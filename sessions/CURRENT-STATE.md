@@ -31,7 +31,6 @@ Planlagt ny: https://effektbibliotek.basbeta.no
 ## Recently Modified Systems
 - Dockerfile, .dockerignore — nye, for Coolify Dockerfile-build-pack
 - lib/email.ts — Brevo SMTP i stedet for Gmail SMTP
-- package.json — fjernet ubrukt `resend`-avhengighet
 - .env.example — nye env-variabler for Coolify/Postgres 18/Brevo
 - specs/nfr.md — tech stack og driftsplan oppdatert for Hetzner/Coolify
 - docs/COOLIFY-DEPLOY.md — ny runbook for manuelt Coolify-oppsett

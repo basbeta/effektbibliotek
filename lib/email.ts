@@ -1,16 +1,16 @@
 import nodemailer from "nodemailer";
 
 const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
+  host: "smtp-relay.brevo.com",
   port: 587,
   secure: false,
   auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_APP_PASSWORD,
+    user: process.env.BREVO_SMTP_LOGIN,
+    pass: process.env.BREVO_SMTP_KEY,
   },
 });
 
-const FROM = process.env.FROM_EMAIL ?? "Effektbibliotek <effektbibliotek@gmail.com>";
+const FROM = process.env.FROM_EMAIL ?? "Effektbibliotek <effektbibliotek@basbeta.no>";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
 export async function sendOtpEmail(to: string, otp: string): Promise<void> {

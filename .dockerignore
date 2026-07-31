@@ -1,0 +1,14 @@
+node_modules
+.next
+.git
+.env
+.env.*
+!.env.example
+app/generated/prisma
+sessions
+change-requests
+specs
+docs
+reviews
+validation
+README.md

@@ -1,25 +1,25 @@
 # nfr.md — Non-Functional Requirements
 
-> Tech stack godkjent 2026-05-21. Se sessions/DECISIONS.md for begrunnelse.
+> Tech stack godkjent 2026-05-21. Portet til Hetzner/Coolify 2026-07-31 (CR-008). Se sessions/DECISIONS.md for begrunnelse.
 
 ## Tech Stack
 
 | Lag | Valg | Versjon |
 |---|---|---|
-| Rammeverk | Next.js (App Router) | 14.x |
+| Rammeverk | Next.js (App Router) | 16.x |
 | Språk | TypeScript | 5.x |
-| Styling | Tailwind CSS + shadcn/ui | Tailwind 3.x |
-| ORM | Prisma | 5.x |
-| Database | PostgreSQL via Neon | PostgreSQL 16 |
+| Styling | Tailwind CSS | Tailwind 4.x |
+| ORM | Prisma (driver adapter, `@prisma/adapter-pg`) | 7.x |
+| Database | PostgreSQL selvhostet på Hetzner via Coolify | PostgreSQL 18 |
 | Auth | Custom OTP + iron-session | — |
-| E-post | Resend | — |
-| Deploy | Vercel (Hobby i fase 1) | — |
-| Runtime | Node.js | 20.x |
+| E-post | Brevo SMTP | — |
+| Deploy | Coolify (Hetzner CX23), Dockerfile build pack | — |
+| Runtime | Node.js | 22.x (Alpine i Docker) |
 
 ## Migreringsplan
-- **Database**: Neon → Supabase / Railway / self-hosted. Kun connection string i `.env` + `prisma migrate deploy`.
-- **Deploy**: Vercel → Railway / Render / self-hosted Node. `next build && next start` fungerer overalt.
-- **E-post**: Resend → Postmark / AWS SES. E-postkall er isolert i `lib/email.ts` — bytt adapter der.
+- **Database**: selvhostet Postgres via driver adapter — bytte leverandør krever kun ny `DATABASE_URL` + `prisma migrate deploy`, ingen kodeendring.
+- **Deploy**: Dockerfile er portabel — kjører på enhver Docker-kompatibel host (Coolify, Railway, Render, ren VPS).
+- **E-post**: Brevo → Postmark / AWS SES. E-postkall er isolert i `lib/email.ts` — bytt adapter der.
 - **Auth**: Custom OTP er uten ekstern avhengighet. Ingen migrasjon nødvendig.
 
 ## Performance
@@ -34,25 +34,25 @@
 - Autorisering: enkel rolle-sjekk (user / admin). Ingen tung RBAC.
 - Public godkjenningsendepunkt: returnerer kun tillatte felter (se FR-PUB-002)
 - Godkjenningstoken: kryptografisk tilfeldig (crypto.randomBytes)
-- TLS: påkrevd i produksjon (håndteres av Vercel)
+- TLS: påkrevd i produksjon (håndteres av Coolify/Traefik bak Hetzner-brannmur, kun 22/80/443 åpne)
 - Rate limiting: sett på `/api/auth/request-code` (maks 5 forsøk/minutt per e-post)
 
 ## Availability
-- Uptime: best-effort i fase 1 (Vercel Hobby SLA)
-- RTO: ikke definert i fase 1
-- RPO: ikke definert i fase 1
+- Uptime: overvåkes via Uptime Kuma (`status.basbeta.no`)
+- Backup: daglig Hetzner-snapshot (hele server) + daglig `pg_dump` → Hetzner Object Storage, 7 dagers historikk
+- RTO/RPO: ikke formelt definert, men daglig backup gir maks 24t datatap ved katastrofe
 
 ## Observability (fase 1)
-- Logging: `console.error` for server-feil, Vercel logs
-- Tracing: ikke i fase 1
-- Metrics: ikke i fase 1
+- Logging: `console.error` for server-feil, Coolify container-logs
+- Feilsporing: Bugsink (`errors.basbeta.no`)
+- Ressursovervåking: Netdata (server-nivå)
 - Alerting: ikke i fase 1
 
 ## CI/CD
-- Fase 1: Vercel auto-deploy fra `master`-branch
-- Ingen CI-pipeline i fase 1 (kan legges til med GitHub Actions senere)
+- Coolify GitHub App auto-deployer fra valgt branch ved push
+- `prisma migrate deploy` kjører automatisk ved container-oppstart (idempotent)
+- Ingen separat CI-pipeline i fase 1
 
 ## Constraints
-- Vercel Hobby: serverless functions maks 10s timeout
-- Neon free: 0.5 GB database, 1 compute unit
-- Resend free: 3 000 e-poster/mnd, 100/dag
+- Hetzner CX23: delt ressurs med andre basbeta-prosjekter på samme server
+- Brevo free tier: se leverandørens gjeldende grenser for sending/mnd

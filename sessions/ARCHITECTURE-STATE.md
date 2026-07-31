@@ -4,19 +4,19 @@
 > Read by Claude at session startup.
 
 ## Current Phase
-BOOTSTRAP — Tech stack valgt, ingen kode skrevet ennå.
+CR-008 IN PROGRESS — Repo portet til Docker/Coolify-oppsett. Manuelt Coolify-oppsett (database, app-ressurs, domene, env-vars) gjenstår, se `docs/COOLIFY-DEPLOY.md`.
 
 ## Stack
 | Lag | Valg |
 |---|---|
-| Rammeverk | Next.js 14 (App Router) |
+| Rammeverk | Next.js 16 (App Router) |
 | Språk | TypeScript 5 |
-| Styling | Tailwind CSS + shadcn/ui |
-| ORM | Prisma 5 |
-| Database | PostgreSQL (Neon i fase 1) |
+| Styling | Tailwind CSS 4 |
+| ORM | Prisma 7 (driver adapter, `@prisma/adapter-pg`) |
+| Database | PostgreSQL 18, selvhostet på Hetzner via Coolify |
 | Auth | Custom OTP + iron-session |
-| E-post | Resend |
-| Deploy | Vercel (Hobby i fase 1) |
+| E-post | Brevo SMTP |
+| Deploy | Coolify (Hetzner CX23), Dockerfile build pack, domene `effektbibliotek.basbeta.no` |
 
 ## Module Map
 Ingen moduler implementert ennå. Planlagt struktur:
@@ -72,9 +72,10 @@ Ingen sirkulære avhengigheter. Ingen direkte kryss-modul-tilgang.
 - Bruksgodkjenning-historikk er append-only, aldri overskriv
 
 ## External Dependencies
-- Neon (PostgreSQL) — connection string i `DATABASE_URL`
-- Resend — API-nøkkel i `RESEND_API_KEY`
-- Vercel — deployment
+- PostgreSQL 18 (Coolify/Hetzner) — connection string i `DATABASE_URL`
+- Brevo SMTP — `BREVO_SMTP_LOGIN` / `BREVO_SMTP_KEY`
+- Coolify (Hetzner CX23) — deployment, Dockerfile build pack
+- Gammel Vercel/Neon-produksjon står urørt som fallback inntil Coolify-oppsettet er verifisert (se CR-008)
 
 ## Last Structural Change
-2026-05-21 — Tech stack valgt og dokumentert.
+2026-07-31 — CR-008: Dockerfile lagt til, e-post byttet fra Gmail SMTP til Brevo SMTP, `specs/nfr.md` oppdatert for Hetzner/Coolify/PostgreSQL 18. Faktisk deploy og domeneoppsett gjenstår manuelt.

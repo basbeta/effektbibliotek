@@ -34,20 +34,22 @@ Opened: 2026-05-21
 Resolved: 2026-05-22 — Bruker nå alltid `new URL(request.url).origin` i stedet for env-variabelen.
 
 ISSUE-003
-Status: Open
+Status: Resolved
 Priority: Medium
 Area: Vercel / e-post
 Description: Gmail App Password er brukt som e-posttransport. Gmail har begrensninger på sending (daglig grense ~500 e-post). For produksjon bør dette vurderes opp mot et dedikert e-posttjeneste (Resend, Mailgun e.l.).
 Blocker for: Skalering
 Opened: 2026-05-22
+Resolved: 2026-07-31 — CR-008: byttet til Brevo SMTP med per-prosjekt-avsender.
 
 ISSUE-004
-Status: Open
+Status: Resolved
 Priority: Medium
 Area: Neon / database
 Description: Neon free tier har cold start-latens på 1-2 sekunder etter idle. Første DB-kall etter inaktivitet oppleves tregt.
 Blocker for: Brukeropplevelse på første request
 Opened: 2026-05-22
+Resolved: 2026-07-31 — CR-008: porter til selvhostet PostgreSQL 18 på Hetzner/Coolify, ingen serverless cold start.
 
 ISSUE-005
 Status: Open
@@ -64,3 +66,11 @@ Area: Vercel / admin
 Description: Ingen admin-bruker er satt opp i produksjonsdatabasen ennå. Første bruker som logger inn via /login på prod får ikke isAdmin=true automatisk. Må settes manuelt i Neon.
 Blocker for: Admin-funksjonalitet i prod
 Opened: 2026-05-22
+
+ISSUE-007
+Status: Open
+Priority: High
+Area: Coolify / Hetzner
+Description: CR-008 (port til Hetzner/Coolify/PostgreSQL 18) er ferdig på repo-siden, men det faktiske Coolify-oppsettet (database-ressurs, app-ressurs, domene, env-vars, backup, Uptime Kuma) må utføres manuelt av produkteier — kan ikke gjøres fra en Claude Code-økt uten tilgang til Coolify-instansen. Se docs/COOLIFY-DEPLOY.md.
+Blocker for: Faktisk publisering på effektbibliotek.basbeta.no
+Opened: 2026-07-31

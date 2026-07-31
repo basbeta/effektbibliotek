@@ -68,3 +68,14 @@ ALTERNATIVES CONSIDERED: postinstall script; Vercel build command override.
 RATIONALE: Enklest å vedlikeholde, synlig i package.json, ingen ekstern Vercel-konfigurasjon nødvendig.
 CONSEQUENCES: Byggetid øker med ~2 sekunder. Prisma-klienten er alltid oppdatert med skjema ved deploy.
 DECIDED BY: Claude
+
+---
+
+DATE: 2026-07-31
+DECISION: Full port fra Vercel/Neon til Hetzner/Coolify/PostgreSQL 18 (CR-008)
+CONTEXT: Effektbiblioteket lå på Vercel/Neon (isolert fra Bas' egen infrastruktur). Bas har bygget basbeta.no — en dedikert, GDPR-compliant beta-plattform på Hetzner med Coolify — der hvert prosjekt skal driftes isolert med eget subdomene og database.
+DECISION: Full migrering (ikke parallelldrift). Deploy: Vercel → Coolify (Dockerfile build pack, domene `effektbibliotek.basbeta.no`). Database: Neon → fersk PostgreSQL 18-instans i Coolify, ingen datamigrering. E-post: Gmail SMTP → Brevo SMTP med per-prosjekt-avsender.
+ALTERNATIVES CONSIDERED: Parallelldrift (Vercel + Coolify samtidig) — avvist, unødvendig kompleksitet for et prosjekt uten viktige produksjonsdata. Datamigrering fra Neon — avvist, produkteier bekreftet at ingenting i eksisterende data er viktig.
+RATIONALE: basbeta-infrastrukturen er allerede bygget og betalt for nettopp denne typen prosjekter (lav kostnad, europeisk, GDPR ut av boksen). Prisma sin driver-adapter gjør databasebytte til kun en ny connection string. Dockerfile er portabelt og fjerner Vercel-spesifikke antakelser fra koden.
+CONSEQUENCES: Nytt produksjons-domene (`effektbibliotek.basbeta.no`). `prisma migrate deploy` kjører automatisk ved container-oppstart i stedet for i Vercel sitt build-steg. Manuelt Coolify-oppsett (database, app-ressurs, domene, env-vars, backup, overvåking) må utføres av produkteier — dokumentert i `docs/COOLIFY-DEPLOY.md`. Vercel/Neon beholdes urørt som fallback inntil Coolify er verifisert stabilt.
+DECIDED BY: human

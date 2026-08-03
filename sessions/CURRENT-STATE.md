@@ -22,7 +22,12 @@ Etter CR-008-deploy hang OTP-innlogging. Feilsøkt over tre CR-er:
 
 Fikset: `Dockerfile` CMD byttet fra `prisma migrate deploy` til `prisma db push --skip-generate`; `request-code/route.ts` fikk try/catch med garantert JSON-feilsvar.
 
-**OBS — dette forsøket (commit 4440b2e) tok ned hele appen:** Containeren crash-looped 10 ganger og stoppet ("Exited, Stopped after reaching restart limit (10/10)"). Ingen live container = ingen app-logger tilgjengelig, kun Coolify sin orkestrerings-log (build/rollout, ikke stdout). Sannsynlig årsak: `prisma db push` uten `--accept-data-loss` ba om interaktiv bekreftelse i et miljø uten TTY → hang → `npm run start` nås aldri → helsesjekk feiler → restart-loop. Lagt til `--accept-data-loss` i en ny fiks. **CR-011 satt tilbake til In Progress inntil et faktisk stabilt deploy er bekreftet.**
+**OBS — to feilslåtte forsøk tok ned hele appen før den faktiske feilen ble funnet:**
+1. `prisma db push --skip-generate` (commit 4440b2e) crash-looped containeren 10 ganger ("Exited, Stopped after reaching restart limit (10/10)").
+2. Antok interaktiv bekreftelse uten TTY som årsak, la til `--accept-data-loss` (commit 697c2cc) — også feil gjetning, samme crash-loop.
+3. **Faktisk feil, bekreftet fra container-logg:** `! unknown or unexpected option: --skip-generate` — denne Prisma CLI-versjonen godtar ikke det flagget på `db push`. Fjernet det. Endelig CMD: `npx prisma db push --accept-data-loss && npm run start`.
+
+**CR-011 forblir In Progress inntil et faktisk stabilt deploy er bekreftet.**
 
 ## Active Change Requests
 - CR-001 (Done) — Auth

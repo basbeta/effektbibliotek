@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   lifecycleStatusLabels,
-  usageLevelLabels,
   industryLabels,
   caseTypeLabels,
   channelLabels,
@@ -24,7 +23,6 @@ interface CaseData {
   summary: string;
   customerFacingSummary: string | null;
   lifecycleStatus: string;
-  usageLevel: string;
   industry: string | null;
   caseTypes: string[];
   channels: string[];
@@ -45,6 +43,9 @@ interface CaseData {
   evidenceLevel: string | null;
   ndaRestricted: boolean;
   anonymizedUseOnly: boolean;
+  websiteUseAllowed: boolean;
+  presentationUseAllowed: boolean;
+  tenderUseAllowed: boolean;
   competitionUseAllowed: boolean;
   ownerEmail: string;
 }
@@ -69,7 +70,6 @@ export default function EditCaseForm({ initial, isAdmin, links }: { initial: Cas
     summary: n(initial.summary),
     customerFacingSummary: n(initial.customerFacingSummary),
     lifecycleStatus: initial.lifecycleStatus,
-    usageLevel: initial.usageLevel,
     industry: n(initial.industry),
     caseTypes: initial.caseTypes ?? [],
     channels: initial.channels ?? [],
@@ -90,6 +90,9 @@ export default function EditCaseForm({ initial, isAdmin, links }: { initial: Cas
     evidenceLevel: n(initial.evidenceLevel),
     ndaRestricted: initial.ndaRestricted,
     anonymizedUseOnly: initial.anonymizedUseOnly,
+    websiteUseAllowed: initial.websiteUseAllowed,
+    presentationUseAllowed: initial.presentationUseAllowed,
+    tenderUseAllowed: initial.tenderUseAllowed,
     competitionUseAllowed: initial.competitionUseAllowed,
     ownerEmail: initial.ownerEmail,
   });
@@ -178,22 +181,13 @@ export default function EditCaseForm({ initial, isAdmin, links }: { initial: Cas
         <Field label="Beskrivelse" required>
           <textarea value={form.summary} onChange={(e) => set("summary", e.target.value)} rows={4} className={inputCls + " resize-y"} style={inputStyle} />
         </Field>
-        <div className="grid grid-cols-2 gap-4">
-          <Field label="Status">
-            <select value={form.lifecycleStatus} onChange={(e) => set("lifecycleStatus", e.target.value)} className={inputCls} style={inputStyle}>
-              {Object.entries(lifecycleStatusLabels).map(([v, l]) => (
-                <option key={v} value={v}>{l}</option>
-              ))}
-            </select>
-          </Field>
-          <Field label="Bruksnivå">
-            <select value={form.usageLevel} onChange={(e) => set("usageLevel", e.target.value)} className={inputCls} style={inputStyle}>
-              {Object.entries(usageLevelLabels).map(([v, l]) => (
-                <option key={v} value={v}>{l}</option>
-              ))}
-            </select>
-          </Field>
-        </div>
+        <Field label="Status">
+          <select value={form.lifecycleStatus} onChange={(e) => set("lifecycleStatus", e.target.value)} className={inputCls} style={inputStyle}>
+            {Object.entries(lifecycleStatusLabels).map(([v, l]) => (
+              <option key={v} value={v}>{l}</option>
+            ))}
+          </select>
+        </Field>
         {isAdmin && allUsers.length > 0 && (
           <Field label="Ansvarlig (admin)">
             <select value={form.ownerEmail} onChange={(e) => set("ownerEmail", e.target.value)} className={inputCls} style={inputStyle}>
@@ -295,7 +289,7 @@ export default function EditCaseForm({ initial, isAdmin, links }: { initial: Cas
         </Field>
       </FormSection>
 
-      <FormSection title="Begrensninger">
+      <FormSection title="Bruksrettigheter">
         <div className="space-y-3">
           <CheckboxField
             checked={form.ndaRestricted}
@@ -307,11 +301,27 @@ export default function EditCaseForm({ initial, isAdmin, links }: { initial: Cas
             checked={form.anonymizedUseOnly}
             onChange={(v) => set("anonymizedUseOnly", v)}
             label="Kun anonymisert bruk"
+            description="Overstyrer de øvrige bruksvalgene under."
+          />
+          <CheckboxField
+            checked={form.websiteUseAllowed}
+            onChange={(v) => set("websiteUseAllowed", v)}
+            label="Kan brukes som case på hjemmeside"
+          />
+          <CheckboxField
+            checked={form.presentationUseAllowed}
+            onChange={(v) => set("presentationUseAllowed", v)}
+            label="Kan brukes som case i presentasjoner"
+          />
+          <CheckboxField
+            checked={form.tenderUseAllowed}
+            onChange={(v) => set("tenderUseAllowed", v)}
+            label="Kan brukes som case i anbudsbesvarelser"
           />
           <CheckboxField
             checked={form.competitionUseAllowed}
             onChange={(v) => set("competitionUseAllowed", v)}
-            label="Konkurransebruk tillatt"
+            label="Kan brukes som case i konkurranse/award-show"
           />
         </div>
       </FormSection>

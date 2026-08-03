@@ -54,7 +54,6 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
     "summary",
     "customerFacingSummary",
     "lifecycleStatus",
-    "usageLevel",
     "industry",
     "caseTypes",
     "channels",
@@ -76,6 +75,9 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
     "evidenceLevel",
     "ndaRestricted",
     "anonymizedUseOnly",
+    "websiteUseAllowed",
+    "presentationUseAllowed",
+    "tenderUseAllowed",
     "competitionUseAllowed",
     "ownerEmail",
   ] as const;

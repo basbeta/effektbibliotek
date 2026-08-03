@@ -13,21 +13,23 @@ interface Props {
 const CHOICES: {
   field: keyof typeof initialChoices;
   label: string;
-  isNda?: boolean;
-  disabledByNda?: boolean;
+  isExclusive?: boolean;
+  disabledByExclusive?: boolean;
 }[] = [
-  { field: "ndaRestricted", label: "Casen er NDA-belagt og skal ikke deles med andre", isNda: true },
-  { field: "internalUseAllowed", label: "Casen kan presenteres internt i Bas", disabledByNda: true },
-  { field: "anonymizedUseOnly", label: "Casen kan kun brukes anonymisert", disabledByNda: true },
-  { field: "presentationUseAllowed", label: "Casen kan brukes i presentasjoner", disabledByNda: true },
-  { field: "competitionUseAllowed", label: "Casen kan brukes i konkurranse", disabledByNda: true },
+  { field: "ndaRestricted", label: "Casen er NDA-belagt og skal ikke deles med andre", isExclusive: true },
+  { field: "anonymizedUseOnly", label: "Casen kan kun brukes anonymisert", isExclusive: true },
+  { field: "websiteUseAllowed", label: "Casen kan brukes som case på hjemmeside", disabledByExclusive: true },
+  { field: "presentationUseAllowed", label: "Casen kan brukes som case i presentasjoner", disabledByExclusive: true },
+  { field: "tenderUseAllowed", label: "Casen kan brukes som case i anbudsbesvarelser", disabledByExclusive: true },
+  { field: "competitionUseAllowed", label: "Casen kan brukes som case i konkurranse/award-show", disabledByExclusive: true },
 ];
 
 const initialChoices = {
   ndaRestricted: false,
-  internalUseAllowed: false,
   anonymizedUseOnly: false,
+  websiteUseAllowed: false,
   presentationUseAllowed: false,
+  tenderUseAllowed: false,
   competitionUseAllowed: false,
 };
 
@@ -42,15 +44,10 @@ export default function ApprovalForm({ caseId, token, ownerName, defaultName = "
   const [submitted, setSubmitted] = useState(false);
 
   function toggleChoice(field: keyof typeof choices) {
-    if (field === "ndaRestricted") {
-      const next = !choices.ndaRestricted;
-      setChoices({
-        ndaRestricted: next,
-        internalUseAllowed: false,
-        anonymizedUseOnly: false,
-        presentationUseAllowed: false,
-        competitionUseAllowed: false,
-      });
+    const isExclusive = field === "ndaRestricted" || field === "anonymizedUseOnly";
+    if (isExclusive) {
+      const next = !choices[field];
+      setChoices({ ...initialChoices, [field]: next });
     } else {
       setChoices((prev) => ({ ...prev, [field]: !prev[field] }));
     }
@@ -166,9 +163,11 @@ export default function ApprovalForm({ caseId, token, ownerName, defaultName = "
           Hva godkjenner du? <span style={{ color: "var(--color-error-text)" }}>*</span>
         </p>
         <div className="space-y-3">
-          {CHOICES.map(({ field, label, isNda, disabledByNda }) => {
-            const disabled = disabledByNda && choices.ndaRestricted;
+          {CHOICES.map(({ field, label, isExclusive, disabledByExclusive }) => {
+            const disabled = disabledByExclusive && (choices.ndaRestricted || choices.anonymizedUseOnly);
             const checked = choices[field];
+            const isNda = field === "ndaRestricted";
+            const isAnonymized = field === "anonymizedUseOnly";
             return (
               <label
                 key={field}
@@ -181,13 +180,19 @@ export default function ApprovalForm({ caseId, token, ownerName, defaultName = "
                   disabled={disabled}
                   onChange={() => toggleChoice(field)}
                   className="mt-0.5 h-4 w-4 flex-shrink-0"
-                  style={{ accentColor: isNda ? "var(--color-nda-bg)" : "var(--color-accent)" }}
+                  style={{
+                    accentColor: isNda
+                      ? "var(--color-nda-bg)"
+                      : isAnonymized
+                      ? "var(--color-warning-text)"
+                      : "var(--color-accent)",
+                  }}
                 />
                 <span
                   className="text-sm"
                   style={{
-                    color: isNda ? "var(--color-error-text)" : "var(--color-text-primary)",
-                    fontWeight: isNda ? "500" : "400",
+                    color: isNda ? "var(--color-error-text)" : isAnonymized ? "var(--color-warning-text)" : "var(--color-text-primary)",
+                    fontWeight: isExclusive ? "500" : "400",
                   }}
                 >
                   {label}

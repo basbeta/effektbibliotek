@@ -1,35 +1,44 @@
 export interface ApprovalChoices {
   ndaRestricted: boolean;
-  internalUseAllowed: boolean;
   anonymizedUseOnly: boolean;
+  websiteUseAllowed: boolean;
   presentationUseAllowed: boolean;
+  tenderUseAllowed: boolean;
   competitionUseAllowed: boolean;
 }
 
-export function computeUsageLevel(choices: ApprovalChoices): {
-  usageLevel: "not_cleared" | "internal_only" | "presentation_allowed";
-  ndaRestricted: boolean;
-  anonymizedUseOnly: boolean;
-  competitionUseAllowed: boolean;
-} {
+/**
+ * NDA and "kun anonymisert" are exclusive: either one blocks every other
+ * choice. Enforced here server-side too, independent of client behavior.
+ */
+export function sanitizeChoices(choices: ApprovalChoices): ApprovalChoices {
   if (choices.ndaRestricted) {
     return {
-      usageLevel: "not_cleared",
       ndaRestricted: true,
       anonymizedUseOnly: false,
+      websiteUseAllowed: false,
+      presentationUseAllowed: false,
+      tenderUseAllowed: false,
       competitionUseAllowed: false,
     };
   }
-
-  let usageLevel: "not_cleared" | "internal_only" | "presentation_allowed" = "not_cleared";
-  if (choices.presentationUseAllowed) usageLevel = "presentation_allowed";
-  else if (choices.internalUseAllowed) usageLevel = "internal_only";
-
+  if (choices.anonymizedUseOnly) {
+    return {
+      ndaRestricted: false,
+      anonymizedUseOnly: true,
+      websiteUseAllowed: false,
+      presentationUseAllowed: false,
+      tenderUseAllowed: false,
+      competitionUseAllowed: false,
+    };
+  }
   return {
-    usageLevel,
     ndaRestricted: false,
-    anonymizedUseOnly: choices.anonymizedUseOnly,
-    competitionUseAllowed: choices.competitionUseAllowed,
+    anonymizedUseOnly: false,
+    websiteUseAllowed: !!choices.websiteUseAllowed,
+    presentationUseAllowed: !!choices.presentationUseAllowed,
+    tenderUseAllowed: !!choices.tenderUseAllowed,
+    competitionUseAllowed: !!choices.competitionUseAllowed,
   };
 }
 
@@ -76,8 +85,9 @@ Effektbiblioteket er foreløpig i betatesting. Gi gjerne beskjed til ${params.ow
 
 export const choiceLabels: Record<keyof ApprovalChoices, string> = {
   ndaRestricted: "Casen er NDA-belagt og skal ikke deles med andre",
-  internalUseAllowed: "Casen kan presenteres internt i Bas",
   anonymizedUseOnly: "Casen kan kun brukes anonymisert",
-  presentationUseAllowed: "Casen kan brukes i presentasjoner",
-  competitionUseAllowed: "Casen kan brukes i konkurranse",
+  websiteUseAllowed: "Casen kan brukes som case på hjemmeside",
+  presentationUseAllowed: "Casen kan brukes som case i presentasjoner",
+  tenderUseAllowed: "Casen kan brukes som case i anbudsbesvarelser",
+  competitionUseAllowed: "Casen kan brukes som case i konkurranse/award-show",
 };

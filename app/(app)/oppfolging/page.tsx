@@ -9,9 +9,12 @@ interface RawCase {
   customerName: string;
   title: string;
   lifecycleStatus: string;
-  usageLevel: string;
   ndaRestricted: boolean;
   anonymizedUseOnly: boolean;
+  websiteUseAllowed: boolean;
+  presentationUseAllowed: boolean;
+  tenderUseAllowed: boolean;
+  competitionUseAllowed: boolean;
   updatedAt: Date;
   industry: string | null;
   caseTypes: string[];
@@ -32,8 +35,12 @@ function toRow(c: RawCase, missing: string[]): CaseRowData {
     customerName: c.customerName,
     title: c.title,
     lifecycleStatus: c.lifecycleStatus,
-    usageLevel: c.usageLevel,
     ndaRestricted: c.ndaRestricted,
+    anonymizedUseOnly: c.anonymizedUseOnly,
+    websiteUseAllowed: c.websiteUseAllowed,
+    presentationUseAllowed: c.presentationUseAllowed,
+    tenderUseAllowed: c.tenderUseAllowed,
+    competitionUseAllowed: c.competitionUseAllowed,
     missing,
     updatedAt: c.updatedAt,
     owner: c.owner,

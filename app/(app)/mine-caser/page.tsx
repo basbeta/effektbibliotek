@@ -8,8 +8,12 @@ function toCaseRow(c: Parameters<typeof getMissingInfo>[0] & {
   customerName: string;
   title: string;
   lifecycleStatus: string;
-  usageLevel: string;
   ndaRestricted: boolean;
+  anonymizedUseOnly: boolean;
+  websiteUseAllowed: boolean;
+  presentationUseAllowed: boolean;
+  tenderUseAllowed: boolean;
+  competitionUseAllowed: boolean;
   updatedAt: Date;
   owner: { name: string };
 }): CaseRowData {
@@ -20,8 +24,12 @@ function toCaseRow(c: Parameters<typeof getMissingInfo>[0] & {
     customerName: c.customerName,
     title: c.title,
     lifecycleStatus: c.lifecycleStatus,
-    usageLevel: c.usageLevel,
     ndaRestricted: c.ndaRestricted,
+    anonymizedUseOnly: c.anonymizedUseOnly,
+    websiteUseAllowed: c.websiteUseAllowed,
+    presentationUseAllowed: c.presentationUseAllowed,
+    tenderUseAllowed: c.tenderUseAllowed,
+    competitionUseAllowed: c.competitionUseAllowed,
     missing: allMissing,
     updatedAt: c.updatedAt,
     owner: c.owner,

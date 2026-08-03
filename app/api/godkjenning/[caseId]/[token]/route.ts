@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { computeUsageLevel, choiceLabels, type ApprovalChoices } from "@/lib/usage-approval";
+import { sanitizeChoices, choiceLabels, type ApprovalChoices } from "@/lib/usage-approval";
 import { sendUsageApprovalConfirmation, sendUsageApprovalCopyToBas } from "@/lib/email";
 
 type RouteContext = { params: Promise<{ caseId: string; token: string }> };
@@ -28,20 +28,22 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
     return NextResponse.json({ error: "Navn og e-post er påkrevd" }, { status: 400 });
   }
 
-  const choices: ApprovalChoices = {
+  const rawChoices: ApprovalChoices = {
     ndaRestricted: !!choiceFields.ndaRestricted,
-    internalUseAllowed: !!choiceFields.internalUseAllowed,
     anonymizedUseOnly: !!choiceFields.anonymizedUseOnly,
+    websiteUseAllowed: !!choiceFields.websiteUseAllowed,
     presentationUseAllowed: !!choiceFields.presentationUseAllowed,
+    tenderUseAllowed: !!choiceFields.tenderUseAllowed,
     competitionUseAllowed: !!choiceFields.competitionUseAllowed,
   };
 
-  const anyChoice = Object.values(choices).some(Boolean);
+  const anyChoice = Object.values(rawChoices).some(Boolean);
   if (!anyChoice) {
     return NextResponse.json({ error: "Minst ett valg er påkrevd" }, { status: 400 });
   }
 
-  const computed = computeUsageLevel(choices);
+  // Enforced server-side too, independent of client behavior.
+  const choices = sanitizeChoices(rawChoices);
   const now = new Date();
 
   await prisma.$transaction([
@@ -61,10 +63,7 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
       where: { id: caseId },
       data: {
         usageApprovalStatus: "submitted_locked",
-        usageLevel: computed.usageLevel,
-        ndaRestricted: computed.ndaRestricted,
-        anonymizedUseOnly: computed.anonymizedUseOnly,
-        competitionUseAllowed: computed.competitionUseAllowed,
+        ...choices,
       },
     }),
   ]);

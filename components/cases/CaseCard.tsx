@@ -10,9 +10,11 @@ export interface CaseCardData {
   title: string;
   summary: string;
   lifecycleStatus: string;
-  usageLevel: string;
   ndaRestricted: boolean;
   anonymizedUseOnly: boolean;
+  websiteUseAllowed: boolean;
+  presentationUseAllowed: boolean;
+  tenderUseAllowed: boolean;
   competitionUseAllowed: boolean;
   industry: string | null;
   caseTypes: string[];
@@ -93,15 +95,14 @@ export default function CaseCard({ c }: { c: CaseCardData }) {
       <div className="flex items-center justify-between mt-auto pt-2" style={{ borderTop: "1px solid var(--color-border-subtle)" }}>
         <div className="flex items-center gap-1.5 flex-wrap">
           <StatusBadge status={c.lifecycleStatus} />
-          <UsageBadge level={c.usageLevel} />
-          {c.anonymizedUseOnly && (
-            <span
-              className="px-2 py-0.5 text-xs font-medium rounded"
-              style={{ backgroundColor: "var(--color-warning-bg)", color: "var(--color-warning-text)" }}
-            >
-              Kun anonymisert
-            </span>
-          )}
+          <UsageBadge
+            ndaRestricted={c.ndaRestricted}
+            anonymizedUseOnly={c.anonymizedUseOnly}
+            websiteUseAllowed={c.websiteUseAllowed}
+            presentationUseAllowed={c.presentationUseAllowed}
+            tenderUseAllowed={c.tenderUseAllowed}
+            competitionUseAllowed={c.competitionUseAllowed}
+          />
         </div>
         <div className="text-right">
           <p className="text-xs" style={{ color: "var(--color-text-muted)" }}>

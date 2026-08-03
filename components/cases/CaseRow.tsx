@@ -8,8 +8,12 @@ export interface CaseRowData {
   customerName: string;
   title: string;
   lifecycleStatus: string;
-  usageLevel: string;
   ndaRestricted: boolean;
+  anonymizedUseOnly: boolean;
+  websiteUseAllowed: boolean;
+  presentationUseAllowed: boolean;
+  tenderUseAllowed: boolean;
+  competitionUseAllowed: boolean;
   missing: string[];
   updatedAt: string | Date;
   owner?: { name: string };
@@ -55,7 +59,14 @@ export default function CaseRow({ c, showOwner }: { c: CaseRowData; showOwner?: 
       <div className="flex items-center gap-3 flex-shrink-0">
         <div className="flex items-center gap-1.5">
           <StatusBadge status={c.lifecycleStatus} />
-          <UsageBadge level={c.usageLevel} />
+          <UsageBadge
+            ndaRestricted={c.ndaRestricted}
+            anonymizedUseOnly={c.anonymizedUseOnly}
+            websiteUseAllowed={c.websiteUseAllowed}
+            presentationUseAllowed={c.presentationUseAllowed}
+            tenderUseAllowed={c.tenderUseAllowed}
+            competitionUseAllowed={c.competitionUseAllowed}
+          />
         </div>
         {showOwner && c.owner && (
           <span className="text-xs hidden sm:block" style={{ color: "var(--color-text-muted)" }}>

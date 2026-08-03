@@ -13,9 +13,10 @@ interface LastApproval {
   submittedByRole: string | null;
   note: string | null;
   ndaRestricted: boolean;
-  internalUseAllowed: boolean;
   anonymizedUseOnly: boolean;
+  websiteUseAllowed: boolean;
   presentationUseAllowed: boolean;
+  tenderUseAllowed: boolean;
   competitionUseAllowed: boolean;
 }
 

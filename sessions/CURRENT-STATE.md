@@ -45,6 +45,7 @@ Node.js 22 (matcher Dockerfile) installert på denne maskinen via `winget instal
 - CR-017 (kodet, IKKE testet i prod) — ApprovalSection er nå et trekkspill, kollapset som default (kun tittel + statusmerke synlig), for å redusere visuell plass på case-siden
 - CR-018 (kodet, IKKE testet i prod) — Reply-To satt til caseeierens e-post på de to e-postene som går til eksterne mottakere (sendUsageApprovalRequest, sendUsageApprovalConfirmation). "kontaktpersonen din i Bas" erstattet med caseeierens faktiske navn
 - CR-019 (kodet, IKKE testet i prod) — Personvernteksten (PRIVACY_NOTICE → buildPrivacyNotice) nevner nå caseeier ved navn og e-post ("ta kontakt med {navn} på {e-post}"), brukt i både e-post og godkjenningssidens footer
+- CR-020 (kodet, IKKE testet i prod) — Stor forenkling av bruksgodkjenning: fjernet redundant "bruksnivå"-enum og duplisert badge-visning, erstattet med 6 rene valg (NDA, kun anonymisert, hjemmeside, presentasjoner, anbud, konkurranse). NDA og "kun anonymisert" er nå begge gjensidig utelukkende med resten. 16 filer endret. **Skjemaendring med reelt datatap** — Case.usageLevel og UsageApproval.internalUseAllowed droppes ved neste db push
 
 ## Production URL
 https://effektbibliotek.basbeta.no — live, innlogging bekreftet fungerende

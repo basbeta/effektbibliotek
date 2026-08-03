@@ -38,7 +38,6 @@ model Case {
   customerFacingSummary String?
 
   lifecycleStatus  CaseLifecycleStatus @default(started)
-  usageLevel       CaseUsageLevel      @default(not_cleared)
 
   industry    Industry?
   caseTypes   CaseType[]
@@ -69,6 +68,9 @@ model Case {
 
   ndaRestricted          Boolean @default(false)
   anonymizedUseOnly      Boolean @default(false)
+  websiteUseAllowed      Boolean @default(false)
+  presentationUseAllowed Boolean @default(false)
+  tenderUseAllowed       Boolean @default(false)
   competitionUseAllowed  Boolean @default(false)
 
   ownerEmail   String
@@ -95,9 +97,10 @@ model UsageApproval {
   submittedByRole      String?
 
   ndaRestricted             Boolean @default(false)
-  internalUseAllowed        Boolean @default(false)
   anonymizedUseOnly         Boolean @default(false)
+  websiteUseAllowed         Boolean @default(false)
   presentationUseAllowed    Boolean @default(false)
+  tenderUseAllowed          Boolean @default(false)
   competitionUseAllowed     Boolean @default(false)
 
   note      String?
@@ -129,12 +132,6 @@ enum CaseLifecycleStatus {
   started
   ongoing
   completed
-}
-
-enum CaseUsageLevel {
-  not_cleared
-  internal_only
-  presentation_allowed
 }
 
 enum UsageApprovalStatus {

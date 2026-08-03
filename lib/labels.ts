@@ -1,6 +1,5 @@
 import type {
   CaseLifecycleStatus,
-  CaseUsageLevel,
   UsageApprovalStatus,
   Industry,
   CaseType,
@@ -14,12 +13,6 @@ export const lifecycleStatusLabels: Record<CaseLifecycleStatus, string> = {
   started: "Påbegynt",
   ongoing: "Pågår",
   completed: "Ferdigstilt",
-};
-
-export const usageLevelLabels: Record<CaseUsageLevel, string> = {
-  not_cleared: "Ikke avklart",
-  internal_only: "Kun internt",
-  presentation_allowed: "Kan brukes i presentasjoner",
 };
 
 export const usageApprovalStatusLabels: Record<UsageApprovalStatus, string> = {

@@ -12,10 +12,14 @@ const statusOptions = [
 ];
 
 const usageOptions = [
-  { value: "", label: "Alle bruksnivåer" },
+  { value: "", label: "Alle bruksområder" },
   { value: "not_cleared", label: "Ikke avklart" },
-  { value: "internal_only", label: "Kun internt" },
-  { value: "presentation_allowed", label: "Kan brukes i presentasjoner" },
+  { value: "nda", label: "NDA" },
+  { value: "anonymized", label: "Kun anonymisert" },
+  { value: "website", label: "Hjemmeside" },
+  { value: "presentation", label: "Presentasjoner" },
+  { value: "tender", label: "Anbudsbesvarelser" },
+  { value: "competition", label: "Konkurranse/award-show" },
 ];
 
 export default function BibliotekPage() {

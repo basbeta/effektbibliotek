@@ -3,7 +3,6 @@ import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import type {
   CaseLifecycleStatus,
-  CaseUsageLevel,
   Industry,
   Channel,
 } from "@/app/generated/prisma/client";
@@ -17,7 +16,7 @@ export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const q = searchParams.get("q")?.trim() ?? "";
   const status = searchParams.get("status") as CaseLifecycleStatus | null;
-  const usage = searchParams.get("usage") as CaseUsageLevel | null;
+  const usage = searchParams.get("usage");
   const industry = searchParams.get("industry") as Industry | null;
   const channel = searchParams.get("channel") as Channel | null;
 
@@ -37,7 +36,20 @@ export async function GET(request: NextRequest) {
   }
 
   if (status) where.lifecycleStatus = status;
-  if (usage) where.usageLevel = usage;
+  if (usage === "nda") where.ndaRestricted = true;
+  else if (usage === "anonymized") where.anonymizedUseOnly = true;
+  else if (usage === "website") where.websiteUseAllowed = true;
+  else if (usage === "presentation") where.presentationUseAllowed = true;
+  else if (usage === "tender") where.tenderUseAllowed = true;
+  else if (usage === "competition") where.competitionUseAllowed = true;
+  else if (usage === "not_cleared") {
+    where.ndaRestricted = false;
+    where.anonymizedUseOnly = false;
+    where.websiteUseAllowed = false;
+    where.presentationUseAllowed = false;
+    where.tenderUseAllowed = false;
+    where.competitionUseAllowed = false;
+  }
   if (industry) where.industry = industry;
   if (channel) where.channels = { has: channel };
 

@@ -6,7 +6,6 @@ import { getMissingInfo } from "@/lib/cases";
 import { formatDate } from "@/lib/format";
 import {
   lifecycleStatusLabels,
-  usageLevelLabels,
   usageApprovalStatusLabels,
   industryLabels,
   channelLabels,
@@ -91,23 +90,14 @@ export default async function CaseDetailPage({ params }: Props) {
 
       <div className="flex flex-wrap items-center gap-2 mb-6">
         <StatusBadge status={c.lifecycleStatus} />
-        <UsageBadge level={c.usageLevel} />
-        {c.anonymizedUseOnly && (
-          <span
-            className="px-2 py-0.5 text-xs font-medium rounded"
-            style={{ backgroundColor: "var(--color-warning-bg)", color: "var(--color-warning-text)" }}
-          >
-            Kun anonymisert
-          </span>
-        )}
-        {c.competitionUseAllowed && (
-          <span
-            className="px-2 py-0.5 text-xs font-medium rounded"
-            style={{ backgroundColor: "var(--color-accent-soft)", color: "var(--color-accent)" }}
-          >
-            Konkurransebruk tillatt
-          </span>
-        )}
+        <UsageBadge
+          ndaRestricted={c.ndaRestricted}
+          anonymizedUseOnly={c.anonymizedUseOnly}
+          websiteUseAllowed={c.websiteUseAllowed}
+          presentationUseAllowed={c.presentationUseAllowed}
+          tenderUseAllowed={c.tenderUseAllowed}
+          competitionUseAllowed={c.competitionUseAllowed}
+        />
       </div>
 
       {(missing.forOngoing.length > 0 || missing.forCompleted.length > 0 || missing.forPresentation.length > 0) && (

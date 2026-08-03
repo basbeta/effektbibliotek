@@ -145,3 +145,14 @@ ALTERNATIVES CONSIDERED: Anta at server-siden fungerte fordi Node ikke har mixed
 RATIONALE: HTTPS var allerede tilgjengelig for `errors.basbeta.no` (Traefik/Coolify redirecter dit automatisk) — det manglet bare i DSN-en vi konfigurerte. Løser både klientsidens mixed-content-blokkering og serversidens stille 307-feil i én endring.
 CONSEQUENCES: Feilsporing fungerer nå ende-til-ende, bekreftet med en reell testfeil i Bugsink. Lærdom: samme mønster som CR-011 — når noe "burde fungere" men ikke gjør det, slå på debug-logging og les faktisk logg, ikke gjett videre.
 DECIDED BY: both
+
+---
+
+DATE: 2026-08-03
+DECISION: Erstatt "kopier godkjenningstekst" med direkte e-postutsending for bruksgodkjenning (CR-013)
+CONTEXT: Bruksgodkjenningsflyten krevde tidligere at Bas-representanten kopierte en ferdigskrevet tekst og limte den inn i sitt eget e-postprogram for å sende til kundens kontaktperson. Nå som e-postutsending er verifisert pålitelig i produksjon (CR-009–011) og feilsporing er på plass (CR-012), ba produkteier om å sende direkte fra appen i stedet.
+DECISION: Case fikk to nye felt (approverName, approverEmail). ApprovalSection.tsx sitt inline-skjema samler disse og poster til en ny route (send-approval-request) som sender e-post direkte til godkjenneren med caseeier på kopi (cc), og lagrer navnet/e-posten på casen for gjenbruk ved eventuell ny utsending. Den gamle copy-approval-text-routen ble fjernet, ikke beholdt som fallback.
+ALTERNATIVES CONSIDERED: Beholde kopier-tekst-knappen som fallback ved siden av — avvist av produkteier, direkte utsending skal være eneste vei siden e-post nå er pålitelig. Legge feltene på case-redigeringsskjemaet i stedet for inline i godkjenningswidgeten — avvist, dataene hører naturlig til selve godkjenningshandlingen, ikke case-metadata.
+RATIONALE: Fjerner et manuelt, feilutsatt steg (kopier → bytt til e-postklient → lim inn → send) nå som forutsetningen (pålitelig e-post) er på plass.
+CONSEQUENCES: `usageApprovalStatus` settes til "open" ved utsending, akkurat som før. Feil ved sending fanges av try/catch og rapporteres til Bugsink, i tråd med mønsteret fra CR-012. IKKE bekreftet fungerende i faktisk produksjon ennå — krever push, deploy og en reell test.
+DECIDED BY: both

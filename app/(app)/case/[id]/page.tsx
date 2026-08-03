@@ -292,6 +292,8 @@ export default async function CaseDetailPage({ params }: Props) {
         status={c.usageApprovalStatus}
         canManage={canEdit}
         lastApproval={c.usageApprovals[0] ?? null}
+        approverName={c.approverName}
+        approverEmail={c.approverEmail}
       />
 
       <div

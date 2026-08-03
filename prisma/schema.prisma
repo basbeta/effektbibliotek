@@ -64,6 +64,8 @@ model Case {
 
   usageApprovalStatus UsageApprovalStatus @default(not_requested)
   usageApprovalToken  String?             @unique @default(cuid())
+  approverName        String?
+  approverEmail       String?
 
   ndaRestricted          Boolean @default(false)
   anonymizedUseOnly      Boolean @default(false)

@@ -3,10 +3,12 @@
 > Updated at the end of every session. Read by Claude at startup.
 
 ## Current Phase
-MIGRERING NESTEN FERDIG — CR-008: porting fra Vercel/Neon til Hetzner/Coolify/PostgreSQL 18. Appen kjører stabilt på `effektbibliotek.basbeta.no`, innlogging er bekreftet fungerende i produksjon (CR-009/010/011). Gjenstår: backup/overvåking-steg og full ende-til-ende-test av resten av appen (case-opprettelse, godkjenningsflyt).
+MIGRERING NESTEN FERDIG — CR-008: porting fra Vercel/Neon til Hetzner/Coolify/PostgreSQL 18. Appen kjører stabilt på `effektbibliotek.basbeta.no`. Innlogging (CR-009–011) og feilsporing (CR-012) er begge bekreftet fungerende i produksjon. CR-013 (direkte utsending av bruksgodkjenning) er kodet og bygget lokalt, men IKKE testet i produksjon ennå.
 
 ## Current Objectives
-Fullføre resten av `docs/COOLIFY-DEPLOY.md` (backup, Uptime Kuma) og verifisere at case-opprettelse og bruksgodkjenningsflyten fungerer på den nye databasen, ikke bare innlogging. Deretter fjerne Vercel/Neon.
+1. Ende-til-ende-teste CR-013 i produksjon (send en reell godkjenningsforespørsel, verifiser at godkjenner mottar e-post og caseeier får kopi)
+2. Fullføre resten av `docs/COOLIFY-DEPLOY.md` (backup, Uptime Kuma)
+3. Deretter fjerne Vercel/Neon
 
 ## Current Branch
 claude/effektbibliotek-publish-database-nsrizw
@@ -14,20 +16,10 @@ claude/effektbibliotek-publish-database-nsrizw
 ## Blockers
 Manuelt Coolify/Hetzner-oppsett kan ikke utføres fra Claude Code-økten (ingen tilgang til Coolify-instansen). Krever produkteier/admin på `coolify.basbeta.no`.
 
-## Løst: OTP-innlogging hang (CR-009, CR-010, CR-011)
-Etter CR-008-deploy hang OTP-innlogging. Feilsøkt over tre CR-er:
-- CR-009: la til SMTP-timeout (reell forbedring, men ikke rotårsaken)
-- CR-010: la til DB connection-timeout (reell forbedring, men ikke rotårsaken)
-- CR-011: **faktisk rotårsak**, funnet via Coolify runtime-logger: den ferske Coolify-databasen hadde ingen tabeller (`prisma migrate deploy` fant ingen migreringsfiler å anvende, siden `prisma/migrations` aldri har eksistert i repoet — databasen ble alltid provisjonert med `db push`). I tillegg hadde `app/api/auth/request-code/route.ts` ingen try/catch, så den uhåndterte Prisma-feilen ga et 500-svar som ikke garantert var gyldig JSON — og `app/(auth)/login/page.tsx` sin `res.json()` uten feilhåndtering lot "Sender…"-knappen henge for alltid selv om serveren svarte på millisekunder.
+## Løst: OTP-innlogging hang (CR-009, CR-010, CR-011) og feilsporing (CR-012)
+Etter CR-008-deploy hang OTP-innlogging. Rotårsak (CR-011, funnet via Coolify runtime-logger): den ferske Coolify-databasen hadde ingen tabeller, siden `prisma/migrations` aldri har eksistert i repoet og `prisma migrate deploy` derfor var en stille no-op. Fikset med `prisma db push --accept-data-loss`. CR-009 (SMTP-timeout) og CR-010 (DB connection-timeout) var reelle forbedringer underveis, men ikke selve rotårsaken. Full historikk (inkl. to feilslåtte deploys som crash-loopet appen) i `sessions/IMPLEMENTATION-LEDGER.md` og `sessions/DECISIONS.md`.
 
-Fikset: `Dockerfile` CMD byttet fra `prisma migrate deploy` til `prisma db push --skip-generate`; `request-code/route.ts` fikk try/catch med garantert JSON-feilsvar.
-
-**OBS — to feilslåtte forsøk tok ned hele appen før den faktiske feilen ble funnet:**
-1. `prisma db push --skip-generate` (commit 4440b2e) crash-looped containeren 10 ganger ("Exited, Stopped after reaching restart limit (10/10)").
-2. Antok interaktiv bekreftelse uten TTY som årsak, la til `--accept-data-loss` (commit 697c2cc) — også feil gjetning, samme crash-loop.
-3. **Faktisk feil, bekreftet fra container-logg:** `! unknown or unexpected option: --skip-generate` — denne Prisma CLI-versjonen godtar ikke det flagget på `db push`. Fjernet det. Endelig CMD: `npx prisma db push --accept-data-loss && npm run start`.
-
-**CR-011 bekreftet løst:** Container kjører stabilt, produkteier logget inn på effektbibliotek.basbeta.no, mottok og verifiserte engangskode. Innlogging fungerer i produksjon.
+CR-012 la til Bugsink-feilsporing (Sentry-kompatibel, selvhostet på errors.basbeta.no) — bekreftet fungerende med en reell testfeil. Viktig detalj: DSN må bruke `https://`, ikke `http://` (Bugsink-hosten redirecter, og Sentry sin transport følger ikke redirects).
 
 ## Node.js nå tilgjengelig lokalt
 Node.js 22 (matcher Dockerfile) installert på denne maskinen via `winget install OpenJS.NodeJS.22` 2026-08-03. `npm`/`npx`/`node` er IKKE på PATH i allerede-kjørende PowerShell-verktøyprosesser i denne økten (winget sin PATH-endring krever ny prosess) — prefiks kommandoer med `$env:PATH = "C:\Users\haavard.kvinnesland\AppData\Local\Microsoft\WinGet\Packages\OpenJS.NodeJS.22_Microsoft.Winget.Source_8wekyb3d8bbwe\node-v22.23.2-win-x64;" + $env:PATH` før `node`/`npm`/`npx`-kall inntil en frisk økt bekrefter det er unødvendig. Dette åpner for faktisk `npm run build`/`tsc --noEmit`-verifisering fremover, i stedet for kun visuell kodegjennomgang slik CR-009 til CR-011 måtte gjøre.
@@ -45,6 +37,7 @@ Node.js 22 (matcher Dockerfile) installert på denne maskinen via `winget instal
 - CR-010 (Done) — Connection-timeout på Prisma/pg-adapteren (bugfix, ikke rotårsak)
 - CR-011 (Done) — Faktisk rotårsak: tomt databaseskjema (db push i stedet for migrate deploy) + manglende feilhåndtering i request-code-routen
 - CR-012 (Done) — Feilsporing med Bugsink (Sentry-kompatibel, selvhostet på errors.basbeta.no). Verifisert i produksjon: bevisst testfeil dukket opp i Bugsink
+- CR-013 (kodet, IKKE testet i prod) — Direkte utsending av bruksgodkjenningsforespørsel på e-post (til godkjenner, cc caseeier), erstatter "kopier tekst"-flyten
 
 ## Production URL
 https://effektbibliotek.basbeta.no — live, innlogging bekreftet fungerende
@@ -56,10 +49,11 @@ https://effektbibliotek.vercel.app (gammel, beholdes urørt inntil Coolify er fu
 - .env.example — nye env-variabler for Coolify/Postgres 18/Brevo
 - specs/nfr.md — tech stack og driftsplan oppdatert for Hetzner/Coolify
 - docs/COOLIFY-DEPLOY.md — ny runbook for manuelt Coolify-oppsett
-- lib/usage-approval.ts — Godkjenningstekst oppdatert (starter med "[navn] har registrert casen...")
-- app/api/cases/[id]/copy-approval-text/route.ts — Bruker nå request.url.origin (fikset port-bug)
+- lib/usage-approval.ts — Godkjenningstekst oppdatert (starter med "[navn] har registrert casen..."); personaliserer hilsen med godkjennerens navn (CR-013)
 - package.json — prisma generate lagt til i build-script for Vercel
-- components/cases/ApprovalSection.tsx — Intern godkjenningsseksjon
+- components/cases/ApprovalSection.tsx — Intern godkjenningsseksjon. CR-013: "kopier tekst"-knapp erstattet med inline navn+e-post-skjema som sender direkte
+- app/api/cases/[id]/send-approval-request/route.ts — CR-013: erstatter copy-approval-text (fjernet). Sender e-post direkte til godkjenner, cc caseeier
+- prisma/schema.prisma — CR-013: Case har nå approverName/approverEmail
 - app/godkjenning/[caseId]/[token]/page.tsx — Offentlig kundevendt godkjenningsside
 - app/godkjenning/[caseId]/[token]/ApprovalForm.tsx — Kundevendt skjema
 - app/api/godkjenning/[caseId]/[token]/route.ts — Public API, e-postutsending
@@ -103,9 +97,10 @@ https://effektbibliotek.vercel.app (gammel, beholdes urørt inntil Coolify er fu
 - Innlogging (OTP via Brevo) i produksjon: ✓ bekreftet av produkteier 2026-08-03
 
 ## Next Recommended Actions
-1. Ende-til-ende-test på `effektbibliotek.basbeta.no` utover innlogging: case-opprettelse, redigering, bruksgodkjenningsflyt, bekreftelses-e-post
-2. Opprett admin-bruker i den nye databasen (første login + manuell `isAdmin`-sett i Coolify sin database-ressurs)
-3. Utføre resterende `docs/COOLIFY-DEPLOY.md`-steg (backup, Uptime Kuma) hvis ikke allerede gjort
-4. Når Coolify-oppsettet er verifisert stabilt over noen dager: fjern Vercel-prosjektet og slett Neon-databasen (ingen data å ta vare på), marker CR-008 som Done
-5. Vurder å innføre formelle `prisma migrate`-migreringer før effektbiblioteket har ekte produksjonsdata av verdi (se Risks i CR-011) — `db push` er greit for beta, men gir ingen reviewbar skjemahistorikk
-6. Vurder om `docs_extracted.txt` skal gitignores (sensitiv prod-dokumentasjon) — uavhengig av denne migreringen
+1. Push og deploy CR-013, deretter ende-til-ende-test: opprett/åpne en case, fyll inn godkjenner navn+e-post i bruksgodkjenningsseksjonen, send, verifiser at godkjenner mottar e-post og caseeier får kopi (cc), og at godkjenningslenken fungerer
+2. Ende-til-ende-test av resten: case-opprettelse, redigering, bekreftelses-e-post etter innsendt godkjenning
+3. Opprett admin-bruker i den nye databasen (første login + manuell `isAdmin`-sett i Coolify sin database-ressurs)
+4. Utføre resterende `docs/COOLIFY-DEPLOY.md`-steg (backup, Uptime Kuma) hvis ikke allerede gjort
+5. Når Coolify-oppsettet er verifisert stabilt over noen dager: fjern Vercel-prosjektet og slett Neon-databasen (ingen data å ta vare på), marker CR-008 som Done
+6. Vurder å innføre formelle `prisma migrate`-migreringer før effektbiblioteket har ekte produksjonsdata av verdi (se Risks i CR-011) — `db push` er greit for beta, men gir ingen reviewbar skjemahistorikk
+7. Vurder om `docs_extracted.txt` skal gitignores (sensitiv prod-dokumentasjon) — uavhengig av denne migreringen

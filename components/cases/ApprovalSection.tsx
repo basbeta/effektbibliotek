@@ -24,33 +24,50 @@ interface Props {
   status: string;
   canManage: boolean;
   lastApproval: LastApproval | null;
+  approverName: string | null;
+  approverEmail: string | null;
 }
 
-export default function ApprovalSection({ caseId, status: initialStatus, canManage, lastApproval }: Props) {
+export default function ApprovalSection({
+  caseId,
+  status: initialStatus,
+  canManage,
+  lastApproval,
+  approverName: initialApproverName,
+  approverEmail: initialApproverEmail,
+}: Props) {
   const router = useRouter();
   const [status, setStatus] = useState(initialStatus);
-  const [copied, setCopied] = useState(false);
-  const [copying, setCopying] = useState(false);
+  const [approverName, setApproverName] = useState(initialApproverName ?? "");
+  const [approverEmail, setApproverEmail] = useState(initialApproverEmail ?? "");
+  const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
   const [unlocking, setUnlocking] = useState(false);
   const [confirmUnlock, setConfirmUnlock] = useState(false);
   const [error, setError] = useState("");
 
-  async function handleCopy() {
-    setCopying(true);
+  async function handleSend() {
+    setSending(true);
     setError("");
     try {
-      const res = await fetch(`/api/cases/${caseId}/copy-approval-text`, { method: "POST" });
-      if (!res.ok) { setError("Kunne ikke hente tekst."); return; }
-      const { text } = await res.json();
-      await navigator.clipboard.writeText(text);
-      setCopied(true);
-      if (status === "not_requested") setStatus("open");
+      const res = await fetch(`/api/cases/${caseId}/send-approval-request`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ approverName, approverEmail }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error ?? "Kunne ikke sende forespørsel.");
+        return;
+      }
+      setSent(true);
+      setStatus("open");
       router.refresh();
-      setTimeout(() => setCopied(false), 3000);
+      setTimeout(() => setSent(false), 3000);
     } catch {
       setError("Noe gikk galt.");
     } finally {
-      setCopying(false);
+      setSending(false);
     }
   }
 
@@ -152,22 +169,62 @@ export default function ApprovalSection({ caseId, status: initialStatus, canMana
         <div>
           {status === "open" && (
             <p className="text-sm mb-4" style={{ color: "var(--color-text-secondary)" }}>
-              Lenken er sendt — venter på svar fra kunde.
+              {approverName
+                ? `Sendt til ${approverName} (${approverEmail}) — venter på svar.`
+                : "Venter på svar fra kunde."}
             </p>
           )}
           {canManage && (
-            <button
-              onClick={handleCopy}
-              disabled={copying}
-              className="px-4 py-2 text-sm font-medium rounded-lg disabled:opacity-60"
-              style={{
-                backgroundColor: copied ? "var(--color-accent-soft)" : "var(--color-surface-muted)",
-                border: `1px solid ${copied ? "var(--color-accent)" : "var(--color-border-strong)"}`,
-                color: copied ? "var(--color-accent)" : "var(--color-text-secondary)",
-              }}
-            >
-              {copied ? "Kopiert!" : copying ? "..." : "Kopier godkjenningstekst"}
-            </button>
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-medium" style={{ color: "var(--color-text-muted)" }}>
+                  Navn på godkjenner
+                </label>
+                <input
+                  value={approverName}
+                  onChange={(e) => setApproverName(e.target.value)}
+                  placeholder="Ola Nordmann"
+                  className="w-full px-3 py-2 text-sm rounded-lg outline-none"
+                  style={{
+                    backgroundColor: "var(--color-surface)",
+                    border: "1px solid var(--color-border-strong)",
+                    color: "var(--color-text-primary)",
+                  }}
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-medium" style={{ color: "var(--color-text-muted)" }}>
+                  E-post til godkjenner
+                </label>
+                <input
+                  value={approverEmail}
+                  onChange={(e) => setApproverEmail(e.target.value)}
+                  placeholder="ola@kunde.no"
+                  type="email"
+                  className="w-full px-3 py-2 text-sm rounded-lg outline-none"
+                  style={{
+                    backgroundColor: "var(--color-surface)",
+                    border: "1px solid var(--color-border-strong)",
+                    color: "var(--color-text-primary)",
+                  }}
+                />
+              </div>
+              <button
+                onClick={handleSend}
+                disabled={sending || !approverName.trim() || !approverEmail.trim()}
+                className="px-4 py-2 text-sm font-medium rounded-lg disabled:opacity-60 self-start"
+                style={{
+                  backgroundColor: sent ? "var(--color-accent-soft)" : "var(--color-surface-muted)",
+                  border: `1px solid ${sent ? "var(--color-accent)" : "var(--color-border-strong)"}`,
+                  color: sent ? "var(--color-accent)" : "var(--color-text-secondary)",
+                }}
+              >
+                {sent ? "Sendt!" : sending ? "Sender…" : status === "open" ? "Send på nytt" : "Send godkjenningsforespørsel"}
+              </button>
+              <p className="text-xs" style={{ color: "var(--color-text-muted)" }}>
+                Du får kopi av e-posten (cc).
+              </p>
+            </div>
           )}
         </div>
       )}

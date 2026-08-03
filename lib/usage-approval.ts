@@ -34,6 +34,7 @@ export function computeUsageLevel(choices: ApprovalChoices): {
 }
 
 export function buildApprovalText(params: {
+  approverName?: string;
   ownerName: string;
   ownerEmail: string;
   caseTitle: string;
@@ -42,7 +43,8 @@ export function buildApprovalText(params: {
   appUrl: string;
 }): string {
   const url = `${params.appUrl}/godkjenning/${params.caseId}/${params.token}`;
-  return `Hei,
+  const greeting = params.approverName ? `Hei ${params.approverName},` : "Hei,";
+  return `${greeting}
 
 ${params.ownerName} har registrert casen «${params.caseTitle}» i vårt effektbibliotek. I Bas er vi opptatt av å dele og lære, og for å ha full kontroll på hva vi kan og ikke kan gjøre med alle casene vi gjennomfører, vil vi gjerne at du tar et minutt til å gi oss tilbakemelding på hva vi kan bruke denne casen til.
 

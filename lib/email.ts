@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import { buildApprovalText } from "./usage-approval";
 
 const transporter = nodemailer.createTransport({
   host: "smtp-relay.brevo.com",
@@ -30,6 +31,27 @@ ${otp}
 Koden er gyldig i 5 minutter.
 
 Hvis du ikke ba om denne koden, kan du se bort fra denne e-posten.`,
+  });
+}
+
+export async function sendUsageApprovalRequest(params: {
+  approverName: string;
+  approverEmail: string;
+  ownerName: string;
+  ownerEmail: string;
+  caseTitle: string;
+  caseId: string;
+  token: string;
+  appUrl: string;
+}): Promise<void> {
+  const text = buildApprovalText(params);
+
+  await transporter.sendMail({
+    from: FROM,
+    to: params.approverEmail,
+    cc: params.ownerEmail,
+    subject: `Bruksgodkjenning: ${params.caseTitle}`,
+    text,
   });
 }
 

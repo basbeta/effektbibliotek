@@ -70,7 +70,7 @@ ${PRIVACY_NOTICE}
 
 ${GDPR_NOTICE}
 
-Effektbiblioteket er foreløpig i betatesting. Gi gjerne beskjed til kontaktpersonen din i Bas hvis noe er uklart, feil eller burde fungere annerledes.`;
+Effektbiblioteket er foreløpig i betatesting. Gi gjerne beskjed til ${params.ownerName} hvis noe er uklart, feil eller burde fungere annerledes.`;
 }
 
 export const choiceLabels: Record<keyof ApprovalChoices, string> = {

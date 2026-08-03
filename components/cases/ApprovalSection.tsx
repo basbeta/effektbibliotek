@@ -55,6 +55,7 @@ export default function ApprovalSection({
   const [unlocking, setUnlocking] = useState(false);
   const [confirmUnlock, setConfirmUnlock] = useState(false);
   const [error, setError] = useState("");
+  const [expanded, setExpanded] = useState(false);
 
   const previewText = useMemo(
     () =>
@@ -121,14 +122,30 @@ export default function ApprovalSection({
         border: "1px solid var(--color-border-subtle)",
       }}
     >
-      <div className="flex items-center justify-between mb-4">
-        <p className="text-sm font-semibold" style={{ color: "var(--color-text-primary)" }}>
-          Bruksgodkjenning
-        </p>
+      <button
+        onClick={() => setExpanded((v) => !v)}
+        className="flex items-center justify-between w-full mb-0 text-left"
+        style={{ marginBottom: expanded ? "1rem" : 0 }}
+      >
+        <div className="flex items-center gap-2">
+          <span
+            className="text-xs transition-transform"
+            style={{
+              color: "var(--color-text-muted)",
+              display: "inline-block",
+              transform: expanded ? "rotate(90deg)" : "rotate(0deg)",
+            }}
+          >
+            ▸
+          </span>
+          <p className="text-sm font-semibold" style={{ color: "var(--color-text-primary)" }}>
+            Bruksgodkjenning
+          </p>
+        </div>
         <StatusPill status={status} label={statusLabel} />
-      </div>
+      </button>
 
-      {status === "submitted_locked" && lastApproval ? (
+      {expanded && (status === "submitted_locked" && lastApproval ? (
         <div className="space-y-3">
           <dl className="text-sm space-y-1">
             <Row label="Sendt inn av" value={`${lastApproval.submittedByName} (${lastApproval.submittedByEmail})`} />
@@ -269,9 +286,9 @@ export default function ApprovalSection({
             </div>
           )}
         </div>
-      )}
+      ))}
 
-      {error && (
+      {expanded && error && (
         <p className="text-xs mt-2" style={{ color: "var(--color-error-text)" }}>{error}</p>
       )}
     </div>

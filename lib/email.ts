@@ -50,6 +50,7 @@ export async function sendUsageApprovalRequest(params: {
     from: FROM,
     to: params.approverEmail,
     cc: params.ownerEmail,
+    replyTo: params.ownerEmail,
     subject: `Bruksgodkjenning: ${params.caseTitle}`,
     text,
   });
@@ -60,6 +61,7 @@ export async function sendUsageApprovalConfirmation(params: {
   customerName: string;
   caseTitle: string;
   ownerName: string;
+  ownerEmail: string;
   choices: string[];
   note: string | null;
   submitterName: string;
@@ -76,6 +78,7 @@ export async function sendUsageApprovalConfirmation(params: {
   await transporter.sendMail({
     from: FROM,
     to: params.to,
+    replyTo: params.ownerEmail,
     subject: "Bekreftelse på bruksgodkjenning for Bas effektbibliotek",
     text: `Hei,
 
@@ -97,7 +100,7 @@ ${timestamp}
 
 Kopi er sendt til ansvarlig i Bas.
 
-Effektbiblioteket er foreløpig i betatesting. Gi gjerne beskjed til kontaktpersonen din i Bas hvis noe er uklart, feil eller burde fungere annerledes.`,
+Effektbiblioteket er foreløpig i betatesting. Gi gjerne beskjed til ${params.ownerName} hvis noe er uklart, feil eller burde fungere annerledes.`,
   });
 }
 

@@ -77,6 +77,7 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
     customerName: c.customerName,
     caseTitle: c.title,
     ownerName: c.owner.name,
+    ownerEmail: c.owner.email,
     choices: selectedChoiceLabels,
     note: note?.trim() || null,
     submitterName: submitterName.trim(),
@@ -87,11 +88,7 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
 
   await Promise.allSettled([
     sendUsageApprovalConfirmation({ to: submitterEmail.trim(), ...emailParams }),
-    sendUsageApprovalCopyToBas({
-      ownerEmail: c.owner.email,
-      caseId,
-      ...emailParams,
-    }),
+    sendUsageApprovalCopyToBas({ caseId, ...emailParams }),
   ]);
 
   return NextResponse.json({ ok: true });

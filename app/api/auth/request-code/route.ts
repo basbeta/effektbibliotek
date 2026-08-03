@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 import { prisma } from "@/lib/prisma";
 import { generateOtp, hashOtp, isBasEmail, nameFromEmail } from "@/lib/auth";
 import { sendOtpEmail } from "@/lib/email";
@@ -63,6 +64,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("request-code failed:", error);
+    Sentry.captureException(error);
     return NextResponse.json(
       { error: "Klarte ikke å sende engangskode. Prøv igjen om litt." },
       { status: 500 }

@@ -101,3 +101,14 @@ ALTERNATIVES CONSIDERED: Anta at problemet fortsatt var SMTP-relatert og fortset
 RATIONALE: Samme prinsipp som CR-009 — enhver ekstern I/O-operasjon uten eksplisitt timeout er en potensiell uendelig hang når appen ikke lenger kjører bak en plattform (Vercel) som håndhever et function-timeout for oss. Database-kallet skjer tidligere i requesten enn e-postkallet, så det måtte fikses uavhengig.
 CONSEQUENCES: Hvis hengingen fortsetter etter denne fiksen, vil Coolify sin app-logg nå vise en konkret feil (trolig en pg/Prisma-tilkoblingsfeil) innen 10s, som gir et konkret neste sted å lete (DATABASE_URL, nettverksisolasjon mellom app- og database-ressurs i Coolify) — i stedet for å gjette blindt. IKKE bekreftet at dette faktisk løser produksjonsproblemet; krever redeploy og ny test.
 DECIDED BY: both
+
+---
+
+DATE: 2026-08-03
+DECISION: Bytt Dockerfile fra `prisma migrate deploy` til `prisma db push`, og legg til garantert JSON-feilrespons i request-code-routen (CR-011)
+CONTEXT: Etter CR-009 og CR-010 (begge reelle, verifiserte forbedringer) hang OTP-innlogging fortsatt. Coolify sine runtime-logger viste den faktiske årsaken direkte: `Error [PrismaClientKnownRequestError]... The table 'public.OtpCode' does not exist`, kode P2021. `prisma/migrations` har aldri eksistert i dette repoet — prosjektet har alltid brukt `db push` for skjemastyring. `prisma migrate deploy` i Dockerfile sin CMD fant derfor ingen migreringer å anvende og gjorde ingenting, og den ferske Coolify-databasen fra CR-008 sto uten tabeller. I tillegg hadde `request-code/route.ts` ingen try/catch, og `login/page.tsx` sin `res.json()`-kall håndterte ikke en eventuell parse-feil — dette lot UI-et henge på "Sender…" for alltid selv når serveren egentlig svarte momentant med en feil.
+DECISION: Endre Dockerfile CMD til `npx prisma db push --skip-generate && npm run start`. Legg til try/catch i request-code-routen som garanterer et gyldig JSON-feilsvar ved enhver uventet feil.
+ALTERNATIVES CONSIDERED: Generere formelle `prisma migrate`-migreringsfiler i stedet for å bytte til `db push` — foretrukket på sikt (se Risks i CR-011), men krevde Prisma CLI + direkte databasetilgang som ikke var tilgjengelig i denne økten. `db push` ble valgt som en riktig, lavrisiko løsning som matcher hvordan prosjektet faktisk har vært driftet fra dag én.
+RATIONALE: `db push` er korrekt gitt at ingen migreringshistorikk noensinne har eksistert — å late som migrate deploy ville fungere er det som faktisk forårsaket bugen. Try/catch-fiksen er en generell robusthetsforbedring: enhver uhåndtert feil i denne routen ville gitt samme "evig hengende UI"-symptom, uavhengig av årsak.
+CONSEQUENCES: Neste deploy oppretter alle tabeller i den ferske databasen. `db push` gir ingen reviewbar skjemahistorikk — anbefalt å vurdere formelle migreringer før prosjektet har ekte data av verdi. Alle fremtidige feil i request-code-routen vil nå vises til brukeren i stedet for å henge UI-et.
+DECIDED BY: both

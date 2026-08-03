@@ -43,21 +43,29 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const otp = generateOtp();
-  const codeHash = await hashOtp(otp);
-  const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+  try {
+    const otp = generateOtp();
+    const codeHash = await hashOtp(otp);
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
-  await prisma.otpCode.create({ data: { email, codeHash, expiresAt } });
+    await prisma.otpCode.create({ data: { email, codeHash, expiresAt } });
 
-  // Ensure user exists
-  const name = nameFromEmail(email);
-  await prisma.user.upsert({
-    where: { email },
-    update: {},
-    create: { email, name },
-  });
+    // Ensure user exists
+    const name = nameFromEmail(email);
+    await prisma.user.upsert({
+      where: { email },
+      update: {},
+      create: { email, name },
+    });
 
-  await sendOtpEmail(email, otp);
+    await sendOtpEmail(email, otp);
 
-  return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error("request-code failed:", error);
+    return NextResponse.json(
+      { error: "Klarte ikke å sende engangskode. Prøv igjen om litt." },
+      { status: 500 }
+    );
+  }
 }

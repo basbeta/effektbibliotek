@@ -12,8 +12,15 @@ Fullføre CR-008: produkteier utfører manuelle Coolify-steg i `docs/COOLIFY-DEP
 claude/effektbibliotek-publish-database-nsrizw
 
 ## Blockers
-- Manuelt Coolify/Hetzner-oppsett kan ikke utføres fra Claude Code-økten (ingen tilgang til Coolify-instansen). Krever produkteier/admin på `coolify.basbeta.no`.
-- Coolify er live på effektbibliotek.basbeta.no, men OTP-innlogging hang fortsatt etter CR-009. Produkteier bekreftet at `BREVO_SMTP_LOGIN`/`BREVO_SMTP_KEY`/`FROM_EMAIL` er korrekt satt som runtime env-vars i Coolify — det utelukker den opprinnelige mistanken. Rotårsak funnet: `lib/prisma.ts` hadde ingen `connectionTimeoutMillis` på `pg.Pool`-adapteren, og databasekallet (`prisma.otpCode.create`) skjer FØR e-postkallet i login-routen — så SMTP-timeouten fra CR-009 ble aldri nådd. Fikset i CR-010. **Ikke bekreftet løst i prod ennå** — krever redeploy + ny test.
+Manuelt Coolify/Hetzner-oppsett kan ikke utføres fra Claude Code-økten (ingen tilgang til Coolify-instansen). Krever produkteier/admin på `coolify.basbeta.no`.
+
+## Løst: OTP-innlogging hang (CR-009, CR-010, CR-011)
+Etter CR-008-deploy hang OTP-innlogging. Feilsøkt over tre CR-er:
+- CR-009: la til SMTP-timeout (reell forbedring, men ikke rotårsaken)
+- CR-010: la til DB connection-timeout (reell forbedring, men ikke rotårsaken)
+- CR-011: **faktisk rotårsak**, funnet via Coolify runtime-logger: den ferske Coolify-databasen hadde ingen tabeller (`prisma migrate deploy` fant ingen migreringsfiler å anvende, siden `prisma/migrations` aldri har eksistert i repoet — databasen ble alltid provisjonert med `db push`). I tillegg hadde `app/api/auth/request-code/route.ts` ingen try/catch, så den uhåndterte Prisma-feilen ga et 500-svar som ikke garantert var gyldig JSON — og `app/(auth)/login/page.tsx` sin `res.json()` uten feilhåndtering lot "Sender…"-knappen henge for alltid selv om serveren svarte på millisekunder.
+
+Fikset: `Dockerfile` CMD byttet fra `prisma migrate deploy` til `prisma db push --skip-generate`; `request-code/route.ts` fikk try/catch med garantert JSON-feilsvar. **Ikke bekreftet løst i faktisk prod ennå** — krever redeploy + ny test.
 
 ## Active Change Requests
 - CR-001 (Done) — Auth
@@ -25,7 +32,8 @@ claude/effektbibliotek-publish-database-nsrizw
 - CR-007 (Done) — Redirect etter innlogging
 - CR-008 (In Progress) — Port til Hetzner/Coolify/PostgreSQL 18
 - CR-009 (Done) — SMTP-timeout på Brevo-transportøren (bugfix: OTP-innlogging hang)
-- CR-010 (Done) — Connection-timeout på Prisma/pg-adapteren (bugfix: OTP-innlogging hang fortsatt etter CR-009 — faktisk rotårsak)
+- CR-010 (Done) — Connection-timeout på Prisma/pg-adapteren (bugfix, ikke rotårsak)
+- CR-011 (Done) — Faktisk rotårsak: tomt databaseskjema (db push i stedet for migrate deploy) + manglende feilhåndtering i request-code-routen
 
 ## Production URL
 https://effektbibliotek.vercel.app (gammel, beholdes til Coolify er verifisert)
@@ -72,6 +80,8 @@ Planlagt ny: https://effektbibliotek.basbeta.no
 - Node 22 Alpine i Dockerfile for å matche faktisk utviklingsmiljø (avviker fra `basbeta-bootstrap`-malens Node 20)
 - nodemailer-transportøren i lib/email.ts hadde ingen connection/socket-timeout — en feilkonfigurert eller nettverksmessig utilgjengelig SMTP-server hang requesten på ubestemt tid i stedet for å feile (CR-009)
 - `pg.Pool` (brukt av `@prisma/adapter-pg`) sin default `connectionTimeoutMillis` er `0` — ingen timeout, venter for alltid ved utilgjengelig database. Satt eksplisitt til 10s i lib/prisma.ts (CR-010). Samme bugklasse som CR-009, bare ett lag lenger opp i requesten
+- `prisma/migrations` har ALDRI eksistert i dette repoet — prosjektet har alltid brukt `prisma db push` for skjema, ikke formelle migreringer. `prisma migrate deploy` i Dockerfile CMD var derfor en stille no-op mot den ferske Coolify-databasen (CR-011)
+- Uhåndterte feil i en Next.js Route Handler gir ikke garantert gyldig JSON-svar — hvis frontend gjør `res.json()` uten feilhåndtering, kan en rask serverfeil se ut som en evig hengende request i UI-et (CR-011)
 
 ## Validation Status
 - Build (lokal, `npm run build`): ✓
@@ -81,11 +91,11 @@ Planlagt ny: https://effektbibliotek.basbeta.no
 - Deploy Coolify: ikke utført ennå — manuelt, se `docs/COOLIFY-DEPLOY.md`
 
 ## Next Recommended Actions
-1. Deploy CR-010 til Coolify og test innlogging på nytt
-2. Hvis fortsatt henging/feil: sjekk Coolify sin app-logg for konkret feilmelding (bør nå dukke opp innen ~10s), og verifiser at `DATABASE_URL` peker på riktig intern hostname/port for `effektbibliotek-db`-ressursen, og at app- og database-ressursene er i samme Coolify-nettverk
-3. Verifiser at utgående SMTP (port 587 til smtp-relay.brevo.com) ikke er blokkert av Hetzner/serverens brannmur (uavklart om dette faktisk er et problem — bare relevant hvis DB-fiksen løser hengingen men SMTP fortsatt feiler)
-4. Utføre resterende `docs/COOLIFY-DEPLOY.md`-steg (backup, Uptime Kuma) hvis ikke allerede gjort
-5. Ende-til-ende-test på `effektbibliotek.basbeta.no`: innlogging, case-opprettelse, godkjenningsflyt
-6. Opprett admin-bruker i den nye databasen (samme prosedyre som tidligere: første login + manuell `isAdmin`-sett)
-7. Når Coolify-oppsettet er verifisert stabilt: fjern Vercel-prosjektet og slett Neon-databasen (ingen data å ta vare på)
+1. Deploy CR-011 til Coolify og test innlogging på nytt — `db push` bør opprette alle tabeller ved oppstart
+2. Verifiser i Coolify database-ressursen at tabellene faktisk finnes etter deploy
+3. Ende-til-ende-test på `effektbibliotek.basbeta.no`: innlogging, case-opprettelse, godkjenningsflyt, bekreftelses-e-post
+4. Opprett admin-bruker i den nye databasen (samme prosedyre som tidligere: første login + manuell `isAdmin`-sett)
+5. Utføre resterende `docs/COOLIFY-DEPLOY.md`-steg (backup, Uptime Kuma) hvis ikke allerede gjort
+6. Når Coolify-oppsettet er verifisert stabilt: fjern Vercel-prosjektet og slett Neon-databasen (ingen data å ta vare på)
+7. Vurder å innføre formelle `prisma migrate`-migreringer før effektbiblioteket har ekte produksjonsdata av verdi (se Risks i CR-011) — `db push` er greit for beta, men gir ingen reviewbar skjemahistorikk
 8. Vurder om `docs_extracted.txt` skal gitignores (sensitiv prod-dokumentasjon) — uavhengig av denne migreringen

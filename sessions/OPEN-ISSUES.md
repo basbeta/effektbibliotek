@@ -79,7 +79,15 @@ Update: 2026-08-03 — effektbibliotek.basbeta.no er live, men OTP-innlogging ha
 ISSUE-008
 Status: Open
 Priority: High
-Area: Coolify / lib/prisma.ts / lib/email.ts
-Description: OTP-innlogging på effektbibliotek.basbeta.no henger. CR-009 la til SMTP-timeout, men produkteier bekreftet BREVO_SMTP_LOGIN/BREVO_SMTP_KEY/FROM_EMAIL var korrekt satt i Coolify OG at CR-009 var redeployet — hengingen fortsatte likevel. Fant faktisk rotårsak: databasekallet (prisma.otpCode.create) skjer FØR e-postkallet i login-routen, og PrismaPg-adapteren hadde ingen connectionTimeoutMillis (pg.Pool default = 0 = ingen timeout). Fikset i CR-010. IKKE bekreftet løst i faktisk prod ennå — krever redeploy og ny test. Hvis fortsatt henging/feil etter CR-010: sjekk DATABASE_URL og nettverksisolasjon mellom app- og database-ressurs i Coolify.
+Area: Dockerfile / app/api/auth/request-code
+Description: OTP-innlogging på effektbibliotek.basbeta.no hang. CR-009 (SMTP-timeout) og CR-010 (DB connection-timeout) var begge reelle forbedringer, men ingen av dem var rotårsaken — bekreftet ved at hengingen fortsatte etter begge var deployet. Coolify sine runtime-logger avslørte faktisk årsak: databasen hadde ingen tabeller (prisma migrate deploy fant ingen migreringsfiler, siden prisma/migrations aldri har eksistert i repoet), og request-code-routen hadde ingen try/catch, så feilen ga et 500-svar som fikk frontend sin `res.json()` til å henge i stedet for å vise en feilmelding. Fikset i CR-011: Dockerfile bruker nå `prisma db push` i stedet for `migrate deploy`, og routen returnerer alltid gyldig JSON ved feil. IKKE bekreftet løst i faktisk prod ennå — krever redeploy og ny test.
 Blocker for: Fungerende innlogging i produksjon
+Opened: 2026-08-03
+
+ISSUE-009
+Status: Open
+Priority: Medium
+Area: prisma/ (skjemastyring)
+Description: Prosjektet har aldri hatt en `prisma/migrations`-mappe — skjema er alltid provisjonert med `prisma db push` (deklarativt, ingen reviewbar migreringshistorikk). CR-011 gjorde dette eksplisitt i Dockerfile i stedet for å late som `migrate deploy` fungerer. Fint for et beta-prosjekt uten verdifull produksjonsdata, men bør erstattes med formelle `prisma migrate`-migreringer før effektbiblioteket har ekte data som må bevares trygt gjennom skjemaendringer.
+Blocker for: Ingenting akkurat nå — bør løses før prosjektet forlater beta
 Opened: 2026-08-03

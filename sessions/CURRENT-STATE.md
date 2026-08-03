@@ -37,7 +37,7 @@ Node.js 22 (matcher Dockerfile) installert på denne maskinen via `winget instal
 - CR-010 (Done) — Connection-timeout på Prisma/pg-adapteren (bugfix, ikke rotårsak)
 - CR-011 (Done) — Faktisk rotårsak: tomt databaseskjema (db push i stedet for migrate deploy) + manglende feilhåndtering i request-code-routen
 - CR-012 (Done) — Feilsporing med Bugsink (Sentry-kompatibel, selvhostet på errors.basbeta.no). Verifisert i produksjon: bevisst testfeil dukket opp i Bugsink
-- CR-013 (kodet, IKKE testet i prod) — Direkte utsending av bruksgodkjenningsforespørsel på e-post (til godkjenner, cc caseeier), erstatter "kopier tekst"-flyten
+- CR-013 (kodet, IKKE testet i prod) — Direkte utsending av bruksgodkjenningsforespørsel på e-post (til godkjenner, cc caseeier), erstatter "kopier tekst"-flyten. Første test avslørte at godkjenningslenken pekte på localhost:3000 — fikset ved å bruke NEXT_PUBLIC_APP_URL i stedet for request.url.origin i API-routes (upålitelig bak Coolify/Traefik). Krever at NEXT_PUBLIC_APP_URL settes i Coolify før neste deploy
 
 ## Production URL
 https://effektbibliotek.basbeta.no — live, innlogging bekreftet fungerende
@@ -97,7 +97,7 @@ https://effektbibliotek.vercel.app (gammel, beholdes urørt inntil Coolify er fu
 - Innlogging (OTP via Brevo) i produksjon: ✓ bekreftet av produkteier 2026-08-03
 
 ## Next Recommended Actions
-1. Push og deploy CR-013, deretter ende-til-ende-test: opprett/åpne en case, fyll inn godkjenner navn+e-post i bruksgodkjenningsseksjonen, send, verifiser at godkjenner mottar e-post og caseeier får kopi (cc), og at godkjenningslenken fungerer
+1. **Sett `NEXT_PUBLIC_APP_URL=https://effektbibliotek.basbeta.no` i Coolify** (mangler helt i dag), deploy CR-013 sin fiks, og send en ny testforespørsel — verifiser at godkjenningslenken nå peker på riktig domene og fungerer
 2. Ende-til-ende-test av resten: case-opprettelse, redigering, bekreftelses-e-post etter innsendt godkjenning
 3. Opprett admin-bruker i den nye databasen (første login + manuell `isAdmin`-sett i Coolify sin database-ressurs)
 4. Utføre resterende `docs/COOLIFY-DEPLOY.md`-steg (backup, Uptime Kuma) hvis ikke allerede gjort

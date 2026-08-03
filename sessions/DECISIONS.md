@@ -156,3 +156,14 @@ ALTERNATIVES CONSIDERED: Beholde kopier-tekst-knappen som fallback ved siden av 
 RATIONALE: Fjerner et manuelt, feilutsatt steg (kopier → bytt til e-postklient → lim inn → send) nå som forutsetningen (pålitelig e-post) er på plass.
 CONSEQUENCES: `usageApprovalStatus` settes til "open" ved utsending, akkurat som før. Feil ved sending fanges av try/catch og rapporteres til Bugsink, i tråd med mønsteret fra CR-012. IKKE bekreftet fungerende i faktisk produksjon ennå — krever push, deploy og en reell test.
 DECIDED BY: both
+
+---
+
+DATE: 2026-08-03
+DECISION: Reverser request.url.origin → NEXT_PUBLIC_APP_URL for lenker i utgående e-post (supersedes 2026-05-22-avgjørelsen for dette formålet)
+CONTEXT: 2026-05-22 ble `request.url.origin` valgt over `NEXT_PUBLIC_APP_URL` for å bygge godkjenningslenker, fordi env-variabelen pekte på feil port i lokal dev (3000 vs 3001) mens `request.url.origin` alltid var korrekt — den gang kjørte appen på Vercel. Etter CR-013 sin første reelle test i produksjon på Coolify/Traefik, viste det seg at `request.url.origin` i API-routes nå resolver til `localhost:3000` i stedet for `effektbibliotek.basbeta.no` — stikk motsatt problem av det som ble løst i mai. `proxy.ts`/middleware sin bruk av samme mønster er IKKE påvirket (bekreftet av at innloggingsredirect har fungert hele kvelden) — bugen er isolert til Route Handlers under app/api/**.
+DECISION: Bygg app-URL-er i e-postinnhold med `process.env.NEXT_PUBLIC_APP_URL ?? new URL(request.url).origin` — env-variabelen først, request-basert fallback kun for lokal dev der ingen slik variabel typisk er satt. `NEXT_PUBLIC_APP_URL=https://effektbibliotek.basbeta.no` må settes i Coolify.
+ALTERNATIVES CONSIDERED: Finne og fikse hvorfor Traefik ikke videresender riktig Host-header til Next.js-containeren — forkastet for nå, krever dypere Traefik/Coolify-konfigurasjonsundersøkelse utenfor denne øktens tilgang, og en env-variabel er uansett mer robust uavhengig av proxy-oppsett.
+RATIONALE: En eksplisitt, driftssatt env-variabel med en fast, kjent produksjons-URL er mer pålitelig enn å stole på at en reverse proxy videresender headere korrekt — spesielt når vi allerede har konkret bevis på at den ikke gjør det i denne konfigurasjonen.
+CONSEQUENCES: Krever at `NEXT_PUBLIC_APP_URL` er satt i Coolify for at lenker i e-post skal bli riktige — uten den, samme bug som før. Samme latente feil eksisterte fra før i lib/email.ts sin "Se casen her"-lenke (CR-004), ikke bare i CR-013 sin nye kode — den er nå også dekket siden den allerede leste NEXT_PUBLIC_APP_URL. Fremtidig kode som bygger absolutte URL-er i API-routes bør følge samme mønster (env-var først), ikke stole blindt på request.url.origin.
+DECIDED BY: both

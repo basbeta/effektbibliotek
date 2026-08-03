@@ -43,7 +43,7 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
   }
 
   try {
-    const appUrl = new URL(request.url).origin;
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? new URL(request.url).origin;
 
     await sendUsageApprovalRequest({
       approverName,

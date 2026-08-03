@@ -71,4 +71,8 @@ Lav — additiv endring. Feil i utsending fanges av try/catch og rapporteres til
 - CR-012 (Done) — feilsporing, brukt i den nye routen
 
 ## Validation Notes
-`npm run build` kjørt lokalt og bekreftet grønn, inkludert ny Prisma-klient med `approverName`/`approverEmail`. Ende-til-ende-test i faktisk produksjon (utsending + mottak av e-post) er IKKE utført ennå i denne økten.
+`npm run build` kjørt lokalt og bekreftet grønn, inkludert ny Prisma-klient med `approverName`/`approverEmail`.
+
+**Oppdatering — bug funnet ved første reelle test:** Godkjenningslenken i den utsendte e-posten pekte på `https://localhost:3000/godkjenning/...` i stedet for `https://effektbibliotek.basbeta.no/...`. Rotårsak: `send-approval-request/route.ts` bygde lenken med `new URL(request.url).origin`, som viste seg upålitelig i API-routes bak Coolify sin Traefik-proxy (i motsetning til i `proxy.ts`/middleware, der samme mønster fortsatt fungerer korrekt — bekreftet av at innloggingsredirect har fungert hele kvelden). Samme latente feil fantes også i `lib/email.ts` sin `APP_URL`-konstant (brukt i "Se casen her"-lenken til caseeier), som er avhengig av `NEXT_PUBLIC_APP_URL` — denne variabelen var aldri lagt til i Coolify sin env-var-liste.
+
+Fikset: `send-approval-request/route.ts` bruker nå `process.env.NEXT_PUBLIC_APP_URL ?? new URL(request.url).origin` (env-var først, request-fallback for lokal dev). `NEXT_PUBLIC_APP_URL=https://effektbibliotek.basbeta.no` lagt til i `.env.example` og `docs/COOLIFY-DEPLOY.md` — **må settes i Coolify før neste deploy**, ellers gjentas bugen.

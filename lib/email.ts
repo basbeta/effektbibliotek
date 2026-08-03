@@ -8,6 +8,9 @@ const transporter = nodemailer.createTransport({
     user: process.env.BREVO_SMTP_LOGIN,
     pass: process.env.BREVO_SMTP_KEY,
   },
+  connectionTimeout: 10_000,
+  greetingTimeout: 10_000,
+  socketTimeout: 10_000,
 });
 
 const FROM = process.env.FROM_EMAIL ?? "Effektbibliotek <effektbibliotek@basbeta.no>";

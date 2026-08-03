@@ -79,3 +79,14 @@ ALTERNATIVES CONSIDERED: Parallelldrift (Vercel + Coolify samtidig) — avvist, 
 RATIONALE: basbeta-infrastrukturen er allerede bygget og betalt for nettopp denne typen prosjekter (lav kostnad, europeisk, GDPR ut av boksen). Prisma sin driver-adapter gjør databasebytte til kun en ny connection string. Dockerfile er portabelt og fjerner Vercel-spesifikke antakelser fra koden.
 CONSEQUENCES: Nytt produksjons-domene (`effektbibliotek.basbeta.no`). `prisma migrate deploy` kjører automatisk ved container-oppstart i stedet for i Vercel sitt build-steg. Manuelt Coolify-oppsett (database, app-ressurs, domene, env-vars, backup, overvåking) må utføres av produkteier — dokumentert i `docs/COOLIFY-DEPLOY.md`. Vercel/Neon beholdes urørt som fallback inntil Coolify er verifisert stabilt.
 DECIDED BY: human
+
+---
+
+DATE: 2026-08-03
+DECISION: Legg til SMTP-timeout på Brevo-transportøren (CR-009)
+CONTEXT: Etter at CR-008 ble satt i produksjon på Coolify (effektbibliotek.basbeta.no), hang OTP-innlogging uten å sende e-post eller returnere feil. Transportøren i lib/email.ts hadde ingen connection/greeting/socket-timeout, så en SMTP-tilkoblingsfeil (feil/manglende credentials, blokkert utgående port) ble aldri overflatebehandlet — requesten ventet på ubestemt tid.
+DECISION: Sett 10s `connectionTimeout`, `greetingTimeout` og `socketTimeout` på nodemailer-transportøren.
+ALTERNATIVES CONSIDERED: La feilen forbli synlig kun via serverlogger uten timeout (avvist — brukeren ser fortsatt en hengende spinner). Lengre/kortere timeout-verdi — 10s valgt som balanse mellom å tåle normal SMTP-latens og å feile raskt nok til å ikke oppleves som henging.
+RATIONALE: En rask, synlig feil er alltid bedre enn en uendelig hengende request — spesielt nå som appen ikke lenger kjører bak en plattform (Vercel) som håndhevet et function-timeout for oss.
+CONSEQUENCES: Løser symptomet (hengende UI). Løser ikke nødvendigvis rotårsaken til hvorfor SMTP faktisk feiler i Coolify — det er en driftsoppgave (verifisere env-vars og brannmurregler), ikke en kodefeil, og er dokumentert som neste steg i CURRENT-STATE.md.
+DECIDED BY: both

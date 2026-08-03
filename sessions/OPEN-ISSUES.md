@@ -68,9 +68,18 @@ Blocker for: Admin-funksjonalitet i prod
 Opened: 2026-05-22
 
 ISSUE-007
-Status: Open
+Status: Partially Resolved
 Priority: High
 Area: Coolify / Hetzner
 Description: CR-008 (port til Hetzner/Coolify/PostgreSQL 18) er ferdig på repo-siden, men det faktiske Coolify-oppsettet (database-ressurs, app-ressurs, domene, env-vars, backup, Uptime Kuma) må utføres manuelt av produkteier — kan ikke gjøres fra en Claude Code-økt uten tilgang til Coolify-instansen. Se docs/COOLIFY-DEPLOY.md.
 Blocker for: Faktisk publisering på effektbibliotek.basbeta.no
 Opened: 2026-07-31
+Update: 2026-08-03 — effektbibliotek.basbeta.no er live, men OTP-innlogging hang uten å sende e-post. Se ISSUE-008.
+
+ISSUE-008
+Status: Open
+Priority: High
+Area: Coolify / Brevo / lib/email.ts
+Description: OTP-innlogging på effektbibliotek.basbeta.no henger uten å sende e-post. CR-009 la til SMTP-timeout slik at feilen nå skal overflatebehandles innen ~10s i stedet for å henge, men selve rotårsaken til hvorfor SMTP-sendingen feiler er ikke bekreftet. Mest sannsynlig: BREVO_SMTP_LOGIN/BREVO_SMTP_KEY/FROM_EMAIL ikke satt (riktig) som miljøvariabler på app-ressursen i Coolify. Alternativt: utgående SMTP (port 587 til smtp-relay.brevo.com) blokkert av Hetzner/serverens brannmur.
+Blocker for: Fungerende innlogging i produksjon
+Opened: 2026-08-03

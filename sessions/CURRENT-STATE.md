@@ -29,6 +29,9 @@ Fikset: `Dockerfile` CMD byttet fra `prisma migrate deploy` til `prisma db push 
 
 **CR-011 bekreftet løst:** Container kjører stabilt, produkteier logget inn på effektbibliotek.basbeta.no, mottok og verifiserte engangskode. Innlogging fungerer i produksjon.
 
+## Node.js nå tilgjengelig lokalt
+Node.js 22 (matcher Dockerfile) installert på denne maskinen via `winget install OpenJS.NodeJS.22` 2026-08-03. `npm`/`npx`/`node` er IKKE på PATH i allerede-kjørende PowerShell-verktøyprosesser i denne økten (winget sin PATH-endring krever ny prosess) — prefiks kommandoer med `$env:PATH = "C:\Users\haavard.kvinnesland\AppData\Local\Microsoft\WinGet\Packages\OpenJS.NodeJS.22_Microsoft.Winget.Source_8wekyb3d8bbwe\node-v22.23.2-win-x64;" + $env:PATH` før `node`/`npm`/`npx`-kall inntil en frisk økt bekrefter det er unødvendig. Dette åpner for faktisk `npm run build`/`tsc --noEmit`-verifisering fremover, i stedet for kun visuell kodegjennomgang slik CR-009 til CR-011 måtte gjøre.
+
 ## Active Change Requests
 - CR-001 (Done) — Auth
 - CR-002 (Done) — Case CRUD + Bibliotek
@@ -41,6 +44,7 @@ Fikset: `Dockerfile` CMD byttet fra `prisma migrate deploy` til `prisma db push 
 - CR-009 (Done) — SMTP-timeout på Brevo-transportøren (bugfix: OTP-innlogging hang)
 - CR-010 (Done) — Connection-timeout på Prisma/pg-adapteren (bugfix, ikke rotårsak)
 - CR-011 (Done) — Faktisk rotårsak: tomt databaseskjema (db push i stedet for migrate deploy) + manglende feilhåndtering i request-code-routen
+- CR-012 (In Progress) — Feilsporing med Bugsink (Sentry-kompatibel, selvhostet). Kode ferdig og bygget lokalt, gjenstår: sette SENTRY_DSN/NEXT_PUBLIC_SENTRY_DSN i Coolify og verifisere levering
 
 ## Production URL
 https://effektbibliotek.basbeta.no — live, innlogging bekreftet fungerende
@@ -99,9 +103,11 @@ https://effektbibliotek.vercel.app (gammel, beholdes urørt inntil Coolify er fu
 - Innlogging (OTP via Brevo) i produksjon: ✓ bekreftet av produkteier 2026-08-03
 
 ## Next Recommended Actions
-1. Ende-til-ende-test på `effektbibliotek.basbeta.no` utover innlogging: case-opprettelse, redigering, bruksgodkjenningsflyt, bekreftelses-e-post
-2. Opprett admin-bruker i den nye databasen (første login + manuell `isAdmin`-sett i Coolify sin database-ressurs)
-3. Utføre resterende `docs/COOLIFY-DEPLOY.md`-steg (backup, Uptime Kuma) hvis ikke allerede gjort
-4. Når Coolify-oppsettet er verifisert stabilt over noen dager: fjern Vercel-prosjektet og slett Neon-databasen (ingen data å ta vare på), marker CR-008 som Done
-5. Vurder å innføre formelle `prisma migrate`-migreringer før effektbiblioteket har ekte produksjonsdata av verdi (se Risks i CR-011) — `db push` er greit for beta, men gir ingen reviewbar skjemahistorikk
-6. Vurder om `docs_extracted.txt` skal gitignores (sensitiv prod-dokumentasjon) — uavhengig av denne migreringen
+1. Sett `SENTRY_DSN` og `NEXT_PUBLIC_SENTRY_DSN` i Coolify (verdi: DSN fra Bugsink sitt "effektbibliotek"-prosjekt, med `errors.basbeta.no` i stedet for `localhost`), deploy CR-012, og verifiser at en bevisst feil dukker opp i Bugsink
+2. Ende-til-ende-test på `effektbibliotek.basbeta.no` utover innlogging: case-opprettelse, redigering, bruksgodkjenningsflyt, bekreftelses-e-post
+3. Opprett admin-bruker i den nye databasen (første login + manuell `isAdmin`-sett i Coolify sin database-ressurs)
+4. Utføre resterende `docs/COOLIFY-DEPLOY.md`-steg (backup, Uptime Kuma) hvis ikke allerede gjort
+5. Når Coolify-oppsettet er verifisert stabilt over noen dager: fjern Vercel-prosjektet og slett Neon-databasen (ingen data å ta vare på), marker CR-008 som Done
+6. Vurder å innføre formelle `prisma migrate`-migreringer før effektbiblioteket har ekte produksjonsdata av verdi (se Risks i CR-011) — `db push` er greit for beta, men gir ingen reviewbar skjemahistorikk
+7. Vurder om `docs_extracted.txt` skal gitignores (sensitiv prod-dokumentasjon) — uavhengig av denne migreringen
+8. Vurder å sette opp TLS/HTTPS for `errors.basbeta.no` (serveres i dag over HTTP, se Risks i CR-012)

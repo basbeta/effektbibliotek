@@ -123,3 +123,14 @@ ALTERNATIVES CONSIDERED: —
 RATIONALE: —
 CONSEQUENCES: Lærdom for fremtidig feilsøking i dette prosjektet: (1) Coolify sin "Deployment"-log ≠ container sin runtime-log — sistnevnte krever at man velger riktig, aktiv container-instans under "Logs"-fanen, og forsvinner når containeren crash-looper til stopp. (2) Gjett aldri på årsaken til en containerkrasj når faktiske logger er hentbare — begge mellomforsøkene her var plausible, velbegrunnede hypoteser som viste seg feil, og kostet reell nedetid. (3) Verifiser CLI-flagg mot den faktiske installerte versjonen (Prisma 7.x her) fremfor generell kunnskap om eldre versjoner.
 DECIDED BY: both
+
+---
+
+DATE: 2026-08-03
+DECISION: Installer Node.js lokalt i AI-arbeidsmiljøet, og legg til Bugsink-basert feilsporing (CR-012)
+CONTEXT: Feilsøkingen av CR-009–CR-011 måtte gjøres helt uten evne til å kjøre `npm`/`npx`/`tsc` i dette miljøet — hver kodeendring ble kun visuelt verifisert, aldri faktisk bygget, før den ble pushet til produksjon. To av deployene tok ned appen (crash-loop) delvis fordi feil (som et ugyldig CLI-flagg) ikke kunne fanges lokalt før push. Samtidig hadde produkteier allerede satt opp Bugsink (selvhostet, Sentry-SDK-kompatibel feilsporing) på `errors.basbeta.no`, uten at appen sendte noe dit ennå — hele CR-009–CR-011-hendelsen kunne vært diagnostisert på sekunder med automatisk feilsporing i stedet for manuell logg-graving i Coolify.
+DECISION: (1) Installerte Node.js 22 lokalt via `winget install OpenJS.NodeJS.22` for å matche Dockerfile sin `node:22-alpine` og kunne kjøre ekte build/typecheck-verifisering fremover. (2) Implementerte CR-012: `@sentry/nextjs` installert via npm, `instrumentation.ts`/`instrumentation-client.ts` lagt til, `next.config.ts` wrappet med `withSentryConfig` (kildekart-opplasting deaktivert), DSN pekt mot `errors.basbeta.no` (ikke `localhost`, avklart med produkteier).
+ALTERNATIVES CONSIDERED: Fortsette uten lokal Node og be produkteier kjøre alle npm-avhengige steg selv — forkastet, ineffektivt og øker risikoen for flere push-and-pray-hendelser som CR-011 sine to feilslåtte deploys.
+RATIONALE: Et AI-arbeidsmiljø som ikke kan bygge koden det skriver, kan ikke verifisere det før produksjon ser det — nettopp det som gjorde CR-011 dyrere enn nødvendig. Bugsink var allerede klar infrastruktur; å ikke koble den til var den eneste reelle mangelen.
+CONSEQUENCES: Fremtidige kodeendringer i denne økten kan (og bør) verifiseres med `npm run build`/`npx tsc --noEmit` før push. Node-installasjonen er maskinlokal, ikke en del av repoet. Gjenstår: sette SENTRY_DSN/NEXT_PUBLIC_SENTRY_DSN i Coolify og bekrefte faktisk event-levering.
+DECIDED BY: both

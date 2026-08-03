@@ -32,6 +32,8 @@ Sett disse i Coolify sitt env-panel — se `.env.example` i repoet for full list
 | `BREVO_SMTP_LOGIN` | Brevo-kontoens innloggings-e-post |
 | `BREVO_SMTP_KEY` | SMTP-nøkkel generert i Brevo-dashbordet (ikke kontopassordet) |
 | `FROM_EMAIL` | `Effektbibliotek <effektbibliotek@basbeta.no>` |
+| `SENTRY_DSN` | DSN fra Bugsink (`errors.basbeta.no`, prosjekt "effektbibliotek") — bruk den offentlige hosten, ikke `localhost` |
+| `NEXT_PUBLIC_SENTRY_DSN` | Samme DSN som `SENTRY_DSN` (kreves separat siden denne må være tilgjengelig i nettleseren) |
 
 Merk: `effektbibliotek@basbeta.no` må finnes som avsenderadresse/alias godkjent i Brevo (domenet `basbeta.no` er allerede SPF/DKIM/DMARC-verifisert der).
 

@@ -1,6 +1,6 @@
 # CR-011: Faktisk rotårsak for hengende OTP-innlogging — manglende databaseskjema + manglende feilhåndtering
 
-**Status:** Done
+**Status:** In Progress
 **Created:** 2026-08-03
 
 ---
@@ -73,3 +73,5 @@ Ingen datamigrasjon (databasen var allerede tom). Fremtidig skjemaendring vil fo
 
 ## Validation Notes
 Diagnostisert direkte fra Coolify sine runtime-logger (Prisma-feilkode P2021, `TableDoesNotExist`) — ikke gjetning. TS-kompilering ikke kjørbar i denne økten (node/npm ikke tilgjengelig i shell-miljøet); begge endringer er små og visuelt verifisert (ett CMD-felt, én try/catch-wrapping av eksisterende logikk uten strukturendring).
+
+**Oppdatering samme dag:** Første forsøk (`prisma db push --skip-generate`, uten `--accept-data-loss`) crashet containeren — 10x restart-loop, "Exited (10x restarts) Stopped after reaching restart limit (10/10)" i Coolify. Ingen container kjørte lenger, så live app-logger var tomme; Coolify sin deployment-log viste kun orkestrering (build/rollout), ikke faktisk stdout fra containeren. Sannsynlig årsak: `prisma db push` ba om interaktiv bekreftelse (ingen TTY i Docker → hang), som blokkerte `&& npm run start` for alltid, og Coolify sin helsesjekk drepte og restartet containeren gjentatte ganger. Lagt til `--accept-data-loss` for å eliminere den interaktive bekreftelsen (trygt her — ingen data å miste på en tom database). **Ikke bekreftet virkende ennå** — status satt tilbake til In Progress inntil et vellykket, stabilt deploy er observert.

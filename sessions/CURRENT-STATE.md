@@ -20,7 +20,9 @@ Etter CR-008-deploy hang OTP-innlogging. Feilsøkt over tre CR-er:
 - CR-010: la til DB connection-timeout (reell forbedring, men ikke rotårsaken)
 - CR-011: **faktisk rotårsak**, funnet via Coolify runtime-logger: den ferske Coolify-databasen hadde ingen tabeller (`prisma migrate deploy` fant ingen migreringsfiler å anvende, siden `prisma/migrations` aldri har eksistert i repoet — databasen ble alltid provisjonert med `db push`). I tillegg hadde `app/api/auth/request-code/route.ts` ingen try/catch, så den uhåndterte Prisma-feilen ga et 500-svar som ikke garantert var gyldig JSON — og `app/(auth)/login/page.tsx` sin `res.json()` uten feilhåndtering lot "Sender…"-knappen henge for alltid selv om serveren svarte på millisekunder.
 
-Fikset: `Dockerfile` CMD byttet fra `prisma migrate deploy` til `prisma db push --skip-generate`; `request-code/route.ts` fikk try/catch med garantert JSON-feilsvar. **Ikke bekreftet løst i faktisk prod ennå** — krever redeploy + ny test.
+Fikset: `Dockerfile` CMD byttet fra `prisma migrate deploy` til `prisma db push --skip-generate`; `request-code/route.ts` fikk try/catch med garantert JSON-feilsvar.
+
+**OBS — dette forsøket (commit 4440b2e) tok ned hele appen:** Containeren crash-looped 10 ganger og stoppet ("Exited, Stopped after reaching restart limit (10/10)"). Ingen live container = ingen app-logger tilgjengelig, kun Coolify sin orkestrerings-log (build/rollout, ikke stdout). Sannsynlig årsak: `prisma db push` uten `--accept-data-loss` ba om interaktiv bekreftelse i et miljø uten TTY → hang → `npm run start` nås aldri → helsesjekk feiler → restart-loop. Lagt til `--accept-data-loss` i en ny fiks. **CR-011 satt tilbake til In Progress inntil et faktisk stabilt deploy er bekreftet.**
 
 ## Active Change Requests
 - CR-001 (Done) — Auth

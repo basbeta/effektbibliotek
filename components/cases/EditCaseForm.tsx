@@ -83,7 +83,10 @@ export default function EditCaseForm({
   lastApproval?: LastApproval | null;
 }) {
   const router = useRouter();
-  const usageRightsLocked = usageApprovalStatus === "submitted_locked" && !!lastApproval;
+  const [approvalStatus, setApprovalStatus] = useState(usageApprovalStatus);
+  const [confirmUnlock, setConfirmUnlock] = useState(false);
+  const [unlocking, setUnlocking] = useState(false);
+  const usageRightsLocked = approvalStatus === "submitted_locked" && !!lastApproval;
   const [form, setForm] = useState({
     customerName: n(initial.customerName),
     title: n(initial.title),
@@ -139,6 +142,25 @@ export default function EditCaseForm({
     const arr = form[field as keyof typeof form] as string[];
     const next = arr.includes(value) ? arr.filter((v) => v !== value) : [...arr, value];
     set(field, next);
+  }
+
+  async function handleUnlock() {
+    setUnlocking(true);
+    setError("");
+    try {
+      const res = await fetch(`/api/cases/${initial.id}/unlock-approval`, { method: "POST" });
+      if (!res.ok) {
+        setError("Kunne ikke låse opp.");
+        return;
+      }
+      setApprovalStatus("open");
+      setConfirmUnlock(false);
+      router.refresh();
+    } catch {
+      setError("Noe gikk galt.");
+    } finally {
+      setUnlocking(false);
+    }
   }
 
   async function handleSave(e: React.FormEvent) {
@@ -312,9 +334,11 @@ export default function EditCaseForm({
       <FormSection title="Bruksrettigheter">
         {usageRightsLocked ? (
           <div className="space-y-3">
-            <p className="text-xs" style={{ color: "var(--color-text-muted)" }}>
-              Låst basert på kundens godkjenning. Lås opp godkjenningen på case-siden for å samle inn en ny.
-            </p>
+            {lastApproval && (
+              <p className="text-xs pb-3" style={{ color: "var(--color-text-muted)", borderBottom: "1px solid var(--color-border-subtle)" }}>
+                Godkjent hos kunde av {lastApproval.submittedByName} ({lastApproval.submittedByEmail}) den {formatDate(lastApproval.submittedAt)}
+              </p>
+            )}
             <div className="space-y-1.5">
               {(
                 [
@@ -329,17 +353,51 @@ export default function EditCaseForm({
                 <p
                   key={key}
                   className="text-sm"
-                  style={{ color: form[key] ? "var(--color-text-primary)" : "var(--color-text-muted)" }}
+                  style={{
+                    color: form[key] ? "var(--color-text-primary)" : "var(--color-text-muted)",
+                    fontWeight: form[key] ? 600 : 400,
+                    opacity: form[key] ? 1 : 0.55,
+                  }}
                 >
-                  {form[key] ? "✓" : "—"} {label}
+                  {form[key] ? "☑" : "☐"} {label}
                 </p>
               ))}
             </div>
-            {lastApproval && (
-              <div className="pt-3 text-xs" style={{ color: "var(--color-text-muted)", borderTop: "1px solid var(--color-border-subtle)" }}>
-                Godkjent hos kunde av {lastApproval.submittedByName} ({lastApproval.submittedByEmail}) den {formatDate(lastApproval.submittedAt)}
-              </div>
-            )}
+            <div className="pt-3" style={{ borderTop: "1px solid var(--color-border-subtle)" }}>
+              {confirmUnlock ? (
+                <div className="flex items-center gap-3">
+                  <p className="text-sm flex-1" style={{ color: "var(--color-warning-text)" }}>
+                    Er du sikker? Dette genererer en ny lenke og gjør det mulig å sende inn på nytt.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleUnlock}
+                    disabled={unlocking}
+                    className="px-3 py-1.5 text-xs font-medium text-white rounded-lg disabled:opacity-60"
+                    style={{ backgroundColor: "var(--color-destructive-bg)" }}
+                  >
+                    {unlocking ? "..." : "Bekreft"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmUnlock(false)}
+                    className="px-3 py-1.5 text-xs rounded-lg"
+                    style={{ border: "1px solid var(--color-border-strong)", color: "var(--color-text-secondary)" }}
+                  >
+                    Avbryt
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setConfirmUnlock(true)}
+                  className="text-sm"
+                  style={{ color: "var(--color-text-muted)" }}
+                >
+                  Lås opp godkjenning
+                </button>
+              )}
+            </div>
           </div>
         ) : (
           <div className="space-y-3">

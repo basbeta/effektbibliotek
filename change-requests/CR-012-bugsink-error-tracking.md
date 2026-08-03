@@ -1,6 +1,6 @@
 # CR-012: Feilsporing med Bugsink (Sentry-kompatibel)
 
-**Status:** In Progress
+**Status:** Done
 **Created:** 2026-08-03
 
 ---
@@ -22,7 +22,7 @@ Produkteier har allerede satt opp Bugsink (selvhostet, Sentry-SDK-kompatibel fei
    - `instrumentation.ts` (server + edge init)
    - `instrumentation-client.ts` (klient init, App Router-konvensjon)
    - `next.config.ts` wrappet med `withSentryConfig` for automatisk error-boundary-integrasjon
-3. `SENTRY_DSN` (og `NEXT_PUBLIC_SENTRY_DSN` for klientsiden) som ny(e) miljøvariabel(er) i Coolify, satt til `http://9ef8b9cd751a40d890431c13921e9468@errors.basbeta.no/1` (offentlig host i stedet for `localhost`, avklart med produkteier) — **verifiser http vs. https før bruk, se Åpne spørsmål**
+3. `SENTRY_DSN` (og `NEXT_PUBLIC_SENTRY_DSN` for klientsiden) som ny(e) miljøvariabel(er) i Coolify, satt til `https://9ef8b9cd751a40d890431c13921e9468@errors.basbeta.no/1`
 4. Fjern ad-hoc `console.error`-kallet i `app/api/auth/request-code/route.ts` (lagt til i CR-011) til fordel for at Sentry/Bugsink sin SDK fanger feilen automatisk — eller behold begge (logging koster ingenting, og er nyttig for rask `docker logs`-titting uavhengig av Bugsink)
 
 ## Impact Analysis
@@ -52,14 +52,14 @@ Minimal — Sentry SDK-en er asynkron og batcher events.
 
 ## Acceptance Criteria
 - [x] Lokal `npm run build` fullfører uten feil eller advarsler etter integrasjonen
-- [ ] `SENTRY_DSN`/`NEXT_PUBLIC_SENTRY_DSN` satt i Coolify (gjenstår — driftsoppgave)
-- [ ] En bevisst utløst feil i produksjon dukker opp i Bugsink sitt "Issues (effektbibliotek)"-prosjekt
-- [ ] Ingen regresjon i eksisterende feilhåndtering (CR-011 sitt JSON-feilrespons-mønster i request-code fortsatt intakt)
+- [x] `SENTRY_DSN`/`NEXT_PUBLIC_SENTRY_DSN` satt i Coolify
+- [x] En bevisst utløst feil i produksjon dukker opp i Bugsink sitt "Issues (effektbibliotek)"-prosjekt
+- [x] Ingen regresjon i eksisterende feilhåndtering (CR-011 sitt JSON-feilrespons-mønster i request-code fortsatt intakt)
 
 ## Required Tests
 - [x] Lokal build (`npm run build`) verifisert grønn
-- [ ] Manuell, etter Coolify-deploy: utløs en bevisst feil, verifiser at den dukker opp i Bugsink
-- [ ] Manuell: verifiser at appen fortsatt bygger og kjører normalt i Coolify med de nye filene
+- [x] Manuell, etter Coolify-deploy: utløs en bevisst feil, verifiser at den dukker opp i Bugsink
+- [x] Manuell: verifiser at appen fortsatt bygger og kjører normalt i Coolify med de nye filene
 
 ## Rollback Strategy
 Fjern Sentry-avhengigheten, instrumenteringsfilene, og `withSentryConfig`-wrapperen i `next.config.ts`. Additiv endring — ingen eksisterende funksjonalitet avhenger av den.
@@ -69,7 +69,7 @@ Ingen datamigrasjon.
 
 ## Risks
 - Lav: SDK-en er godt utbredt og vedlikeholdt (offisiell Sentry Next.js-integrasjon).
-- Lav: `errors.basbeta.no` serveres foreløpig over HTTP ("Ikke sikker" i nettleseren), ikke HTTPS. DSN-en peker derfor midlertidig på `http://`. Feilrapporter (som kan inneholde brukerkontekst) sendes ukryptert over nettverket internt i basbeta-infrastrukturen inntil TLS er satt opp for Bugsink-instansen.
+- ~~`errors.basbeta.no` serveres over HTTP~~ **Avklart:** Traefik/Coolify redirecter faktisk HTTP→HTTPS for `errors.basbeta.no` (307-respons observert direkte i produksjonslogg). HTTPS er altså allerede tilgjengelig — DSN-en bruker nå `https://`, ikke `http://`. Nettleseren sitt tidligere "Ikke sikker"-varsel var ikke et reelt hinder for oss.
 
 ## Dependencies
 - Bugsink allerede satt opp og kjørende på `errors.basbeta.no` (bekreftet av produkteier, prosjekt "effektbibliotek" opprettet)
@@ -83,4 +83,4 @@ Node.js 22 (matcher `Dockerfile` sin `node:22-alpine`) ble installert lokalt via
 
 `npm run build` kjørt lokalt og bekreftet grønn, inkludert `next.config.ts` sin `withSentryConfig`-wrapping og begge instrumenteringsfilene. `@sentry/nextjs` sin build-tid varslet først om manglende `onRouterTransitionStart`-hook i `instrumentation-client.ts` — lagt til, og påfølgende build var ren uten advarsler.
 
-Faktisk levering av events til `errors.basbeta.no` er IKKE testet fra denne økten (ingen DSN satt i lokalt `.env`, og Bugsink-instansen er trolig kun nåbar fra basbeta sitt eget nettverk). Må verifiseres etter at `SENTRY_DSN`/`NEXT_PUBLIC_SENTRY_DSN` er satt i Coolify og appen er redeployet.
+**Bekreftet løst:** Første forsøk med `http://`-DSN feilet stille — Sentry sin transport følger ikke redirects, og `errors.basbeta.no` redirecter (307) HTTP til HTTPS. Dette var kun synlig ved å slå på `debug: true` på server-SDK-en og lese produksjonsloggen direkte (samme lærdom som CR-011: gjett aldri, les faktiske logger). Byttet DSN-skjema til `https://`, redeployet, og en bevisst utløst testfeil dukket opp i Bugsink sitt "Issues (effektbibliotek)"-prosjekt. Midlertidig testrute (`app/api/sentry-test/route.ts`) og `debug: true` er fjernet igjen etter verifisering.

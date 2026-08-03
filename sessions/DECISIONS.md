@@ -134,3 +134,14 @@ ALTERNATIVES CONSIDERED: Fortsette uten lokal Node og be produkteier kjøre alle
 RATIONALE: Et AI-arbeidsmiljø som ikke kan bygge koden det skriver, kan ikke verifisere det før produksjon ser det — nettopp det som gjorde CR-011 dyrere enn nødvendig. Bugsink var allerede klar infrastruktur; å ikke koble den til var den eneste reelle mangelen.
 CONSEQUENCES: Fremtidige kodeendringer i denne økten kan (og bør) verifiseres med `npm run build`/`npx tsc --noEmit` før push. Node-installasjonen er maskinlokal, ikke en del av repoet. Gjenstår: sette SENTRY_DSN/NEXT_PUBLIC_SENTRY_DSN i Coolify og bekrefte faktisk event-levering.
 DECIDED BY: both
+
+---
+
+DATE: 2026-08-03
+DECISION: DSN for Bugsink må bruke https://, ikke http:// — bekreftet via produksjonslogg, ikke gjetning
+CONTEXT: Etter at SENTRY_DSN/NEXT_PUBLIC_SENTRY_DSN var korrekt satt i Coolify (bekreftet i UI), nådde en bevisst testfeil likevel ikke Bugsink. Nettleserens konsoll hadde tidligere vist en Mixed-Content-blokkering for klientsiden (http-DSN fra en https-side), men server-siden skulle i teorien ikke ha samme begrensning. Ved å slå på `debug: true` på server-SDK-en og lese faktisk produksjonslogg (samme metode som løste CR-011), dukket den ekte årsaken opp: `Sentry responded with status code 307 to sent event` — `errors.basbeta.no` redirecter HTTP-forespørsler til HTTPS, og Sentry sin transport følger ikke redirects, så eventet ble stille droppet uten synlig feil.
+DECISION: Bytt DSN-skjema fra `http://` til `https://` for både `SENTRY_DSN` og `NEXT_PUBLIC_SENTRY_DSN`.
+ALTERNATIVES CONSIDERED: Anta at server-siden fungerte fordi Node ikke har mixed-content-begrensning, og lete etter andre årsaker (feil DSN-verdi, nettverksisolasjon) — forkastet etter at debug-logging ga et eksakt, ugjettbart svar.
+RATIONALE: HTTPS var allerede tilgjengelig for `errors.basbeta.no` (Traefik/Coolify redirecter dit automatisk) — det manglet bare i DSN-en vi konfigurerte. Løser både klientsidens mixed-content-blokkering og serversidens stille 307-feil i én endring.
+CONSEQUENCES: Feilsporing fungerer nå ende-til-ende, bekreftet med en reell testfeil i Bugsink. Lærdom: samme mønster som CR-011 — når noe "burde fungere" men ikke gjør det, slå på debug-logging og les faktisk logg, ikke gjett videre.
+DECIDED BY: both

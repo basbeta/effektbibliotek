@@ -44,7 +44,7 @@ Node.js 22 (matcher Dockerfile) installert på denne maskinen via `winget instal
 - CR-009 (Done) — SMTP-timeout på Brevo-transportøren (bugfix: OTP-innlogging hang)
 - CR-010 (Done) — Connection-timeout på Prisma/pg-adapteren (bugfix, ikke rotårsak)
 - CR-011 (Done) — Faktisk rotårsak: tomt databaseskjema (db push i stedet for migrate deploy) + manglende feilhåndtering i request-code-routen
-- CR-012 (In Progress) — Feilsporing med Bugsink (Sentry-kompatibel, selvhostet). Kode ferdig og bygget lokalt, gjenstår: sette SENTRY_DSN/NEXT_PUBLIC_SENTRY_DSN i Coolify og verifisere levering
+- CR-012 (Done) — Feilsporing med Bugsink (Sentry-kompatibel, selvhostet på errors.basbeta.no). Verifisert i produksjon: bevisst testfeil dukket opp i Bugsink
 
 ## Production URL
 https://effektbibliotek.basbeta.no — live, innlogging bekreftet fungerende
@@ -103,11 +103,9 @@ https://effektbibliotek.vercel.app (gammel, beholdes urørt inntil Coolify er fu
 - Innlogging (OTP via Brevo) i produksjon: ✓ bekreftet av produkteier 2026-08-03
 
 ## Next Recommended Actions
-1. Sett `SENTRY_DSN` og `NEXT_PUBLIC_SENTRY_DSN` i Coolify (verdi: DSN fra Bugsink sitt "effektbibliotek"-prosjekt, med `errors.basbeta.no` i stedet for `localhost`), deploy CR-012, og verifiser at en bevisst feil dukker opp i Bugsink
-2. Ende-til-ende-test på `effektbibliotek.basbeta.no` utover innlogging: case-opprettelse, redigering, bruksgodkjenningsflyt, bekreftelses-e-post
-3. Opprett admin-bruker i den nye databasen (første login + manuell `isAdmin`-sett i Coolify sin database-ressurs)
-4. Utføre resterende `docs/COOLIFY-DEPLOY.md`-steg (backup, Uptime Kuma) hvis ikke allerede gjort
-5. Når Coolify-oppsettet er verifisert stabilt over noen dager: fjern Vercel-prosjektet og slett Neon-databasen (ingen data å ta vare på), marker CR-008 som Done
-6. Vurder å innføre formelle `prisma migrate`-migreringer før effektbiblioteket har ekte produksjonsdata av verdi (se Risks i CR-011) — `db push` er greit for beta, men gir ingen reviewbar skjemahistorikk
-7. Vurder om `docs_extracted.txt` skal gitignores (sensitiv prod-dokumentasjon) — uavhengig av denne migreringen
-8. Vurder å sette opp TLS/HTTPS for `errors.basbeta.no` (serveres i dag over HTTP, se Risks i CR-012)
+1. Ende-til-ende-test på `effektbibliotek.basbeta.no` utover innlogging: case-opprettelse, redigering, bruksgodkjenningsflyt, bekreftelses-e-post
+2. Opprett admin-bruker i den nye databasen (første login + manuell `isAdmin`-sett i Coolify sin database-ressurs)
+3. Utføre resterende `docs/COOLIFY-DEPLOY.md`-steg (backup, Uptime Kuma) hvis ikke allerede gjort
+4. Når Coolify-oppsettet er verifisert stabilt over noen dager: fjern Vercel-prosjektet og slett Neon-databasen (ingen data å ta vare på), marker CR-008 som Done
+5. Vurder å innføre formelle `prisma migrate`-migreringer før effektbiblioteket har ekte produksjonsdata av verdi (se Risks i CR-011) — `db push` er greit for beta, men gir ingen reviewbar skjemahistorikk
+6. Vurder om `docs_extracted.txt` skal gitignores (sensitiv prod-dokumentasjon) — uavhengig av denne migreringen

@@ -41,6 +41,7 @@ Node.js 22 (matcher Dockerfile) installert på denne maskinen via `winget instal
 - CR-013 (Done, bekreftet i produksjon) — Direkte utsending av bruksgodkjenningsforespørsel på e-post (til godkjenner, cc caseeier), erstatter "kopier tekst"-flyten. To runder feilsøking på godkjenningslenken før den fungerte: (1) request.url.origin upålitelig bak Coolify/Traefik, byttet til NEXT_PUBLIC_APP_URL — (2) det slo heller ikke gjennom, fordi NEXT_PUBLIC_-variabler bygges statisk inn i koden ved build time (også server-side). Endte på en vanlig `APP_URL` (uten prefiks), satt i Coolify. Bekreftet fungerende av produkteier 2026-08-03
 - CR-014 (Done, bekreftet i produksjon) — Brukere kan overstyre sitt eget visningsnavn (blyant ved "Ansvarlig" på case-siden, kun for seg selv). Løser at nameFromEmail() mister spesialtegn (æøå) som ikke finnes i e-postadressen
 - CR-015 (kodet, IKKE testet i prod) — E-postforhåndsvisning i ApprovalSection (live, samme buildApprovalText-funksjon som faktisk sending), forhåndsutfylt navn/e-post på den offentlige godkjenningssiden, personvern- og GDPR-avsnitt lagt til i godkjenningse-posten
+- CR-016 (kodet, IKKE testet i prod) — Kvitteringsteksten på godkjenningssiden presiserer at både godkjenner og caseeier får bekreftelse på e-post; personvern-/GDPR-tekst lagt til i sidens footer (samme tekst som e-posten, delt via PRIVACY_NOTICE/GDPR_NOTICE-konstanter)
 
 ## Production URL
 https://effektbibliotek.basbeta.no — live, innlogging bekreftet fungerende
@@ -100,7 +101,7 @@ https://effektbibliotek.vercel.app (gammel, beholdes urørt inntil Coolify er fu
 - Innlogging (OTP via Brevo) i produksjon: ✓ bekreftet av produkteier 2026-08-03
 
 ## Next Recommended Actions
-1. Test CR-015 i produksjon: send en godkjenningsforespørsel og verifiser at forhåndsvisningen matcher den mottatte e-posten, at godkjenningssiden er forhåndsutfylt, og at personvern-/GDPR-avsnittet vises
+1. Test CR-015+CR-016 i produksjon: send en godkjenningsforespørsel, verifiser at forhåndsvisningen matcher den mottatte e-posten, at godkjenningssiden er forhåndsutfylt, at personvern-/GDPR-avsnittet vises i e-posten, og at kvitteringssiden etter innsending viser riktig tekst og footer
 2. Ende-til-ende-test av resten: case-opprettelse, redigering, bekreftelses-e-post etter innsendt godkjenning
 3. Opprett admin-bruker i den nye databasen (første login + manuell `isAdmin`-sett i Coolify sin database-ressurs)
 4. Utføre resterende `docs/COOLIFY-DEPLOY.md`-steg (backup, Uptime Kuma) hvis ikke allerede gjort

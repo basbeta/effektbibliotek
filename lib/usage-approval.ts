@@ -33,6 +33,12 @@ export function computeUsageLevel(choices: ApprovalChoices): {
   };
 }
 
+export const PRIVACY_NOTICE =
+  "Personvern: Vi lagrer navn og e-postadresse til godkjenningsansvarlig så lenge vi oppbevarer godkjenningen/tillatelsene knyttet til denne casen.";
+
+export const GDPR_NOTICE =
+  "GDPR: Bas Kommunikasjon sitt effektbibliotek (basbeta.no) driftes utelukkende på europeisk, selvhostet programvare med hosting i EU.";
+
 export function buildApprovalText(params: {
   approverName?: string;
   ownerName: string;
@@ -60,9 +66,9 @@ QA-teamet
 Bas Kommunikasjon
 
 ---
-Personvern: Vi lagrer navn og e-postadresse til godkjenningsansvarlig så lenge vi oppbevarer godkjenningen/tillatelsene knyttet til denne casen.
+${PRIVACY_NOTICE}
 
-GDPR: Bas Kommunikasjon sitt effektbibliotek (basbeta.no) driftes utelukkende på europeisk, selvhostet programvare med hosting i EU.
+${GDPR_NOTICE}
 
 Effektbiblioteket er foreløpig i betatesting. Gi gjerne beskjed til kontaktpersonen din i Bas hvis noe er uklart, feil eller burde fungere annerledes.`;
 }

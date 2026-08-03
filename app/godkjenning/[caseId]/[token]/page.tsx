@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { PRIVACY_NOTICE, GDPR_NOTICE } from "@/lib/usage-approval";
 import ApprovalForm from "./ApprovalForm";
 
 type Props = { params: Promise<{ caseId: string; token: string }> };
@@ -84,9 +85,11 @@ export default async function GodkjenningPage({ params }: Props) {
           )}
         </div>
 
-        <p className="text-xs text-center px-4" style={{ color: "var(--color-text-muted)" }}>
-          {BETA_NOTICE}
-        </p>
+        <div className="text-xs text-center px-4 space-y-1.5" style={{ color: "var(--color-text-muted)" }}>
+          <p>{PRIVACY_NOTICE}</p>
+          <p>{GDPR_NOTICE}</p>
+          <p>{BETA_NOTICE}</p>
+        </div>
       </div>
     </div>
   );

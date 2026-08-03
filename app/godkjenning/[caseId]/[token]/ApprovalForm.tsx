@@ -112,7 +112,7 @@ export default function ApprovalForm({ caseId, token, ownerName, defaultName = "
           Takk for din tilbakemelding!
         </p>
         <p className="text-sm" style={{ color: "var(--color-text-secondary)" }}>
-          Vi har registrert ditt valg og sendt deg en bekreftelse på e-post.
+          Vi har registrert ditt valg. Du og din kontaktperson ({ownerName}) vil motta en bekreftelse på e-post.
           Ta gjerne kontakt med {ownerName} i Bas hvis du har spørsmål.
         </p>
       </div>

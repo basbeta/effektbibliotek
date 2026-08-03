@@ -13,7 +13,7 @@ claude/effektbibliotek-publish-database-nsrizw
 
 ## Blockers
 - Manuelt Coolify/Hetzner-oppsett kan ikke utføres fra Claude Code-økten (ingen tilgang til Coolify-instansen). Krever produkteier/admin på `coolify.basbeta.no`.
-- Coolify er nå live på effektbibliotek.basbeta.no, men OTP-innlogging feilet (hang, ingen e-post sendt). CR-009 la til SMTP-timeout for å gjøre feilen synlig i stedet for hengende — MEN rotårsaken (mest sannsynlig manglende `BREVO_SMTP_LOGIN`/`BREVO_SMTP_KEY` i Coolify sine env-vars på app-ressursen, evt. utgående SMTP blokkert) er ikke bekreftet løst. Krever verifisering av produkteier i Coolify.
+- Coolify er live på effektbibliotek.basbeta.no, men OTP-innlogging hang fortsatt etter CR-009. Produkteier bekreftet at `BREVO_SMTP_LOGIN`/`BREVO_SMTP_KEY`/`FROM_EMAIL` er korrekt satt som runtime env-vars i Coolify — det utelukker den opprinnelige mistanken. Rotårsak funnet: `lib/prisma.ts` hadde ingen `connectionTimeoutMillis` på `pg.Pool`-adapteren, og databasekallet (`prisma.otpCode.create`) skjer FØR e-postkallet i login-routen — så SMTP-timeouten fra CR-009 ble aldri nådd. Fikset i CR-010. **Ikke bekreftet løst i prod ennå** — krever redeploy + ny test.
 
 ## Active Change Requests
 - CR-001 (Done) — Auth
@@ -25,6 +25,7 @@ claude/effektbibliotek-publish-database-nsrizw
 - CR-007 (Done) — Redirect etter innlogging
 - CR-008 (In Progress) — Port til Hetzner/Coolify/PostgreSQL 18
 - CR-009 (Done) — SMTP-timeout på Brevo-transportøren (bugfix: OTP-innlogging hang)
+- CR-010 (Done) — Connection-timeout på Prisma/pg-adapteren (bugfix: OTP-innlogging hang fortsatt etter CR-009 — faktisk rotårsak)
 
 ## Production URL
 https://effektbibliotek.vercel.app (gammel, beholdes til Coolify er verifisert)
@@ -70,6 +71,7 @@ Planlagt ny: https://effektbibliotek.basbeta.no
 - `prisma migrate deploy` kjøres i container-`CMD` ved hver oppstart (idempotent) i stedet for som eget Coolify-hook
 - Node 22 Alpine i Dockerfile for å matche faktisk utviklingsmiljø (avviker fra `basbeta-bootstrap`-malens Node 20)
 - nodemailer-transportøren i lib/email.ts hadde ingen connection/socket-timeout — en feilkonfigurert eller nettverksmessig utilgjengelig SMTP-server hang requesten på ubestemt tid i stedet for å feile (CR-009)
+- `pg.Pool` (brukt av `@prisma/adapter-pg`) sin default `connectionTimeoutMillis` er `0` — ingen timeout, venter for alltid ved utilgjengelig database. Satt eksplisitt til 10s i lib/prisma.ts (CR-010). Samme bugklasse som CR-009, bare ett lag lenger opp i requesten
 
 ## Validation Status
 - Build (lokal, `npm run build`): ✓
@@ -79,11 +81,11 @@ Planlagt ny: https://effektbibliotek.basbeta.no
 - Deploy Coolify: ikke utført ennå — manuelt, se `docs/COOLIFY-DEPLOY.md`
 
 ## Next Recommended Actions
-1. Verifiser i Coolify at `BREVO_SMTP_LOGIN`, `BREVO_SMTP_KEY` og `FROM_EMAIL` er satt som miljøvariabler på **app-ressursen** (ikke bare i `.env.example`) — mest sannsynlige årsak til at OTP-e-post ikke ble sendt
-2. Verifiser at utgående SMTP (port 587 til smtp-relay.brevo.com) ikke er blokkert av Hetzner/serverens brannmur
-3. Etter deploy av CR-009: be om engangskode på prod igjen — skal nå enten fungere, eller feile med en synlig feilmelding innen ~10s (ikke lenger henge)
+1. Deploy CR-010 til Coolify og test innlogging på nytt
+2. Hvis fortsatt henging/feil: sjekk Coolify sin app-logg for konkret feilmelding (bør nå dukke opp innen ~10s), og verifiser at `DATABASE_URL` peker på riktig intern hostname/port for `effektbibliotek-db`-ressursen, og at app- og database-ressursene er i samme Coolify-nettverk
+3. Verifiser at utgående SMTP (port 587 til smtp-relay.brevo.com) ikke er blokkert av Hetzner/serverens brannmur (uavklart om dette faktisk er et problem — bare relevant hvis DB-fiksen løser hengingen men SMTP fortsatt feiler)
 4. Utføre resterende `docs/COOLIFY-DEPLOY.md`-steg (backup, Uptime Kuma) hvis ikke allerede gjort
 5. Ende-til-ende-test på `effektbibliotek.basbeta.no`: innlogging, case-opprettelse, godkjenningsflyt
-3. Opprett admin-bruker i den nye databasen (samme prosedyre som tidligere: første login + manuell `isAdmin`-sett)
-4. Når Coolify-oppsettet er verifisert stabilt: fjern Vercel-prosjektet og slett Neon-databasen (ingen data å ta vare på)
-5. Vurder om `docs_extracted.txt` skal gitignores (sensitiv prod-dokumentasjon) — uavhengig av denne migreringen
+6. Opprett admin-bruker i den nye databasen (samme prosedyre som tidligere: første login + manuell `isAdmin`-sett)
+7. Når Coolify-oppsettet er verifisert stabilt: fjern Vercel-prosjektet og slett Neon-databasen (ingen data å ta vare på)
+8. Vurder om `docs_extracted.txt` skal gitignores (sensitiv prod-dokumentasjon) — uavhengig av denne migreringen

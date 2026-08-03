@@ -79,7 +79,7 @@ Update: 2026-08-03 — effektbibliotek.basbeta.no er live, men OTP-innlogging ha
 ISSUE-008
 Status: Open
 Priority: High
-Area: Coolify / Brevo / lib/email.ts
-Description: OTP-innlogging på effektbibliotek.basbeta.no henger uten å sende e-post. CR-009 la til SMTP-timeout slik at feilen nå skal overflatebehandles innen ~10s i stedet for å henge, men selve rotårsaken til hvorfor SMTP-sendingen feiler er ikke bekreftet. Mest sannsynlig: BREVO_SMTP_LOGIN/BREVO_SMTP_KEY/FROM_EMAIL ikke satt (riktig) som miljøvariabler på app-ressursen i Coolify. Alternativt: utgående SMTP (port 587 til smtp-relay.brevo.com) blokkert av Hetzner/serverens brannmur.
+Area: Coolify / lib/prisma.ts / lib/email.ts
+Description: OTP-innlogging på effektbibliotek.basbeta.no henger. CR-009 la til SMTP-timeout, men produkteier bekreftet BREVO_SMTP_LOGIN/BREVO_SMTP_KEY/FROM_EMAIL var korrekt satt i Coolify OG at CR-009 var redeployet — hengingen fortsatte likevel. Fant faktisk rotårsak: databasekallet (prisma.otpCode.create) skjer FØR e-postkallet i login-routen, og PrismaPg-adapteren hadde ingen connectionTimeoutMillis (pg.Pool default = 0 = ingen timeout). Fikset i CR-010. IKKE bekreftet løst i faktisk prod ennå — krever redeploy og ny test. Hvis fortsatt henging/feil etter CR-010: sjekk DATABASE_URL og nettverksisolasjon mellom app- og database-ressurs i Coolify.
 Blocker for: Fungerende innlogging i produksjon
 Opened: 2026-08-03

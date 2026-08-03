@@ -90,3 +90,14 @@ ALTERNATIVES CONSIDERED: La feilen forbli synlig kun via serverlogger uten timeo
 RATIONALE: En rask, synlig feil er alltid bedre enn en uendelig hengende request — spesielt nå som appen ikke lenger kjører bak en plattform (Vercel) som håndhevet et function-timeout for oss.
 CONSEQUENCES: Løser symptomet (hengende UI). Løser ikke nødvendigvis rotårsaken til hvorfor SMTP faktisk feiler i Coolify — det er en driftsoppgave (verifisere env-vars og brannmurregler), ikke en kodefeil, og er dokumentert som neste steg i CURRENT-STATE.md.
 DECIDED BY: both
+
+---
+
+DATE: 2026-08-03
+DECISION: Legg til connectionTimeoutMillis på Prisma/pg-adapteren (CR-010)
+CONTEXT: Etter at CR-009 var deployet OG produkteier hadde bekreftet at BREVO_SMTP_LOGIN/BREVO_SMTP_KEY/FROM_EMAIL var korrekt satt som runtime-miljøvariabler i Coolify, hang OTP-innlogging fortsatt. Dette utelukket den opprinnelige SMTP-hypotesen. Videre undersøkelse viste at prisma.otpCode.create() — et databasekall — skjer FØR sendOtpEmail() i login-routen. lib/prisma.ts sin PrismaPg-adapter var kun konfigurert med connectionString; pg.Pool (som adapteren bruker under panseret) har connectionTimeoutMillis: 0 som standard, altså ingen timeout. En utilgjengelig eller feilkonfigurert database ville derfor henge for alltid, uavhengig av SMTP-fiksen.
+DECISION: Sett connectionTimeoutMillis: 10_000 på PrismaPg-adapteren i lib/prisma.ts.
+ALTERNATIVES CONSIDERED: Anta at problemet fortsatt var SMTP-relatert og fortsette å feilsøke Brevo/nettverk uten å se på databaselaget (avvist etter å ha lest kildekoden til request-code-routen og bekreftet rekkefølgen på operasjonene).
+RATIONALE: Samme prinsipp som CR-009 — enhver ekstern I/O-operasjon uten eksplisitt timeout er en potensiell uendelig hang når appen ikke lenger kjører bak en plattform (Vercel) som håndhever et function-timeout for oss. Database-kallet skjer tidligere i requesten enn e-postkallet, så det måtte fikses uavhengig.
+CONSEQUENCES: Hvis hengingen fortsetter etter denne fiksen, vil Coolify sin app-logg nå vise en konkret feil (trolig en pg/Prisma-tilkoblingsfeil) innen 10s, som gir et konkret neste sted å lete (DATABASE_URL, nettverksisolasjon mellom app- og database-ressurs i Coolify) — i stedet for å gjette blindt. IKKE bekreftet at dette faktisk løser produksjonsproblemet; krever redeploy og ny test.
+DECIDED BY: both

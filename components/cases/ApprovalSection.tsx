@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatDate } from "@/lib/format";
-import { choiceLabels, type ApprovalChoices } from "@/lib/usage-approval";
+import { choiceLabels, buildApprovalText, type ApprovalChoices } from "@/lib/usage-approval";
 import { usageApprovalStatusLabels } from "@/lib/labels";
 
 interface LastApproval {
@@ -26,6 +26,11 @@ interface Props {
   lastApproval: LastApproval | null;
   approverName: string | null;
   approverEmail: string | null;
+  caseTitle: string;
+  ownerName: string;
+  ownerEmail: string;
+  token: string | null;
+  appUrl: string;
 }
 
 export default function ApprovalSection({
@@ -35,6 +40,11 @@ export default function ApprovalSection({
   lastApproval,
   approverName: initialApproverName,
   approverEmail: initialApproverEmail,
+  caseTitle,
+  ownerName,
+  ownerEmail,
+  token,
+  appUrl,
 }: Props) {
   const router = useRouter();
   const [status, setStatus] = useState(initialStatus);
@@ -45,6 +55,20 @@ export default function ApprovalSection({
   const [unlocking, setUnlocking] = useState(false);
   const [confirmUnlock, setConfirmUnlock] = useState(false);
   const [error, setError] = useState("");
+
+  const previewText = useMemo(
+    () =>
+      buildApprovalText({
+        approverName: approverName.trim() || undefined,
+        ownerName,
+        ownerEmail,
+        caseTitle,
+        caseId,
+        token: token ?? "",
+        appUrl,
+      }),
+    [approverName, ownerName, ownerEmail, caseTitle, caseId, token, appUrl]
+  );
 
   async function handleSend() {
     setSending(true);
@@ -208,6 +232,24 @@ export default function ApprovalSection({
                     color: "var(--color-text-primary)",
                   }}
                 />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <p className="text-xs font-medium" style={{ color: "var(--color-text-muted)" }}>
+                  Forhåndsvisning av e-posten som sendes
+                </p>
+                <pre
+                  className="text-xs whitespace-pre-wrap p-3 rounded-lg"
+                  style={{
+                    backgroundColor: "var(--color-surface-muted)",
+                    border: "1px solid var(--color-border-subtle)",
+                    color: "var(--color-text-secondary)",
+                    maxHeight: "16rem",
+                    overflowY: "auto",
+                    fontFamily: "inherit",
+                  }}
+                >
+                  {`Emne: Bruksgodkjenning: ${caseTitle}\n\n${previewText}`}
+                </pre>
               </div>
               <button
                 onClick={handleSend}

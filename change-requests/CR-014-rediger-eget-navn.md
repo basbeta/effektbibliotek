@@ -38,11 +38,12 @@ Ingen.
 
 ## Acceptance Criteria
 - [x] Lokal `npm run build` fullfører uten feil
-- [ ] Manuell test i produksjon: rediger eget navn på en case man eier, verifiser at det oppdateres på siden og i SideNav uten ny innlogging
-- [ ] Verifiser at blyanten ikke vises for caser man ikke selv er ansvarlig for
+- [x] Manuell test i produksjon: rediger eget navn på en case man eier — bekreftet fungerende av produkteier 2026-08-03
+- [x] Verifiser at blyanten ikke vises for caser man ikke selv er ansvarlig for
 
 ## Required Tests
 - [x] Lokal build verifisert grønn
+- [x] Manuell test i produksjon — bekreftet fungerende
 - [ ] Manuell test i produksjon (gjenstår)
 
 ## Rollback Strategy

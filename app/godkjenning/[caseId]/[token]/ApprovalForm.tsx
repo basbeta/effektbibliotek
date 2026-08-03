@@ -6,6 +6,8 @@ interface Props {
   caseId: string;
   token: string;
   ownerName: string;
+  defaultName?: string;
+  defaultEmail?: string;
 }
 
 const CHOICES: {
@@ -29,9 +31,9 @@ const initialChoices = {
   competitionUseAllowed: false,
 };
 
-export default function ApprovalForm({ caseId, token, ownerName }: Props) {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+export default function ApprovalForm({ caseId, token, ownerName, defaultName = "", defaultEmail = "" }: Props) {
+  const [name, setName] = useState(defaultName);
+  const [email, setEmail] = useState(defaultEmail);
   const [role, setRole] = useState("");
   const [note, setNote] = useState("");
   const [choices, setChoices] = useState(initialChoices);

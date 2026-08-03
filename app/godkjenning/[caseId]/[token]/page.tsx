@@ -19,6 +19,8 @@ export default async function GodkjenningPage({ params }: Props) {
       customerFacingSummary: true,
       usageApprovalStatus: true,
       usageApprovalToken: true,
+      approverName: true,
+      approverEmail: true,
       owner: { select: { name: true, email: true } },
     },
   });
@@ -70,7 +72,13 @@ export default async function GodkjenningPage({ params }: Props) {
           {isLocked ? (
             <LockedView ownerName={c.owner.name} ownerEmail={c.owner.email} />
           ) : isOpen ? (
-            <ApprovalForm caseId={c.id} token={token} ownerName={c.owner.name} />
+            <ApprovalForm
+              caseId={c.id}
+              token={token}
+              ownerName={c.owner.name}
+              defaultName={c.approverName ?? ""}
+              defaultEmail={c.approverEmail ?? ""}
+            />
           ) : (
             <InvalidLink ownerName={c.owner.name} ownerEmail={c.owner.email} />
           )}

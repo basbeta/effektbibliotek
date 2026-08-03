@@ -296,6 +296,11 @@ export default async function CaseDetailPage({ params }: Props) {
         lastApproval={c.usageApprovals[0] ?? null}
         approverName={c.approverName}
         approverEmail={c.approverEmail}
+        caseTitle={c.title}
+        ownerName={c.owner.name}
+        ownerEmail={c.owner.email}
+        token={c.usageApprovalToken}
+        appUrl={process.env.APP_URL ?? ""}
       />
 
       <div

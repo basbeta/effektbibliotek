@@ -48,6 +48,15 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
 
   const body = await request.json();
 
+  const usageRightsFields = [
+    "ndaRestricted",
+    "anonymizedUseOnly",
+    "websiteUseAllowed",
+    "presentationUseAllowed",
+    "tenderUseAllowed",
+    "competitionUseAllowed",
+  ] as const;
+
   const allowed = [
     "customerName",
     "title",
@@ -73,17 +82,18 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
     "measurementPeriod",
     "dataSource",
     "evidenceLevel",
-    "ndaRestricted",
-    "anonymizedUseOnly",
-    "websiteUseAllowed",
-    "presentationUseAllowed",
-    "tenderUseAllowed",
-    "competitionUseAllowed",
+    ...usageRightsFields,
     "ownerEmail",
   ] as const;
 
+  // Bruksrettigheter reflekterer et faktisk kundesamtykke og skal ikke kunne
+  // overstyres via API-et etter at godkjenningen er låst (se CR-021) — kun
+  // via "lås opp"-flyten på case-siden, som selv nullstiller status.
+  const usageRightsLocked = existing.usageApprovalStatus === "submitted_locked";
+
   const updateData: Record<string, unknown> = { updatedByEmail: session.userEmail };
   for (const key of allowed) {
+    if (usageRightsLocked && (usageRightsFields as readonly string[]).includes(key)) continue;
     if (body[key] !== undefined) updateData[key] = body[key];
   }
 

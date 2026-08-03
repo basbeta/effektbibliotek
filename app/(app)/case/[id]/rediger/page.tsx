@@ -12,7 +12,10 @@ export default async function RedigerCasePage({ params }: Props) {
 
   const c = await prisma.case.findUnique({
     where: { id },
-    include: { links: { orderBy: { createdAt: "asc" } } },
+    include: {
+      links: { orderBy: { createdAt: "asc" } },
+      usageApprovals: { orderBy: { submittedAt: "desc" }, take: 1 },
+    },
   });
   if (!c) notFound();
 
@@ -35,7 +38,13 @@ export default async function RedigerCasePage({ params }: Props) {
         {c.customerName} — {c.title}
       </p>
 
-      <EditCaseForm initial={c} isAdmin={session.isAdmin} links={c.links} />
+      <EditCaseForm
+        initial={c}
+        isAdmin={session.isAdmin}
+        links={c.links}
+        usageApprovalStatus={c.usageApprovalStatus}
+        lastApproval={c.usageApprovals[0] ?? null}
+      />
     </div>
   );
 }

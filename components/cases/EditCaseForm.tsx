@@ -11,6 +11,7 @@ import {
   effectTypeLabels,
   evidenceLevelLabels,
 } from "@/lib/labels";
+import { formatDate } from "@/lib/format";
 
 import LinksSection from "@/components/cases/LinksSection";
 
@@ -62,8 +63,27 @@ interface LinkItem {
   description: string | null;
 }
 
-export default function EditCaseForm({ initial, isAdmin, links }: { initial: CaseData; isAdmin?: boolean; links?: LinkItem[] }) {
+interface LastApproval {
+  submittedByName: string;
+  submittedByEmail: string;
+  submittedAt: string | Date;
+}
+
+export default function EditCaseForm({
+  initial,
+  isAdmin,
+  links,
+  usageApprovalStatus,
+  lastApproval,
+}: {
+  initial: CaseData;
+  isAdmin?: boolean;
+  links?: LinkItem[];
+  usageApprovalStatus?: string;
+  lastApproval?: LastApproval | null;
+}) {
   const router = useRouter();
+  const usageRightsLocked = usageApprovalStatus === "submitted_locked" && !!lastApproval;
   const [form, setForm] = useState({
     customerName: n(initial.customerName),
     title: n(initial.title),
@@ -290,40 +310,73 @@ export default function EditCaseForm({ initial, isAdmin, links }: { initial: Cas
       </FormSection>
 
       <FormSection title="Bruksrettigheter">
-        <div className="space-y-3">
-          <CheckboxField
-            checked={form.ndaRestricted}
-            onChange={(v) => set("ndaRestricted", v)}
-            label="NDA / Skal ikke deles"
-            description="Overstyrer alle andre bruksvalg. Vises tydelig i biblioteket."
-          />
-          <CheckboxField
-            checked={form.anonymizedUseOnly}
-            onChange={(v) => set("anonymizedUseOnly", v)}
-            label="Kun anonymisert bruk"
-            description="Overstyrer de øvrige bruksvalgene under."
-          />
-          <CheckboxField
-            checked={form.websiteUseAllowed}
-            onChange={(v) => set("websiteUseAllowed", v)}
-            label="Kan brukes som case på hjemmeside"
-          />
-          <CheckboxField
-            checked={form.presentationUseAllowed}
-            onChange={(v) => set("presentationUseAllowed", v)}
-            label="Kan brukes som case i presentasjoner"
-          />
-          <CheckboxField
-            checked={form.tenderUseAllowed}
-            onChange={(v) => set("tenderUseAllowed", v)}
-            label="Kan brukes som case i anbudsbesvarelser"
-          />
-          <CheckboxField
-            checked={form.competitionUseAllowed}
-            onChange={(v) => set("competitionUseAllowed", v)}
-            label="Kan brukes som case i konkurranse/award-show"
-          />
-        </div>
+        {usageRightsLocked ? (
+          <div className="space-y-3">
+            <p className="text-xs" style={{ color: "var(--color-text-muted)" }}>
+              Låst basert på kundens godkjenning. Lås opp godkjenningen på case-siden for å samle inn en ny.
+            </p>
+            <div className="space-y-1.5">
+              {(
+                [
+                  ["ndaRestricted", "NDA / Skal ikke deles"],
+                  ["anonymizedUseOnly", "Kun anonymisert bruk"],
+                  ["websiteUseAllowed", "Kan brukes som case på hjemmeside"],
+                  ["presentationUseAllowed", "Kan brukes som case i presentasjoner"],
+                  ["tenderUseAllowed", "Kan brukes som case i anbudsbesvarelser"],
+                  ["competitionUseAllowed", "Kan brukes som case i konkurranse/award-show"],
+                ] as [keyof typeof form, string][]
+              ).map(([key, label]) => (
+                <p
+                  key={key}
+                  className="text-sm"
+                  style={{ color: form[key] ? "var(--color-text-primary)" : "var(--color-text-muted)" }}
+                >
+                  {form[key] ? "✓" : "—"} {label}
+                </p>
+              ))}
+            </div>
+            {lastApproval && (
+              <div className="pt-3 text-xs" style={{ color: "var(--color-text-muted)", borderTop: "1px solid var(--color-border-subtle)" }}>
+                Godkjent hos kunde av {lastApproval.submittedByName} ({lastApproval.submittedByEmail}) den {formatDate(lastApproval.submittedAt)}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <CheckboxField
+              checked={form.ndaRestricted}
+              onChange={(v) => set("ndaRestricted", v)}
+              label="NDA / Skal ikke deles"
+              description="Overstyrer alle andre bruksvalg. Vises tydelig i biblioteket."
+            />
+            <CheckboxField
+              checked={form.anonymizedUseOnly}
+              onChange={(v) => set("anonymizedUseOnly", v)}
+              label="Kun anonymisert bruk"
+              description="Overstyrer de øvrige bruksvalgene under."
+            />
+            <CheckboxField
+              checked={form.websiteUseAllowed}
+              onChange={(v) => set("websiteUseAllowed", v)}
+              label="Kan brukes som case på hjemmeside"
+            />
+            <CheckboxField
+              checked={form.presentationUseAllowed}
+              onChange={(v) => set("presentationUseAllowed", v)}
+              label="Kan brukes som case i presentasjoner"
+            />
+            <CheckboxField
+              checked={form.tenderUseAllowed}
+              onChange={(v) => set("tenderUseAllowed", v)}
+              label="Kan brukes som case i anbudsbesvarelser"
+            />
+            <CheckboxField
+              checked={form.competitionUseAllowed}
+              onChange={(v) => set("competitionUseAllowed", v)}
+              label="Kan brukes som case i konkurranse/award-show"
+            />
+          </div>
+        )}
       </FormSection>
 
       <FormSection title="Interne notater">

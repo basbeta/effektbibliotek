@@ -44,6 +44,7 @@ Node.js 22 (matcher Dockerfile) installert på denne maskinen via `winget instal
 - CR-016 (kodet, IKKE testet i prod) — Kvitteringsteksten på godkjenningssiden presiserer at både godkjenner og caseeier får bekreftelse på e-post; personvern-/GDPR-tekst lagt til i sidens footer (samme tekst som e-posten, delt via PRIVACY_NOTICE/GDPR_NOTICE-konstanter)
 - CR-017 (kodet, IKKE testet i prod) — ApprovalSection er nå et trekkspill, kollapset som default (kun tittel + statusmerke synlig), for å redusere visuell plass på case-siden
 - CR-018 (kodet, IKKE testet i prod) — Reply-To satt til caseeierens e-post på de to e-postene som går til eksterne mottakere (sendUsageApprovalRequest, sendUsageApprovalConfirmation). "kontaktpersonen din i Bas" erstattet med caseeierens faktiske navn
+- CR-019 (kodet, IKKE testet i prod) — Personvernteksten (PRIVACY_NOTICE → buildPrivacyNotice) nevner nå caseeier ved navn og e-post ("ta kontakt med {navn} på {e-post}"), brukt i både e-post og godkjenningssidens footer
 
 ## Production URL
 https://effektbibliotek.basbeta.no — live, innlogging bekreftet fungerende

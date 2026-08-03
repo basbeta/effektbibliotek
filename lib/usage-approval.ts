@@ -33,11 +33,12 @@ export function computeUsageLevel(choices: ApprovalChoices): {
   };
 }
 
-export const PRIVACY_NOTICE =
-  "Personvern: Vi lagrer navn og e-postadresse til godkjenningsansvarlig så lenge vi oppbevarer godkjenningen/tillatelsene knyttet til denne casen.";
+export function buildPrivacyNotice(ownerName: string, ownerEmail: string): string {
+  return `Personvern: For å ha kontroll på hvem som gir tillatelse vil vi lagre navn og e-postadresse så lenge vi oppbevarer denne. Ønsker du å trekke tilbake tillatelsen eller av andre grunner fjerne navn og epostadresse fra arkivene, ta kontakt med ${ownerName} på ${ownerEmail}.`;
+}
 
 export const GDPR_NOTICE =
-  "GDPR: Bas Kommunikasjon sitt effektbibliotek (basbeta.no) driftes utelukkende på europeisk, selvhostet programvare med hosting i EU.";
+  "GDPR: Bas Kommunikasjon sitt effektbibliotek og basbeta.no driftes utelukkende på europeisk og/eller selvhostet programvare med lagring i EU.";
 
 export function buildApprovalText(params: {
   approverName?: string;
@@ -66,7 +67,7 @@ QA-teamet
 Bas Kommunikasjon
 
 ---
-${PRIVACY_NOTICE}
+${buildPrivacyNotice(params.ownerName, params.ownerEmail)}
 
 ${GDPR_NOTICE}
 

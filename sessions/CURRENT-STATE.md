@@ -38,6 +38,7 @@ Node.js 22 (matcher Dockerfile) installert på denne maskinen via `winget instal
 - CR-011 (Done) — Faktisk rotårsak: tomt databaseskjema (db push i stedet for migrate deploy) + manglende feilhåndtering i request-code-routen
 - CR-012 (Done) — Feilsporing med Bugsink (Sentry-kompatibel, selvhostet på errors.basbeta.no). Verifisert i produksjon: bevisst testfeil dukket opp i Bugsink
 - CR-013 (kodet, IKKE testet i prod) — Direkte utsending av bruksgodkjenningsforespørsel på e-post (til godkjenner, cc caseeier), erstatter "kopier tekst"-flyten. Første test avslørte at godkjenningslenken pekte på localhost:3000 — fikset ved å bruke NEXT_PUBLIC_APP_URL i stedet for request.url.origin i API-routes (upålitelig bak Coolify/Traefik). Krever at NEXT_PUBLIC_APP_URL settes i Coolify før neste deploy
+- CR-014 (kodet, IKKE testet i prod) — Brukere kan nå overstyre sitt eget visningsnavn (blyant ved "Ansvarlig" på case-siden, kun for seg selv). Løser at nameFromEmail() mister spesialtegn (æøå) som ikke finnes i e-postadressen
 
 ## Production URL
 https://effektbibliotek.basbeta.no — live, innlogging bekreftet fungerende

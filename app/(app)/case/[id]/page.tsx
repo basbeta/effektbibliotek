@@ -17,6 +17,7 @@ import {
 import StatusBadge from "@/components/cases/StatusBadge";
 import UsageBadge from "@/components/cases/UsageBadge";
 import ApprovalSection from "@/components/cases/ApprovalSection";
+import OwnerNameEditor from "@/components/cases/OwnerNameEditor";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -81,9 +82,10 @@ export default async function CaseDetailPage({ params }: Props) {
         </div>
         <div>
           <p className="text-xs font-medium" style={{ color: "var(--color-text-muted)" }}>Ansvarlig</p>
-          <p className="text-sm font-semibold" style={{ color: "var(--color-text-primary)" }}>
-            {c.owner?.name ?? c.ownerEmail}
-          </p>
+          <OwnerNameEditor
+            name={c.owner?.name ?? c.ownerEmail}
+            canEdit={c.ownerEmail === session.userEmail}
+          />
         </div>
       </div>
 

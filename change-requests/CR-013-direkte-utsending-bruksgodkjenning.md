@@ -50,12 +50,12 @@ Ingen.
 
 ## Acceptance Criteria
 - [x] Lokal `npm run build` fullfører uten feil
-- [ ] Manuell test i produksjon: fyll inn navn+e-post på en case, trykk send, verifiser at godkjenneren mottar e-post og caseeier får kopi
-- [ ] Verifiser at godkjenningslenken i e-posten fungerer som før
+- [x] Manuell test i produksjon: fyll inn navn+e-post på en case, trykk send, verifiser at godkjenneren mottar e-post og caseeier får kopi
+- [x] Verifiser at godkjenningslenken i e-posten fungerer som før — bekreftet 2026-08-03 etter APP_URL-fiksen
 
 ## Required Tests
 - [x] Lokal build verifisert grønn
-- [ ] Manuell ende-til-ende-test i produksjon (gjenstår — se CURRENT-STATE.md)
+- [x] Manuell ende-til-ende-test i produksjon — bekreftet fungerende av produkteier
 
 ## Rollback Strategy
 Reverter denne commiten. `approverName`/`approverEmail`-feltene er nullable og additive — trygt å stå urørt selv ved en delvis rollback av UI/API-lag.

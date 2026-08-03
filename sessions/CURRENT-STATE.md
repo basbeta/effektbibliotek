@@ -3,12 +3,13 @@
 > Updated at the end of every session. Read by Claude at startup.
 
 ## Current Phase
-MIGRERING NESTEN FERDIG — CR-008: porting fra Vercel/Neon til Hetzner/Coolify/PostgreSQL 18. Appen kjører stabilt på `effektbibliotek.basbeta.no`. Innlogging (CR-009–011) og feilsporing (CR-012) er begge bekreftet fungerende i produksjon. CR-013 (direkte utsending av bruksgodkjenning) er kodet og bygget lokalt, men IKKE testet i produksjon ennå.
+MIGRERING NESTEN FERDIG — CR-008: porting fra Vercel/Neon til Hetzner/Coolify/PostgreSQL 18. Appen kjører stabilt på `effektbibliotek.basbeta.no`. Innlogging (CR-009–011), feilsporing (CR-012) og direkte utsending av bruksgodkjenning (CR-013) er alle bekreftet fungerende i produksjon. CR-014 (rediger eget navn) er kodet og bygget lokalt, men IKKE testet i produksjon ennå.
 
 ## Current Objectives
-1. Ende-til-ende-teste CR-013 i produksjon (send en reell godkjenningsforespørsel, verifiser at godkjenner mottar e-post og caseeier får kopi)
-2. Fullføre resten av `docs/COOLIFY-DEPLOY.md` (backup, Uptime Kuma)
-3. Deretter fjerne Vercel/Neon
+1. Ende-til-ende-teste CR-014 i produksjon (rediger eget navn via blyanten på en case man eier)
+2. Ende-til-ende-test av resten: case-opprettelse, redigering
+3. Fullføre resten av `docs/COOLIFY-DEPLOY.md` (backup, Uptime Kuma)
+4. Deretter fjerne Vercel/Neon
 
 ## Current Branch
 claude/effektbibliotek-publish-database-nsrizw
@@ -37,7 +38,7 @@ Node.js 22 (matcher Dockerfile) installert på denne maskinen via `winget instal
 - CR-010 (Done) — Connection-timeout på Prisma/pg-adapteren (bugfix, ikke rotårsak)
 - CR-011 (Done) — Faktisk rotårsak: tomt databaseskjema (db push i stedet for migrate deploy) + manglende feilhåndtering i request-code-routen
 - CR-012 (Done) — Feilsporing med Bugsink (Sentry-kompatibel, selvhostet på errors.basbeta.no). Verifisert i produksjon: bevisst testfeil dukket opp i Bugsink
-- CR-013 (kodet, IKKE testet i prod) — Direkte utsending av bruksgodkjenningsforespørsel på e-post (til godkjenner, cc caseeier), erstatter "kopier tekst"-flyten. To runder feilsøking på godkjenningslenken: (1) request.url.origin upålitelig bak Coolify/Traefik, byttet til NEXT_PUBLIC_APP_URL — (2) det slo heller ikke gjennom, fordi NEXT_PUBLIC_-variabler bygges statisk inn i koden ved build time (også server-side), så en runtime-only-satt variabel har ingen effekt. Byttet til en vanlig `APP_URL` (uten prefiks). Krever at `APP_URL` (IKKE `NEXT_PUBLIC_APP_URL`) settes i Coolify før neste deploy
+- CR-013 (Done, bekreftet i produksjon) — Direkte utsending av bruksgodkjenningsforespørsel på e-post (til godkjenner, cc caseeier), erstatter "kopier tekst"-flyten. To runder feilsøking på godkjenningslenken før den fungerte: (1) request.url.origin upålitelig bak Coolify/Traefik, byttet til NEXT_PUBLIC_APP_URL — (2) det slo heller ikke gjennom, fordi NEXT_PUBLIC_-variabler bygges statisk inn i koden ved build time (også server-side). Endte på en vanlig `APP_URL` (uten prefiks), satt i Coolify. Bekreftet fungerende av produkteier 2026-08-03
 - CR-014 (kodet, IKKE testet i prod) — Brukere kan nå overstyre sitt eget visningsnavn (blyant ved "Ansvarlig" på case-siden, kun for seg selv). Løser at nameFromEmail() mister spesialtegn (æøå) som ikke finnes i e-postadressen
 
 ## Production URL
@@ -98,7 +99,7 @@ https://effektbibliotek.vercel.app (gammel, beholdes urørt inntil Coolify er fu
 - Innlogging (OTP via Brevo) i produksjon: ✓ bekreftet av produkteier 2026-08-03
 
 ## Next Recommended Actions
-1. **Sett `APP_URL=https://effektbibliotek.basbeta.no` i Coolify** (ny variabel — ikke `NEXT_PUBLIC_APP_URL`, den virker ikke for denne bruken, se CR-013), deploy fiksen, og send en ny testforespørsel — verifiser at godkjenningslenken nå peker på riktig domene og fungerer
+1. Test CR-014 i produksjon: rediger eget navn via blyanten på en case man eier, verifiser at det oppdateres på siden og i SideNav uten ny innlogging
 2. Ende-til-ende-test av resten: case-opprettelse, redigering, bekreftelses-e-post etter innsendt godkjenning
 3. Opprett admin-bruker i den nye databasen (første login + manuell `isAdmin`-sett i Coolify sin database-ressurs)
 4. Utføre resterende `docs/COOLIFY-DEPLOY.md`-steg (backup, Uptime Kuma) hvis ikke allerede gjort

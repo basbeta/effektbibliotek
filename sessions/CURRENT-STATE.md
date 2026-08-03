@@ -3,10 +3,10 @@
 > Updated at the end of every session. Read by Claude at startup.
 
 ## Current Phase
-MIGRERING PÅGÅR — CR-008: porting fra Vercel/Neon til Hetzner/Coolify/PostgreSQL 18. Repo-siden er ferdig; manuelt Coolify-oppsett gjenstår.
+MIGRERING NESTEN FERDIG — CR-008: porting fra Vercel/Neon til Hetzner/Coolify/PostgreSQL 18. Appen kjører stabilt på `effektbibliotek.basbeta.no`, innlogging er bekreftet fungerende i produksjon (CR-009/010/011). Gjenstår: backup/overvåking-steg og full ende-til-ende-test av resten av appen (case-opprettelse, godkjenningsflyt).
 
 ## Current Objectives
-Fullføre CR-008: produkteier utfører manuelle Coolify-steg i `docs/COOLIFY-DEPLOY.md` (database, app-ressurs, domene, env-vars, backup, Uptime Kuma). Vercel/Neon beholdes urørt som fallback til Coolify er verifisert.
+Fullføre resten av `docs/COOLIFY-DEPLOY.md` (backup, Uptime Kuma) og verifisere at case-opprettelse og bruksgodkjenningsflyten fungerer på den nye databasen, ikke bare innlogging. Deretter fjerne Vercel/Neon.
 
 ## Current Branch
 claude/effektbibliotek-publish-database-nsrizw
@@ -27,7 +27,7 @@ Fikset: `Dockerfile` CMD byttet fra `prisma migrate deploy` til `prisma db push 
 2. Antok interaktiv bekreftelse uten TTY som årsak, la til `--accept-data-loss` (commit 697c2cc) — også feil gjetning, samme crash-loop.
 3. **Faktisk feil, bekreftet fra container-logg:** `! unknown or unexpected option: --skip-generate` — denne Prisma CLI-versjonen godtar ikke det flagget på `db push`. Fjernet det. Endelig CMD: `npx prisma db push --accept-data-loss && npm run start`.
 
-**CR-011 forblir In Progress inntil et faktisk stabilt deploy er bekreftet.**
+**CR-011 bekreftet løst:** Container kjører stabilt, produkteier logget inn på effektbibliotek.basbeta.no, mottok og verifiserte engangskode. Innlogging fungerer i produksjon.
 
 ## Active Change Requests
 - CR-001 (Done) — Auth
@@ -43,8 +43,8 @@ Fikset: `Dockerfile` CMD byttet fra `prisma migrate deploy` til `prisma db push 
 - CR-011 (Done) — Faktisk rotårsak: tomt databaseskjema (db push i stedet for migrate deploy) + manglende feilhåndtering i request-code-routen
 
 ## Production URL
-https://effektbibliotek.vercel.app (gammel, beholdes til Coolify er verifisert)
-Planlagt ny: https://effektbibliotek.basbeta.no
+https://effektbibliotek.basbeta.no — live, innlogging bekreftet fungerende
+https://effektbibliotek.vercel.app (gammel, beholdes urørt inntil Coolify er fullt verifisert)
 
 ## Recently Modified Systems
 - Dockerfile, .dockerignore — nye, for Coolify Dockerfile-build-pack
@@ -93,16 +93,15 @@ Planlagt ny: https://effektbibliotek.basbeta.no
 ## Validation Status
 - Build (lokal, `npm run build`): ✓
 - TypeScript: ✓ (ingen feil)
-- Docker build: ikke testbart i denne økten (ingen Docker-daemon tilgjengelig i sandkassen) — bør verifiseres av produkteier eller i Coolify sin egen build
+- Docker build: verifisert indirekte — bygger og kjører stabilt i Coolify (produkteiers egen build)
 - Build (Vercel prod, gammel): ✓
-- Deploy Coolify: ikke utført ennå — manuelt, se `docs/COOLIFY-DEPLOY.md`
+- Deploy Coolify: ✓ live på effektbibliotek.basbeta.no, container kjører stabilt (ikke lenger crash-loop)
+- Innlogging (OTP via Brevo) i produksjon: ✓ bekreftet av produkteier 2026-08-03
 
 ## Next Recommended Actions
-1. Deploy CR-011 til Coolify og test innlogging på nytt — `db push` bør opprette alle tabeller ved oppstart
-2. Verifiser i Coolify database-ressursen at tabellene faktisk finnes etter deploy
-3. Ende-til-ende-test på `effektbibliotek.basbeta.no`: innlogging, case-opprettelse, godkjenningsflyt, bekreftelses-e-post
-4. Opprett admin-bruker i den nye databasen (samme prosedyre som tidligere: første login + manuell `isAdmin`-sett)
-5. Utføre resterende `docs/COOLIFY-DEPLOY.md`-steg (backup, Uptime Kuma) hvis ikke allerede gjort
-6. Når Coolify-oppsettet er verifisert stabilt: fjern Vercel-prosjektet og slett Neon-databasen (ingen data å ta vare på)
-7. Vurder å innføre formelle `prisma migrate`-migreringer før effektbiblioteket har ekte produksjonsdata av verdi (se Risks i CR-011) — `db push` er greit for beta, men gir ingen reviewbar skjemahistorikk
-8. Vurder om `docs_extracted.txt` skal gitignores (sensitiv prod-dokumentasjon) — uavhengig av denne migreringen
+1. Ende-til-ende-test på `effektbibliotek.basbeta.no` utover innlogging: case-opprettelse, redigering, bruksgodkjenningsflyt, bekreftelses-e-post
+2. Opprett admin-bruker i den nye databasen (første login + manuell `isAdmin`-sett i Coolify sin database-ressurs)
+3. Utføre resterende `docs/COOLIFY-DEPLOY.md`-steg (backup, Uptime Kuma) hvis ikke allerede gjort
+4. Når Coolify-oppsettet er verifisert stabilt over noen dager: fjern Vercel-prosjektet og slett Neon-databasen (ingen data å ta vare på), marker CR-008 som Done
+5. Vurder å innføre formelle `prisma migrate`-migreringer før effektbiblioteket har ekte produksjonsdata av verdi (se Risks i CR-011) — `db push` er greit for beta, men gir ingen reviewbar skjemahistorikk
+6. Vurder om `docs_extracted.txt` skal gitignores (sensitiv prod-dokumentasjon) — uavhengig av denne migreringen

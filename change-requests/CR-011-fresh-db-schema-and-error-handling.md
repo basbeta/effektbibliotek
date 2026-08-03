@@ -1,6 +1,6 @@
 # CR-011: Faktisk rotårsak for hengende OTP-innlogging — manglende databaseskjema + manglende feilhåndtering
 
-**Status:** In Progress
+**Status:** Done
 **Created:** 2026-08-03
 
 ---
@@ -76,4 +76,6 @@ Diagnostisert direkte fra Coolify sine runtime-logger (Prisma-feilkode P2021, `T
 
 **Oppdatering samme dag (forsøk 2):** Første forsøk (`prisma db push --skip-generate`, uten `--accept-data-loss`) crashet containeren — 10x restart-loop, "Exited (10x restarts) Stopped after reaching restart limit (10/10)" i Coolify. Antok først interaktiv bekreftelse uten TTY som årsak, la til `--accept-data-loss`.
 
-**Oppdatering samme dag (forsøk 3):** Fikk denne gang faktisk tak i container-loggene (via Logs-fanen med riktig container-instans valgt). Den ekte feilen var noe helt annet enn antatt: `! unknown or unexpected option: --skip-generate` — denne Prisma CLI-versjonen (7.x) godtar ikke `--skip-generate` på `db push` i det hele tatt. Kommandoen feilet umiddelbart på et ugyldig flagg, `&&`-kjeden stoppet, `npm run start` kjørte aldri, helsesjekk feilet, restart-loop. `--accept-data-loss`-hypotesen var aldri testet isolert — det spiller ingen rolle siden roten var flagg-parsing, ikke en interaktiv prompt. Fjernet `--skip-generate` (var uansett bare en mikro-optimalisering — klienten er allerede generert i build-steget). Endelig CMD: `npx prisma db push --accept-data-loss && npm run start`. **Ikke bekreftet virkende ennå** — status forblir In Progress inntil et vellykket, stabilt deploy er observert.
+**Oppdatering samme dag (forsøk 3):** Fikk denne gang faktisk tak i container-loggene (via Logs-fanen med riktig container-instans valgt). Den ekte feilen var noe helt annet enn antatt: `! unknown or unexpected option: --skip-generate` — denne Prisma CLI-versjonen (7.x) godtar ikke `--skip-generate` på `db push` i det hele tatt. Kommandoen feilet umiddelbart på et ugyldig flagg, `&&`-kjeden stoppet, `npm run start` kjørte aldri, helsesjekk feilet, restart-loop. `--accept-data-loss`-hypotesen var aldri testet isolert — det spiller ingen rolle siden roten var flagg-parsing, ikke en interaktiv prompt. Fjernet `--skip-generate` (var uansett bare en mikro-optimalisering — klienten er allerede generert i build-steget). Endelig CMD: `npx prisma db push --accept-data-loss && npm run start`.
+
+**Bekreftet løst (commit 0377011):** Container status gikk til "Running" (ikke lenger crash-loop). Produkteier logget inn på `effektbibliotek.basbeta.no`, mottok engangskode på e-post, og fullførte innlogging. Hele feilsøkingskjeden (CR-009 → CR-010 → CR-011) er dermed verifisert i faktisk produksjon.

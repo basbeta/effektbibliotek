@@ -112,3 +112,14 @@ ALTERNATIVES CONSIDERED: Generere formelle `prisma migrate`-migreringsfiler i st
 RATIONALE: `db push` er korrekt gitt at ingen migreringshistorikk noensinne har eksistert — å late som migrate deploy ville fungere er det som faktisk forårsaket bugen. Try/catch-fiksen er en generell robusthetsforbedring: enhver uhåndtert feil i denne routen ville gitt samme "evig hengende UI"-symptom, uavhengig av årsak.
 CONSEQUENCES: Neste deploy oppretter alle tabeller i den ferske databasen. `db push` gir ingen reviewbar skjemahistorikk — anbefalt å vurdere formelle migreringer før prosjektet har ekte data av verdi. Alle fremtidige feil i request-code-routen vil nå vises til brukeren i stedet for å henge UI-et.
 DECIDED BY: both
+
+---
+
+DATE: 2026-08-03
+DECISION: CR-011 løsning bekreftet — dokumentere lærdom om to feilslåtte mellomsteg som tok ned produksjon
+CONTEXT: Det første CR-011-forsøket (`prisma db push --skip-generate`) crash-loopet containeren 10 ganger og tok ned hele appen — verre enn utgangspunktet (hvor i det minste innloggingssiden lastet, selv om innlogging feilet). Andre forsøk gjettet feil årsak (antok interaktiv bekreftelsesprompt uten TTY, la til `--accept-data-loss`) og crashet likt. Kun ved å faktisk lese container-loggene (ikke Coolify sin orkestrerings-/deployment-log, som viser build/rollout men ikke stdout fra selve containeren) ble den ekte feilen funnet: `--skip-generate` er ikke et gyldig flagg for `db push` i denne Prisma-versjonen.
+DECISION: Endelig CMD (`npx prisma db push --accept-data-loss && npm run start`) er deployet og bekreftet — produkteier logget inn, mottok og verifiserte OTP-kode på effektbibliotek.basbeta.no.
+ALTERNATIVES CONSIDERED: —
+RATIONALE: —
+CONSEQUENCES: Lærdom for fremtidig feilsøking i dette prosjektet: (1) Coolify sin "Deployment"-log ≠ container sin runtime-log — sistnevnte krever at man velger riktig, aktiv container-instans under "Logs"-fanen, og forsvinner når containeren crash-looper til stopp. (2) Gjett aldri på årsaken til en containerkrasj når faktiske logger er hentbare — begge mellomforsøkene her var plausible, velbegrunnede hypoteser som viste seg feil, og kostet reell nedetid. (3) Verifiser CLI-flagg mot den faktiske installerte versjonen (Prisma 7.x her) fremfor generell kunnskap om eldre versjoner.
+DECIDED BY: both

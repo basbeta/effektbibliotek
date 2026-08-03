@@ -77,12 +77,13 @@ Opened: 2026-07-31
 Update: 2026-08-03 — effektbibliotek.basbeta.no er live, men OTP-innlogging hang uten å sende e-post. Se ISSUE-008.
 
 ISSUE-008
-Status: Open
+Status: Resolved
 Priority: High
 Area: Dockerfile / app/api/auth/request-code
-Description: OTP-innlogging på effektbibliotek.basbeta.no hang. CR-009 (SMTP-timeout) og CR-010 (DB connection-timeout) var begge reelle forbedringer, men ingen av dem var rotårsaken — bekreftet ved at hengingen fortsatte etter begge var deployet. Coolify sine runtime-logger avslørte faktisk årsak: databasen hadde ingen tabeller (prisma migrate deploy fant ingen migreringsfiler, siden prisma/migrations aldri har eksistert i repoet), og request-code-routen hadde ingen try/catch, så feilen ga et 500-svar som fikk frontend sin `res.json()` til å henge i stedet for å vise en feilmelding. Fikset i CR-011: Dockerfile bruker nå `prisma db push` i stedet for `migrate deploy`, og routen returnerer alltid gyldig JSON ved feil. IKKE bekreftet løst i faktisk prod ennå — krever redeploy og ny test.
+Description: OTP-innlogging på effektbibliotek.basbeta.no hang. CR-009 (SMTP-timeout) og CR-010 (DB connection-timeout) var begge reelle forbedringer, men ingen av dem var rotårsaken. Coolify sine runtime-logger avslørte faktisk årsak: databasen hadde ingen tabeller (prisma migrate deploy fant ingen migreringsfiler, siden prisma/migrations aldri har eksistert i repoet), og request-code-routen hadde ingen try/catch, så feilen ga et 500-svar som fikk frontend sin `res.json()` til å henge i stedet for å vise en feilmelding. Fikset i CR-011: Dockerfile bruker nå `prisma db push --accept-data-loss` i stedet for `migrate deploy`, og routen returnerer alltid gyldig JSON ved feil.
 Blocker for: Fungerende innlogging i produksjon
 Opened: 2026-08-03
+Resolved: 2026-08-03 — Bekreftet av produkteier: engangskode mottatt og innlogging fullført på effektbibliotek.basbeta.no.
 
 ISSUE-009
 Status: Open

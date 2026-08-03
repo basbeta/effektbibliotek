@@ -37,7 +37,7 @@ Node.js 22 (matcher Dockerfile) installert på denne maskinen via `winget instal
 - CR-010 (Done) — Connection-timeout på Prisma/pg-adapteren (bugfix, ikke rotårsak)
 - CR-011 (Done) — Faktisk rotårsak: tomt databaseskjema (db push i stedet for migrate deploy) + manglende feilhåndtering i request-code-routen
 - CR-012 (Done) — Feilsporing med Bugsink (Sentry-kompatibel, selvhostet på errors.basbeta.no). Verifisert i produksjon: bevisst testfeil dukket opp i Bugsink
-- CR-013 (kodet, IKKE testet i prod) — Direkte utsending av bruksgodkjenningsforespørsel på e-post (til godkjenner, cc caseeier), erstatter "kopier tekst"-flyten. Første test avslørte at godkjenningslenken pekte på localhost:3000 — fikset ved å bruke NEXT_PUBLIC_APP_URL i stedet for request.url.origin i API-routes (upålitelig bak Coolify/Traefik). Krever at NEXT_PUBLIC_APP_URL settes i Coolify før neste deploy
+- CR-013 (kodet, IKKE testet i prod) — Direkte utsending av bruksgodkjenningsforespørsel på e-post (til godkjenner, cc caseeier), erstatter "kopier tekst"-flyten. To runder feilsøking på godkjenningslenken: (1) request.url.origin upålitelig bak Coolify/Traefik, byttet til NEXT_PUBLIC_APP_URL — (2) det slo heller ikke gjennom, fordi NEXT_PUBLIC_-variabler bygges statisk inn i koden ved build time (også server-side), så en runtime-only-satt variabel har ingen effekt. Byttet til en vanlig `APP_URL` (uten prefiks). Krever at `APP_URL` (IKKE `NEXT_PUBLIC_APP_URL`) settes i Coolify før neste deploy
 - CR-014 (kodet, IKKE testet i prod) — Brukere kan nå overstyre sitt eget visningsnavn (blyant ved "Ansvarlig" på case-siden, kun for seg selv). Løser at nameFromEmail() mister spesialtegn (æøå) som ikke finnes i e-postadressen
 
 ## Production URL
@@ -98,7 +98,7 @@ https://effektbibliotek.vercel.app (gammel, beholdes urørt inntil Coolify er fu
 - Innlogging (OTP via Brevo) i produksjon: ✓ bekreftet av produkteier 2026-08-03
 
 ## Next Recommended Actions
-1. **Sett `NEXT_PUBLIC_APP_URL=https://effektbibliotek.basbeta.no` i Coolify** (mangler helt i dag), deploy CR-013 sin fiks, og send en ny testforespørsel — verifiser at godkjenningslenken nå peker på riktig domene og fungerer
+1. **Sett `APP_URL=https://effektbibliotek.basbeta.no` i Coolify** (ny variabel — ikke `NEXT_PUBLIC_APP_URL`, den virker ikke for denne bruken, se CR-013), deploy fiksen, og send en ny testforespørsel — verifiser at godkjenningslenken nå peker på riktig domene og fungerer
 2. Ende-til-ende-test av resten: case-opprettelse, redigering, bekreftelses-e-post etter innsendt godkjenning
 3. Opprett admin-bruker i den nye databasen (første login + manuell `isAdmin`-sett i Coolify sin database-ressurs)
 4. Utføre resterende `docs/COOLIFY-DEPLOY.md`-steg (backup, Uptime Kuma) hvis ikke allerede gjort

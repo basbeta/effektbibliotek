@@ -15,7 +15,7 @@ const transporter = nodemailer.createTransport({
 });
 
 const FROM = process.env.FROM_EMAIL ?? "Effektbibliotek <effektbibliotek@basbeta.no>";
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+const APP_URL = process.env.APP_URL ?? "http://localhost:3000";
 
 export async function sendOtpEmail(to: string, otp: string): Promise<void> {
   await transporter.sendMail({

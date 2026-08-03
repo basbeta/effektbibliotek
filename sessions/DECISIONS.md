@@ -167,3 +167,14 @@ ALTERNATIVES CONSIDERED: Finne og fikse hvorfor Traefik ikke videresender riktig
 RATIONALE: En eksplisitt, driftssatt env-variabel med en fast, kjent produksjons-URL er mer pålitelig enn å stole på at en reverse proxy videresender headere korrekt — spesielt når vi allerede har konkret bevis på at den ikke gjør det i denne konfigurasjonen.
 CONSEQUENCES: Krever at `NEXT_PUBLIC_APP_URL` er satt i Coolify for at lenker i e-post skal bli riktige — uten den, samme bug som før. Samme latente feil eksisterte fra før i lib/email.ts sin "Se casen her"-lenke (CR-004), ikke bare i CR-013 sin nye kode — den er nå også dekket siden den allerede leste NEXT_PUBLIC_APP_URL. Fremtidig kode som bygger absolutte URL-er i API-routes bør følge samme mønster (env-var først), ikke stole blindt på request.url.origin.
 DECIDED BY: both
+
+---
+
+DATE: 2026-08-03
+DECISION: Bruk vanlig APP_URL i stedet for NEXT_PUBLIC_APP_URL for server-only lenkebygging
+CONTEXT: Etter forrige fiks (bytte fra request.url.origin til NEXT_PUBLIC_APP_URL) var godkjenningslenken i e-post fortsatt uendret selv etter at variabelen var satt i Coolify og appen redeployet. Next.js bygger enhver `process.env.NEXT_PUBLIC_*`-referanse statisk inn i koden ved `next build` — uavhengig av om referansen faktisk havner i klient- eller serverkode. Hvis variabelen ikke var tilgjengelig i selve Docker build-steget (kun flagget "Runtime" i Coolify, ikke nødvendigvis "Buildtime", eller feil rekkefølge), blir den kompilert inn som `undefined` permanent — ingen senere runtime-endring i miljøet kan endre det, siden verdien aldri leses dynamisk.
+DECISION: Fjern `NEXT_PUBLIC_`-prefikset for denne variabelen. Bruk en vanlig `APP_URL`, lest normalt via `process.env.APP_URL` ved runtime, siden verdien kun brukes i server-only kode (e-postmaler, API-routes) og aldri i klientbundelen.
+ALTERNATIVES CONSIDERED: Sørge for at NEXT_PUBLIC_APP_URL er tilgjengelig ved buildtime i Coolify (huke av "Available at Buildtime") — ville sannsynligvis løst symptomet, men beholder en unødvendig NEXT_PUBLIC_-prefiks (og dermed unødvendig eksponering til klientbundelen) for en verdi som aldri trengs der.
+RATIONALE: NEXT_PUBLIC_-prefikset finnes for å bevisst eksponere en variabel til nettleserkoden — det er ikke "en variabel som også virker på server". Å bruke prefikset for noe som kun trengs server-side er feil bruk av mekanismen og introduserer akkurat denne typen build-vs-runtime-forvirring. CR-012 sin Bugsink-DSN trenger fortsatt NEXT_PUBLIC_-varianten (client-side feilsporing), så det er ikke roten som er problemet — det er å bruke det prefikset der det ikke trengs.
+CONSEQUENCES: Coolify-variabelen må hete `APP_URL`, ikke `NEXT_PUBLIC_APP_URL`. Fremtidig kode som trenger en server-only konfigurasjonsverdi bør aldri bruke NEXT_PUBLIC_-prefiks med mindre verdien faktisk skal være synlig i nettleserens JavaScript.
+DECIDED BY: both

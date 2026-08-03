@@ -34,7 +34,7 @@ Sett disse i Coolify sitt env-panel — se `.env.example` i repoet for full list
 | `FROM_EMAIL` | `Effektbibliotek <effektbibliotek@basbeta.no>` |
 | `SENTRY_DSN` | DSN fra Bugsink (`errors.basbeta.no`, prosjekt "effektbibliotek") — bruk den offentlige hosten, ikke `localhost` |
 | `NEXT_PUBLIC_SENTRY_DSN` | Samme DSN som `SENTRY_DSN` (kreves separat siden denne må være tilgjengelig i nettleseren) |
-| `NEXT_PUBLIC_APP_URL` | `https://effektbibliotek.basbeta.no` — brukes til å bygge lenker i utgående e-post (godkjenningslenke, case-lenke). `request.url.origin` er upålitelig bak Traefik i API-routes og resolver til `localhost:3000` uten denne satt (oppdaget i CR-013) |
+| `APP_URL` | `https://effektbibliotek.basbeta.no` — brukes til å bygge lenker i utgående e-post (godkjenningslenke, case-lenke). **IKKE** `NEXT_PUBLIC_APP_URL` — den prefiksen får Next.js til å bygge verdien statisk inn i koden ved build time, så en senere runtime-endring har ingen effekt (oppdaget i CR-013 etter at et første forsøk med `NEXT_PUBLIC_APP_URL` ikke slo gjennom). `request.url.origin` er dessuten upålitelig bak Traefik i API-routes og resolver til `localhost:3000` uten denne satt |
 
 Merk: `effektbibliotek@basbeta.no` må finnes som avsenderadresse/alias godkjent i Brevo (domenet `basbeta.no` er allerede SPF/DKIM/DMARC-verifisert der).
 

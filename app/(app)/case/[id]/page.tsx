@@ -295,21 +295,23 @@ export default async function CaseDetailPage({ params }: Props) {
         </div>
       )}
 
-      <ApprovalSection
-        caseId={c.id}
-        status={c.usageApprovalStatus}
-        canManage={canEdit}
-        lastApproval={c.usageApprovals[0] ?? null}
-        approverName={c.approverName}
-        approverEmail={c.approverEmail}
-        caseTitle={c.title}
-        ownerName={c.owner.name}
-        ownerEmail={c.owner.email}
-        token={c.usageApprovalToken}
-        appUrl={process.env.APP_URL ?? ""}
-      />
+      <div className="mb-4">
+        <ApprovalSection
+          caseId={c.id}
+          status={c.usageApprovalStatus}
+          canManage={canEdit}
+          lastApproval={c.usageApprovals[0] ?? null}
+          approverName={c.approverName}
+          approverEmail={c.approverEmail}
+          caseTitle={c.title}
+          ownerName={c.owner.name}
+          ownerEmail={c.owner.email}
+          token={c.usageApprovalToken}
+          appUrl={process.env.APP_URL ?? ""}
+        />
+      </div>
 
-      <LinksSection caseId={c.id} links={c.links} files={c.files} canManage={canEdit} />
+      <LinksSection caseId={c.id} links={c.links} files={c.files} canManage={false} />
 
       <div
         className="rounded-xl p-4 text-xs mt-4"

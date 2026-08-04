@@ -16,11 +16,10 @@ master (alle CR-009–023-endringer er pushet direkte til master denne økten, i
 
 ## Blockers
 Manuelt Coolify/Hetzner-oppsett kan ikke utføres fra Claude Code-økten (ingen tilgang til Coolify-instansen). Krever produkteier/admin på `coolify.basbeta.no`.
-**CR-024 to-deploy-prosess, nesten ferdig:** Deploy A (kun `prisma/migrations/`-mappen) er pushet og live. Produkteier har kjørt `npx prisma migrate resolve --applied 20260804120000_init` via Coolify Terminal og bekreftet: "Migration 20260804120000_init marked as applied." Dockerfile CMD er nå endret til `prisma migrate deploy` (Deploy B) og klar til push — se docs/COOLIFY-DEPLOY.md §4b. Gjenstår: push Deploy B og bekreft i Coolify sin deploy-logg at `migrate deploy` rapporterer "No pending migrations to apply" og at appen starter normalt.
 
 ## Risks / Tech Debt (per 2026-08-04)
 - **Ingen automatiserte tester i prosjektet.** All verifisering denne økten var `npm run build`/TypeScript-sjekk + manuell produksjonstesting av produkteier. Fungerer for nå, men skalerer dårlig etter hvert som appen vokser — regressonsrisiko ved fremtidige endringer er reelt.
-- **`prisma db push` i stedet for formelle migreringer** (ISSUE-009) — nå to ganger brukt til å droppe kolonner med reelt datatap (CR-011, CR-020). Akseptabelt i beta, men risikabelt hvis gjentatt etter at appen har ekte kundedata.
+- ~~`prisma db push` i stedet for formelle migreringer~~ (ISSUE-009, **løst 2026-08-04 via CR-024**) — appen bruker nå `prisma migrate deploy` med en reviewbar migreringshistorikk. Fremtidige skjemaendringer skal gjøres med `prisma migrate dev` lokalt.
 - **CR-015, 016, 018, 019 ikke enkeltvis bekreftet** (ISSUE-010) — lav risiko, men reply-to-headeren (CR-018) spesielt er kun kodebekreftet, ikke funksjonelt testet med et faktisk svar.
 - **Ingen tilgang til Coolify-instansen fra Claude Code-økter** — enhver fremtidig feilsøking som krever env-var-endringer, redeploy-trigger, eller database-terminal må gjøres av produkteier manuelt, med skjermbilder/copy-paste av logger tilbake til denne økten. Dette var flaskehalsen i mesteparten av CR-009–011-feilsøkingen.
 - **Vercel/Neon (gammel produksjon) står fortsatt aktiv** som fallback — ingen data av verdi der, men bør ryddes opp når Coolify er verifisert stabilt over noen dager (se Next Actions).
@@ -58,7 +57,7 @@ Node.js 22 (matcher Dockerfile) installert på denne maskinen via `winget instal
 - CR-021 (Done, bekreftet i produksjon) — Bruksrettigheter skrivebeskyttet i redigeringsskjemaet når submitted_locked (viser hvem som godkjente + dato), håndhevet UI + server-side
 - CR-022 (Done, bekreftet i produksjon) — Tydeligere låst visning, "Lås opp godkjenning" direkte fra redigeringsskjemaet
 - CR-023 (Done, bekreftet i produksjon 2026-08-04) — ApprovalSection permanent utvidet når submitted_locked; redigerbar liste viser bold/dempet basert på avkrysning; låst visning bruker ✓/— (flat stil, matcher appens øvrige read-only lister — valgt fremfor ☑/☐ etter avklaring med produkteier)
-- CR-024 (In Progress) — Formelle Prisma-migreringer (ISSUE-009). Deploy A pushet og live. Manuelt `migrate resolve --applied`-steg bekreftet utført av produkteier. Deploy B (Dockerfile CMD → `migrate deploy`) klar til push, gjenstår kun å bekrefte deploy-loggen etterpå
+- CR-024 (Done, bekreftet i produksjon 2026-08-04) — Formelle Prisma-migreringer (ISSUE-009), rullet ut i to atskilte deploys pga. autodeploy på master: Deploy A (migreringsfiler, uendret CMD) → manuelt `migrate resolve --applied` mot prod via Coolify Terminal → Deploy B (CMD → `migrate deploy`). Begge deploys bekreftet vellykket, appen kjører normalt
 
 ## Production URL
 https://effektbibliotek.basbeta.no — live, innlogging bekreftet fungerende
@@ -107,11 +106,11 @@ https://effektbibliotek.vercel.app (gammel, beholdes urørt inntil Coolify er fu
 - `Promise.allSettled()` for e-postutsending (feil i e-post stopper ikke godkjenning)
 - `prisma generate && next build` i build-script — kjøres nå inne i Docker-imaget, ikke på Vercel
 - Prisma 7 driver adapter er "engine-less" (ingen Rust query-engine-binær) — Dockerfile trenger ikke kopiere Prisma-engines separat
-- `prisma migrate deploy` kjøres i container-`CMD` ved hver oppstart (idempotent) i stedet for som eget Coolify-hook
+- `prisma migrate deploy` kjøres i container-`CMD` ved hver oppstart (idempotent) i stedet for som eget Coolify-hook — **fra CR-024 (2026-08-04) er dette nå faktisk sant**, se linjen under om CR-011/CR-024-historikken
 - Node 22 Alpine i Dockerfile for å matche faktisk utviklingsmiljø (avviker fra `basbeta-bootstrap`-malens Node 20)
 - nodemailer-transportøren i lib/email.ts hadde ingen connection/socket-timeout — en feilkonfigurert eller nettverksmessig utilgjengelig SMTP-server hang requesten på ubestemt tid i stedet for å feile (CR-009)
 - `pg.Pool` (brukt av `@prisma/adapter-pg`) sin default `connectionTimeoutMillis` er `0` — ingen timeout, venter for alltid ved utilgjengelig database. Satt eksplisitt til 10s i lib/prisma.ts (CR-010). Samme bugklasse som CR-009, bare ett lag lenger opp i requesten
-- `prisma/migrations` har ALDRI eksistert i dette repoet — prosjektet har alltid brukt `prisma db push` for skjema, ikke formelle migreringer. `prisma migrate deploy` i Dockerfile CMD var derfor en stille no-op mot den ferske Coolify-databasen (CR-011)
+- `prisma/migrations` eksisterte ikke i dette repoet før CR-024 (2026-08-04) — frem til da brukte prosjektet alltid `prisma db push` for skjema. `prisma migrate deploy` i Dockerfile CMD var derfor en stille no-op mot den ferske Coolify-databasen i CR-011. CR-024 rettet opp dette: baseline-migrering generert og produksjonsdatabasen baselinet med `migrate resolve --applied`, rullet ut i to atskilte deploys pga. autodeploy (se `sessions/DECISIONS.md` for full rekkefølge). Skjemaendringer skal fra nå av gjøres med `prisma migrate dev` lokalt, ikke `db push`
 - Uhåndterte feil i en Next.js Route Handler gir ikke garantert gyldig JSON-svar — hvis frontend gjør `res.json()` uten feilhåndtering, kan en rask serverfeil se ut som en evig hengende request i UI-et (CR-011)
 - `NEXT_PUBLIC_*`-variabler bygges statisk inn i koden ved `next build`, også i server-only kode — en variabel som ikke er tilgjengelig ved selve build-steget (kun "Runtime" i Coolify, ikke "Buildtime") blir permanent `undefined`, uansett senere runtime-endringer. Bruk aldri dette prefikset for verdier som kun trengs server-side (CR-013)
 - Sentry sin transport følger ikke HTTP-redirects — hvis Bugsink-hosten redirecter HTTP→HTTPS, feiler event-sending stille med kun en `debug: true`-synlig 307-logglinje, ingen synlig feil ellers (CR-012)
@@ -128,6 +127,7 @@ https://effektbibliotek.vercel.app (gammel, beholdes urørt inntil Coolify er fu
 - Direkte utsending av bruksgodkjenning (CR-013): ✓ bekreftet — e-post sendt og godkjenningslenke fungerer
 - Rediger eget navn (CR-014): ✓ bekreftet
 - Forenklet bruksrettighets-system, låst/opplåst UI (CR-020–023): ✓ bekreftet av produkteier 2026-08-04, inkl. skjemaendring (kolonner droppet) uten problemer
+- Formelle Prisma-migreringer (CR-024): ✓ bekreftet av produkteier 2026-08-04 — begge deploys (baseline-migrering, deretter CMD-bytte til `migrate deploy`) fullførte uten feil, appen kjører normalt
 
 ## Next Actions (prioritert)
 1. **(Anbefalt, lav innsats)** Bekreft CR-015, CR-016, CR-018, CR-019 hver for seg hvis full sikkerhet ønskes: (a) sammenlign e-postforhåndsvisning mot faktisk mottatt e-post ord for ord, (b) svar på en godkjenningsforespørsel-e-post og verifiser at svaret går til caseeieren (reply-to), (c) les gjennom kvitteringssiden og personvernteksten på selve godkjenningssiden (ikke bare i e-post)
@@ -135,6 +135,6 @@ https://effektbibliotek.vercel.app (gammel, beholdes urørt inntil Coolify er fu
 3. Ende-til-ende-test av gjenstående flyter: case-opprettelse, redigering av felt utenom bruksrettigheter (de er nå grundig testet)
 4. Utføre resterende `docs/COOLIFY-DEPLOY.md`-steg (backup, Uptime Kuma) — ISSUE-007, delvis løst
 5. Når Coolify-oppsettet er verifisert stabilt over noen dager: fjern Vercel-prosjektet og slett Neon-databasen (ingen data å ta vare på), marker CR-008 som Done
-6. Vurder å innføre formelle `prisma migrate`-migreringer før effektbiblioteket har ekte produksjonsdata av verdi (se ISSUE-009) — `db push` er greit for beta, men gir ingen reviewbar skjemahistorikk, og har nå to ganger (CR-011, CR-020) medført reelt datatap-håndtering ved deploy
+6. ~~Vurder å innføre formelle `prisma migrate`-migreringer~~ — **løst 2026-08-04, CR-024**
 7. Vurder om `docs_extracted.txt` skal gitignores (sensitiv prod-dokumentasjon) — ISSUE-005, fortsatt åpen
 8. Vurder om det skal legges til en enkel automatisert test/smoke-test-suite — hele denne økten er verifisert med `npm run build` + manuell produksjonstesting, ingen automatiserte tester finnes ennå i prosjektet

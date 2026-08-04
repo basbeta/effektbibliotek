@@ -1,6 +1,6 @@
 # CR-024: Formelle Prisma-migreringer i stedet for db push
 
-**Status:** In Progress
+**Status:** Done
 **Created:** 2026-08-04
 
 ---
@@ -64,8 +64,8 @@ Ingen målbar — `migrate deploy` og `db push` har lik oppstartskostnad.
 - [x] `docs/COOLIFY-DEPLOY.md` dokumenterer to-deploy-prosessen og engangs-mellomsteget tydelig
 - [x] Deploy A pushet og bekreftet live (autodeploy) — commit 7c012ea
 - [x] Produkteier har kjørt `migrate resolve --applied` mot produksjonsdatabasen via Coolify Terminal — bekreftet 2026-08-04: "Migration 20260804120000_init marked as applied."
-- [x] Dockerfile CMD endret til `prisma migrate deploy` i en EGEN, senere commit (Deploy B)
-- [ ] Deploy B fullfører uten feil, bekreftet i deploy-loggen ("No pending migrations to apply")
+- [x] Dockerfile CMD endret til `prisma migrate deploy` i en EGEN, senere commit (Deploy B) — commit 4fad3b5
+- [x] Deploy B fullførte uten feil, bekreftet av produkteier 2026-08-04: deploy-loggen så ren ut, appen kjører
 
 ## Required Tests
 - [ ] Unit: —
@@ -92,4 +92,4 @@ Krever produkteiers tilgang til Coolify sin database-ressurs for engangssteget (
 - `migration.sql` gjennomlest manuelt og verifisert å reflektere alle modeller/enums/relasjoner i `schema.prisma` korrekt
 - `npm run build` / `npx tsc --noEmit`: ✓ (Deploy A, ingen kodeendring; kjørt på nytt etter Deploy B sin Dockerfile-endring, fortsatt ✓)
 - Deploy A verifisert live, deretter `npx prisma migrate resolve --applied 20260804120000_init` kjørt av produkteier via Coolify Terminal — output bekreftet: "Migration 20260804120000_init marked as applied." Datasource-linjen i output bekreftet at kommandoen traff produksjonsdatabasen (`j6dg0ut8t0fxm512u3ntpnfs:5432`), ikke en lokal/dev-database
-- Gjenstår: verifisere at Deploy B (denne committen) faktisk deployer uten feil i Coolify sin deploy-logg
+- Deploy B pushet (4fad3b5) og bekreftet av produkteier 2026-08-04: deploy-loggen så ren ut, appen kjører normalt på `effektbibliotek.basbeta.no`. CR-024 lukket.

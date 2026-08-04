@@ -92,3 +92,12 @@ Area: prisma/ (skjemastyring)
 Description: Prosjektet har aldri hatt en `prisma/migrations`-mappe — skjema er alltid provisjonert med `prisma db push` (deklarativt, ingen reviewbar migreringshistorikk). CR-011 gjorde dette eksplisitt i Dockerfile i stedet for å late som `migrate deploy` fungerer. Fint for et beta-prosjekt uten verdifull produksjonsdata, men bør erstattes med formelle `prisma migrate`-migreringer før effektbiblioteket har ekte data som må bevares trygt gjennom skjemaendringer.
 Blocker for: Ingenting akkurat nå — bør løses før prosjektet forlater beta
 Opened: 2026-08-03
+Update: 2026-08-04 — CR-020 droppet ytterligere to kolonner (Case.usageLevel, UsageApproval.internalUseAllowed) via samme db push-mekanisme, uten problemer. Andre gang dette mønsteret har medført reelt (akseptert) datatap ved deploy — styrker argumentet for formelle migreringer før prosjektet har ekte produksjonsdata.
+
+ISSUE-010
+Status: Open
+Priority: Low
+Area: components/cases/ApprovalSection.tsx, app/godkjenning/[caseId]/[token]/*
+Description: CR-015 (e-postforhåndsvisning), CR-016 (kvitteringstekst/footer), CR-018 (reply-to), CR-019 (personvernteksten på selve godkjenningssiden, ikke bare i e-post) er alle deployet og ble funksjonelt utøvd gjennom senere testing (ekte godkjenningsdata synlig i skjermbilder), men er ikke bekreftet feature-for-feature enkeltvis. Spesielt reply-to-headeren (CR-018) er umulig å verifisere uten faktisk å sende et svar på en godkjenningsforespørsel-e-post.
+Blocker for: Ingenting — lav risiko, kun ønskelig for full sikkerhet
+Opened: 2026-08-04

@@ -3,19 +3,27 @@
 > Updated at the end of every session. Read by Claude at startup.
 
 ## Current Phase
-MIGRERING NESTEN FERDIG — CR-008: porting fra Vercel/Neon til Hetzner/Coolify/PostgreSQL 18. Appen kjører stabilt på `effektbibliotek.basbeta.no`. Innlogging (CR-009–011), feilsporing (CR-012) og direkte utsending av bruksgodkjenning (CR-013) er alle bekreftet fungerende i produksjon. CR-014 (rediger eget navn) er kodet og bygget lokalt, men IKKE testet i produksjon ennå.
+MIGRERING NESTEN FERDIG — CR-008: porting fra Vercel/Neon til Hetzner/Coolify/PostgreSQL 18. Appen kjører stabilt på `effektbibliotek.basbeta.no`. Innlogging (CR-009–011), feilsporing (CR-012), direkte utsending av bruksgodkjenning (CR-013), rediger eget navn (CR-014), og hele det forenklede bruksrettighets-systemet (CR-020–023, inkl. låst/opplåst UI) er alle bekreftet fungerende i produksjon av produkteier per 2026-08-04. CR-015–019 (e-postforhåndsvisning, forhåndsutfylling, personvern/GDPR-tekst, reply-to, trekkspill) er deployet og ble funksjonelt utøvd gjennom den samme produksjonstestingen (ekte godkjenningsdata synlig i skjermbilder fra 3.–4. aug), men er ikke bekreftet feature-for-feature enkeltvis — se Next Recommended Actions punkt 1.
 
 ## Current Objectives
-1. Ende-til-ende-teste CR-014 i produksjon (rediger eget navn via blyanten på en case man eier)
-2. Ende-til-ende-test av resten: case-opprettelse, redigering
+1. (Valgfritt, lav prioritet) Bekreft CR-015–019 individuelt hvis det er ønskelig med fullstendig sikkerhet — se Next Recommended Actions
+2. Ende-til-ende-test av gjenstående flyter: case-opprettelse, redigering av felt utenom bruksrettigheter
 3. Fullføre resten av `docs/COOLIFY-DEPLOY.md` (backup, Uptime Kuma)
-4. Deretter fjerne Vercel/Neon
+4. Deretter fjerne Vercel/Neon, marker CR-008 som Done
 
 ## Current Branch
-claude/effektbibliotek-publish-database-nsrizw
+master (alle CR-009–023-endringer er pushet direkte til master denne økten, ingen feature-branch brukt)
 
 ## Blockers
 Manuelt Coolify/Hetzner-oppsett kan ikke utføres fra Claude Code-økten (ingen tilgang til Coolify-instansen). Krever produkteier/admin på `coolify.basbeta.no`.
+
+## Risks / Tech Debt (per 2026-08-04)
+- **Ingen automatiserte tester i prosjektet.** All verifisering denne økten var `npm run build`/TypeScript-sjekk + manuell produksjonstesting av produkteier. Fungerer for nå, men skalerer dårlig etter hvert som appen vokser — regressonsrisiko ved fremtidige endringer er reelt.
+- **`prisma db push` i stedet for formelle migreringer** (ISSUE-009) — nå to ganger brukt til å droppe kolonner med reelt datatap (CR-011, CR-020). Akseptabelt i beta, men risikabelt hvis gjentatt etter at appen har ekte kundedata.
+- **CR-015, 016, 018, 019 ikke enkeltvis bekreftet** (ISSUE-010) — lav risiko, men reply-to-headeren (CR-018) spesielt er kun kodebekreftet, ikke funksjonelt testet med et faktisk svar.
+- **Ingen tilgang til Coolify-instansen fra Claude Code-økter** — enhver fremtidig feilsøking som krever env-var-endringer, redeploy-trigger, eller database-terminal må gjøres av produkteier manuelt, med skjermbilder/copy-paste av logger tilbake til denne økten. Dette var flaskehalsen i mesteparten av CR-009–011-feilsøkingen.
+- **Vercel/Neon (gammel produksjon) står fortsatt aktiv** som fallback — ingen data av verdi der, men bør ryddes opp når Coolify er verifisert stabilt over noen dager (se Next Actions).
+- **`docs_extracted.txt`** (ISSUE-005) er fortsatt committed med potensielt sensitiv rå-tekst fra produktdokumentasjon — lav prioritet, men uadressert.
 
 ## Løst: OTP-innlogging hang (CR-009, CR-010, CR-011) og feilsporing (CR-012)
 Etter CR-008-deploy hang OTP-innlogging. Rotårsak (CR-011, funnet via Coolify runtime-logger): den ferske Coolify-databasen hadde ingen tabeller, siden `prisma/migrations` aldri har eksistert i repoet og `prisma migrate deploy` derfor var en stille no-op. Fikset med `prisma db push --accept-data-loss`. CR-009 (SMTP-timeout) og CR-010 (DB connection-timeout) var reelle forbedringer underveis, men ikke selve rotårsaken. Full historikk (inkl. to feilslåtte deploys som crash-loopet appen) i `sessions/IMPLEMENTATION-LEDGER.md` og `sessions/DECISIONS.md`.
@@ -40,45 +48,50 @@ Node.js 22 (matcher Dockerfile) installert på denne maskinen via `winget instal
 - CR-012 (Done) — Feilsporing med Bugsink (Sentry-kompatibel, selvhostet på errors.basbeta.no). Verifisert i produksjon: bevisst testfeil dukket opp i Bugsink
 - CR-013 (Done, bekreftet i produksjon) — Direkte utsending av bruksgodkjenningsforespørsel på e-post (til godkjenner, cc caseeier), erstatter "kopier tekst"-flyten. To runder feilsøking på godkjenningslenken før den fungerte: (1) request.url.origin upålitelig bak Coolify/Traefik, byttet til NEXT_PUBLIC_APP_URL — (2) det slo heller ikke gjennom, fordi NEXT_PUBLIC_-variabler bygges statisk inn i koden ved build time (også server-side). Endte på en vanlig `APP_URL` (uten prefiks), satt i Coolify. Bekreftet fungerende av produkteier 2026-08-03
 - CR-014 (Done, bekreftet i produksjon) — Brukere kan overstyre sitt eget visningsnavn (blyant ved "Ansvarlig" på case-siden, kun for seg selv). Løser at nameFromEmail() mister spesialtegn (æøå) som ikke finnes i e-postadressen
-- CR-015 (kodet, IKKE testet i prod) — E-postforhåndsvisning i ApprovalSection (live, samme buildApprovalText-funksjon som faktisk sending), forhåndsutfylt navn/e-post på den offentlige godkjenningssiden, personvern- og GDPR-avsnitt lagt til i godkjenningse-posten
-- CR-016 (kodet, IKKE testet i prod) — Kvitteringsteksten på godkjenningssiden presiserer at både godkjenner og caseeier får bekreftelse på e-post; personvern-/GDPR-tekst lagt til i sidens footer (samme tekst som e-posten, delt via PRIVACY_NOTICE/GDPR_NOTICE-konstanter)
-- CR-017 (kodet, IKKE testet i prod) — ApprovalSection er nå et trekkspill, kollapset som default (kun tittel + statusmerke synlig), for å redusere visuell plass på case-siden
-- CR-018 (kodet, IKKE testet i prod) — Reply-To satt til caseeierens e-post på de to e-postene som går til eksterne mottakere (sendUsageApprovalRequest, sendUsageApprovalConfirmation). "kontaktpersonen din i Bas" erstattet med caseeierens faktiske navn
-- CR-019 (kodet, IKKE testet i prod) — Personvernteksten (PRIVACY_NOTICE → buildPrivacyNotice) nevner nå caseeier ved navn og e-post ("ta kontakt med {navn} på {e-post}"), brukt i både e-post og godkjenningssidens footer
-- CR-020 (kodet, IKKE testet i prod) — Stor forenkling av bruksgodkjenning: fjernet redundant "bruksnivå"-enum og duplisert badge-visning, erstattet med 6 rene valg (NDA, kun anonymisert, hjemmeside, presentasjoner, anbud, konkurranse). NDA og "kun anonymisert" er nå begge gjensidig utelukkende med resten. 16 filer endret. **Skjemaendring med reelt datatap** — Case.usageLevel og UsageApproval.internalUseAllowed droppes ved neste db push
-- CR-021 (kodet, IKKE testet i prod) — Bruksrettigheter i redigeringsskjemaet er nå skrivebeskyttet når casen har status submitted_locked (viser hvem hos kunden som godkjente + dato), håndhevet både i UI og server-side (PATCH /api/cases/:id)
-- CR-022 (kodet, IKKE testet i prod) — Tydeligere låst visning i redigeringsskjema (senere finpusset i CR-023: glyfer byttet til ✓/—), godkjenningslinje flyttet over listen, "Lås opp godkjenning" tilgjengelig direkte fra redigeringsskjemaet
-- CR-023 (kodet, IKKE testet i prod) — ApprovalSection permanent utvidet (ikke trekkspill) når status er submitted_locked; redigerbar bruksrettighets-liste viser bold/dempet basert på avkrysning (tydelig "ikke fylt ut ennå"); låst visning i redigeringsskjema bruker nå ✓/— i stedet for ☑/☐ for å matche appens øvrige skrivebeskyttede lister
+- CR-015 (Done, deployet — funksjonelt utøvd via senere testing, ikke enkeltvis bekreftet) — E-postforhåndsvisning i ApprovalSection, forhåndsutfylt navn/e-post på godkjenningssiden, personvern-/GDPR-avsnitt i godkjenningse-posten
+- CR-016 (Done, deployet — funksjonelt utøvd via senere testing, ikke enkeltvis bekreftet) — Kvitteringstekst presiserer at godkjenner + caseeier får bekreftelse; personvern-/GDPR-tekst i sidens footer
+- CR-017 (Done, deployet — funksjonelt utøvd via senere testing, ikke enkeltvis bekreftet) — ApprovalSection som trekkspill, kollapset som default for `not_requested`/`open`-status (permanent åpen for `submitted_locked`, se CR-023)
+- CR-018 (Done, deployet — reply-to-header ikke eksplisitt verifisert ved faktisk svar-e-post) — Reply-To satt til caseeierens e-post på de to eksterne e-postene; "kontaktpersonen din i Bas" erstattet med caseeierens navn
+- CR-019 (Done, deployet — funksjonelt utøvd via senere testing, ikke enkeltvis bekreftet) — Personvernteksten nevner caseeier ved navn og e-post
+- CR-020 (Done, bekreftet i produksjon) — Stor forenkling av bruksgodkjenning: fjernet "bruksnivå"-enum og duplisert badge-visning, erstattet med 6 rene valg (NDA, kun anonymisert, hjemmeside, presentasjoner, anbud, konkurranse), gjensidig utelukkelse for NDA/anonymisert. **Skjemaendring med reelt datatap** — Case.usageLevel og UsageApproval.internalUseAllowed droppet ved db push, bekreftet gjennomført uten problemer
+- CR-021 (Done, bekreftet i produksjon) — Bruksrettigheter skrivebeskyttet i redigeringsskjemaet når submitted_locked (viser hvem som godkjente + dato), håndhevet UI + server-side
+- CR-022 (Done, bekreftet i produksjon) — Tydeligere låst visning, "Lås opp godkjenning" direkte fra redigeringsskjemaet
+- CR-023 (Done, bekreftet i produksjon 2026-08-04) — ApprovalSection permanent utvidet når submitted_locked; redigerbar liste viser bold/dempet basert på avkrysning; låst visning bruker ✓/— (flat stil, matcher appens øvrige read-only lister — valgt fremfor ☑/☐ etter avklaring med produkteier)
 
 ## Production URL
 https://effektbibliotek.basbeta.no — live, innlogging bekreftet fungerende
 https://effektbibliotek.vercel.app (gammel, beholdes urørt inntil Coolify er fullt verifisert)
 
-## Recently Modified Systems
-- Dockerfile, .dockerignore — nye, for Coolify Dockerfile-build-pack
-- lib/email.ts — Brevo SMTP i stedet for Gmail SMTP
-- .env.example — nye env-variabler for Coolify/Postgres 18/Brevo
-- specs/nfr.md — tech stack og driftsplan oppdatert for Hetzner/Coolify
-- docs/COOLIFY-DEPLOY.md — ny runbook for manuelt Coolify-oppsett
-- lib/usage-approval.ts — Godkjenningstekst oppdatert (starter med "[navn] har registrert casen..."); personaliserer hilsen med godkjennerens navn (CR-013)
-- package.json — prisma generate lagt til i build-script for Vercel
-- components/cases/ApprovalSection.tsx — Intern godkjenningsseksjon. CR-013: "kopier tekst"-knapp erstattet med inline navn+e-post-skjema som sender direkte
-- app/api/cases/[id]/send-approval-request/route.ts — CR-013: erstatter copy-approval-text (fjernet). Sender e-post direkte til godkjenner, cc caseeier
-- prisma/schema.prisma — CR-013: Case har nå approverName/approverEmail
-- app/godkjenning/[caseId]/[token]/page.tsx — Offentlig kundevendt godkjenningsside
-- app/godkjenning/[caseId]/[token]/ApprovalForm.tsx — Kundevendt skjema
-- app/api/godkjenning/[caseId]/[token]/route.ts — Public API, e-postutsending
-- app/api/cases/[id]/unlock-approval/route.ts — Gjenåpne godkjenning
-- components/cases/LinksSection.tsx — Legg til/slett lenker på case-detalj
-- app/api/cases/[id]/links/route.ts — POST ny lenke
-- app/api/cases/[id]/links/[linkId]/route.ts — DELETE lenke
-- app/(app)/admin/page.tsx — Admin-side (server)
-- app/(app)/admin/AdminUsersClient.tsx — Brukertabell med isAdmin-toggle
-- app/api/admin/users/route.ts — GET/PATCH brukere
-- app/api/admin/users/list/route.ts — GET brukerliste for owner-dropdown
-- components/cases/EditCaseForm.tsx — isAdmin: owner-change select
-- components/layout/SideNav.tsx — Admin-lenke for admin-brukere
-- proxy.ts — /api/godkjenning lagt til PUBLIC_PATHS
+## Recently Modified Systems (denne økten, CR-009–023)
+- Dockerfile — `prisma db push --accept-data-loss` (byttet fra `migrate deploy`, CR-011)
+- lib/email.ts — SMTP-timeout (CR-009), sendUsageApprovalRequest med reply-to (CR-013/018), APP_URL (ikke NEXT_PUBLIC_, CR-013)
+- lib/prisma.ts — connectionTimeoutMillis på pg-adapteren (CR-010)
+- lib/usage-approval.ts — buildApprovalText personalisert (CR-013), PRIVACY_NOTICE/GDPR_NOTICE → buildPrivacyNotice (CR-015/019), sanitizeChoices erstatter computeUsageLevel (CR-020)
+- lib/labels.ts — usageLevelLabels fjernet (CR-020)
+- prisma/schema.prisma — approverName/approverEmail (CR-013), usageLevel-enum fjernet, 6 nye bruksrettighetsfelt (CR-020)
+- instrumentation.ts, instrumentation-client.ts — nye, Bugsink/Sentry-init (CR-012)
+- next.config.ts — wrappet med withSentryConfig (CR-012)
+- app/api/auth/request-code/route.ts — try/catch + Sentry.captureException (CR-011/012)
+- app/api/auth/me/route.ts — ny PATCH for å endre eget navn (CR-014)
+- app/api/cases/[id]/send-approval-request/route.ts — ny, erstatter copy-approval-text (CR-013)
+- app/api/cases/[id]/route.ts — server-side lås av bruksrettighetsfelt når submitted_locked (CR-021)
+- app/api/cases/route.ts — bibliotek-filter bygget om for 6 flate bruksrettighetsfelt (CR-020)
+- app/api/godkjenning/[caseId]/[token]/route.ts — sanitizeChoices, ownerEmail i emailParams (CR-018/020)
+- app/godkjenning/[caseId]/[token]/page.tsx, ApprovalForm.tsx — forhåndsutfylling, personvern/GDPR-footer, 6 nye valg (CR-015/016/019/020)
+- components/cases/ApprovalSection.tsx — e-postforhåndsvisning, trekkspill, permanent åpen ved lås (CR-015/017/023)
+- components/cases/EditCaseForm.tsx — bruksrettigheter-seksjon (6 valg), lås ved submitted_locked, unlock-widget, visuell finpuss (CR-020–023)
+- components/cases/UsageBadge.tsx — omskrevet for 6 flate valg i stedet for avledet nivå (CR-020)
+- components/cases/CaseCard.tsx, CaseRow.tsx — oppdatert for nye UsageBadge-props (CR-020)
+- components/cases/OwnerNameEditor.tsx — ny, blyant for å endre eget navn (CR-014)
+- app/(app)/case/[id]/page.tsx — OwnerNameEditor, UsageBadge-props (CR-014/020)
+- app/(app)/case/[id]/rediger/page.tsx — henter usageApprovalStatus + siste UsageApproval (CR-021)
+- app/(app)/bibliotek/page.tsx — filter-dropdown for 6 bruksrettigheter (CR-020)
+- app/(app)/mine-caser/page.tsx, oppfolging/page.tsx — oppdatert datamapping for nye felt (CR-020)
+- .env.example, docs/COOLIFY-DEPLOY.md — SENTRY_DSN/NEXT_PUBLIC_SENTRY_DSN (CR-012), APP_URL (CR-013)
+- package.json/package-lock.json — @sentry/nextjs lagt til (CR-012)
+
+## Tidligere sesjoners systemer (uendret denne økten)
+- app/api/cases/[id]/unlock-approval/route.ts, components/cases/LinksSection.tsx, app/(app)/admin/*, app/api/admin/*, components/layout/SideNav.tsx, proxy.ts
 
 ## Tech Stack Notes (oppdaget under implementering)
 - Next.js 16.2.6 bruker `proxy.ts` ikke `middleware.ts`
@@ -86,7 +99,7 @@ https://effektbibliotek.vercel.app (gammel, beholdes urørt inntil Coolify er fu
 - Tailwind v4: tokens via `@theme inline {}` i CSS, ikke `tailwind.config.ts`
 - Prisma client output: `app/generated/prisma/client.ts` (ikke `@prisma/client`)
 - Next.js 16: `params` og `searchParams` i page/layout er Promises — må awaites
-- Godkjenningslenke bruker alltid `new URL(request.url).origin` — ikke NEXT_PUBLIC_APP_URL
+- **OPPDATERT i CR-013 (se linje under om NEXT_PUBLIC_-fallgruven):** Godkjenningslenke brukte tidligere (Vercel-æraen) alltid `new URL(request.url).origin`. Etter porten til Coolify/Traefik er dette upålitelig i API-routes (resolver til `localhost:3000`) — lenkebygging bruker nå `process.env.APP_URL` først, med `request.url.origin` kun som lokal dev-fallback
 - `crypto.randomUUID().replace(/-/g, "")` brukes for token-generering (ingen @paralleldrive/cuid2)
 - E-post sendes via Nodemailer + Brevo SMTP (byttet fra Gmail SMTP i CR-008), aldri Resend
 - `Promise.allSettled()` for e-postutsending (feil i e-post stopper ikke godkjenning)
@@ -98,20 +111,28 @@ https://effektbibliotek.vercel.app (gammel, beholdes urørt inntil Coolify er fu
 - `pg.Pool` (brukt av `@prisma/adapter-pg`) sin default `connectionTimeoutMillis` er `0` — ingen timeout, venter for alltid ved utilgjengelig database. Satt eksplisitt til 10s i lib/prisma.ts (CR-010). Samme bugklasse som CR-009, bare ett lag lenger opp i requesten
 - `prisma/migrations` har ALDRI eksistert i dette repoet — prosjektet har alltid brukt `prisma db push` for skjema, ikke formelle migreringer. `prisma migrate deploy` i Dockerfile CMD var derfor en stille no-op mot den ferske Coolify-databasen (CR-011)
 - Uhåndterte feil i en Next.js Route Handler gir ikke garantert gyldig JSON-svar — hvis frontend gjør `res.json()` uten feilhåndtering, kan en rask serverfeil se ut som en evig hengende request i UI-et (CR-011)
+- `NEXT_PUBLIC_*`-variabler bygges statisk inn i koden ved `next build`, også i server-only kode — en variabel som ikke er tilgjengelig ved selve build-steget (kun "Runtime" i Coolify, ikke "Buildtime") blir permanent `undefined`, uansett senere runtime-endringer. Bruk aldri dette prefikset for verdier som kun trengs server-side (CR-013)
+- Sentry sin transport følger ikke HTTP-redirects — hvis Bugsink-hosten redirecter HTTP→HTTPS, feiler event-sending stille med kun en `debug: true`-synlig 307-logglinje, ingen synlig feil ellers (CR-012)
+- I dette prosjektet er skrivebeskyttede/read-only informasjonslister stilt med flat ✓/— i stedet for checkbox-glyfer (☑/☐) — sistnevnte oppleves som en inert/deaktivert form, ikke informasjon (CR-023, avklart med produkteier via mockup-spørsmål)
 
 ## Validation Status
-- Build (lokal, `npm run build`): ✓
+- Build (lokal, `npm run build`): ✓ — kjørt og bekreftet grønt etter HVER commit fra CR-011 og utover (Node 22 installert lokalt spesifikt for dette, se notat over)
 - TypeScript: ✓ (ingen feil)
 - Docker build: verifisert indirekte — bygger og kjører stabilt i Coolify (produkteiers egen build)
 - Build (Vercel prod, gammel): ✓
 - Deploy Coolify: ✓ live på effektbibliotek.basbeta.no, container kjører stabilt (ikke lenger crash-loop)
 - Innlogging (OTP via Brevo) i produksjon: ✓ bekreftet av produkteier 2026-08-03
+- Feilsporing (Bugsink): ✓ bekreftet med reell testfeil 2026-08-03
+- Direkte utsending av bruksgodkjenning (CR-013): ✓ bekreftet — e-post sendt og godkjenningslenke fungerer
+- Rediger eget navn (CR-014): ✓ bekreftet
+- Forenklet bruksrettighets-system, låst/opplåst UI (CR-020–023): ✓ bekreftet av produkteier 2026-08-04, inkl. skjemaendring (kolonner droppet) uten problemer
 
-## Next Recommended Actions
-1. Test CR-015+CR-016+CR-017 i produksjon: send en godkjenningsforespørsel, verifiser at forhåndsvisningen matcher den mottatte e-posten, at godkjenningssiden er forhåndsutfylt, at personvern-/GDPR-avsnittet vises i e-posten og på kvitteringssiden, og at bruksgodkjenning-widgeten på case-siden åpner/lukker seg som forventet
-2. Ende-til-ende-test av resten: case-opprettelse, redigering, bekreftelses-e-post etter innsendt godkjenning
-3. Opprett admin-bruker i den nye databasen (første login + manuell `isAdmin`-sett i Coolify sin database-ressurs)
-4. Utføre resterende `docs/COOLIFY-DEPLOY.md`-steg (backup, Uptime Kuma) hvis ikke allerede gjort
+## Next Actions (prioritert)
+1. **(Anbefalt, lav innsats)** Bekreft CR-015, CR-016, CR-018, CR-019 hver for seg hvis full sikkerhet ønskes: (a) sammenlign e-postforhåndsvisning mot faktisk mottatt e-post ord for ord, (b) svar på en godkjenningsforespørsel-e-post og verifiser at svaret går til caseeieren (reply-to), (c) les gjennom kvitteringssiden og personvernteksten på selve godkjenningssiden (ikke bare i e-post)
+2. Opprett admin-bruker i produksjonsdatabasen (første login + manuell `isAdmin`-sett i Coolify sin database-ressurs) — ISSUE-006, fortsatt åpen
+3. Ende-til-ende-test av gjenstående flyter: case-opprettelse, redigering av felt utenom bruksrettigheter (de er nå grundig testet)
+4. Utføre resterende `docs/COOLIFY-DEPLOY.md`-steg (backup, Uptime Kuma) — ISSUE-007, delvis løst
 5. Når Coolify-oppsettet er verifisert stabilt over noen dager: fjern Vercel-prosjektet og slett Neon-databasen (ingen data å ta vare på), marker CR-008 som Done
-6. Vurder å innføre formelle `prisma migrate`-migreringer før effektbiblioteket har ekte produksjonsdata av verdi (se Risks i CR-011) — `db push` er greit for beta, men gir ingen reviewbar skjemahistorikk
-7. Vurder om `docs_extracted.txt` skal gitignores (sensitiv prod-dokumentasjon) — uavhengig av denne migreringen
+6. Vurder å innføre formelle `prisma migrate`-migreringer før effektbiblioteket har ekte produksjonsdata av verdi (se ISSUE-009) — `db push` er greit for beta, men gir ingen reviewbar skjemahistorikk, og har nå to ganger (CR-011, CR-020) medført reelt datatap-håndtering ved deploy
+7. Vurder om `docs_extracted.txt` skal gitignores (sensitiv prod-dokumentasjon) — ISSUE-005, fortsatt åpen
+8. Vurder om det skal legges til en enkel automatisert test/smoke-test-suite — hele denne økten er verifisert med `npm run build` + manuell produksjonstesting, ingen automatiserte tester finnes ennå i prosjektet

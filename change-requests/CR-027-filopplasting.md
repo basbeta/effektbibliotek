@@ -22,6 +22,7 @@ La caseeiere legge til bilder og dokumenter direkte på casen, ikke bare ekstern
 - `lib/case-export.ts` lister opplastede filnavn (ikke selve binærinnholdet — tekst-eksporten forblir en tekstfil)
 - `EditCaseForm.tsx` sin slette-advarsel ("Farlig sone") lister nå også opplastede filer, ikke bare lenker
 - `DELETE /api/cases/[id]` sletter nå S3-objektene til en case sine filer FØR selve case-raden slettes (cascade tar kun DB-rader, ikke eksterne S3-objekter)
+- Oppfølging etter første gjennomgang: eksplisitt "Last ned"-lenke per fil (ikke bare filnavnet som lenke), ny `GET /api/cases/[id]/files/download-all` (zippet med `jszip`, kun eksponert i UI når en case har mer enn én fil), og `window.confirm()` før filsletting
 
 ---
 
@@ -30,13 +31,13 @@ La caseeiere legge til bilder og dokumenter direkte på casen, ikke bare ekstern
 ### Affected Components
 - `prisma/schema.prisma` (nytt `CaseFile`-modell), ny migrering
 - `lib/storage.ts` (ny)
-- `app/api/cases/[id]/files/route.ts`, `app/api/cases/[id]/files/[fileId]/route.ts` (nye)
+- `app/api/cases/[id]/files/route.ts`, `app/api/cases/[id]/files/[fileId]/route.ts`, `app/api/cases/[id]/files/download-all/route.ts` (nye)
 - `app/api/cases/[id]/route.ts` (DELETE rydder S3-objekter)
 - `lib/case-export.ts` (lister filnavn)
-- `components/cases/LinksSection.tsx` (utvidet for filopplasting)
+- `components/cases/LinksSection.tsx` (utvidet for filopplasting, eksplisitt last ned/last ned alle, bekreft-på-slett)
 - `components/cases/EditCaseForm.tsx` (slette-dialogen lister filer)
 - `.env.example`, `docs/COOLIFY-DEPLOY.md` (nye S3_*-env-variabler)
-- `package.json` — `@aws-sdk/client-s3`, `@aws-sdk/s3-request-presigner`
+- `package.json` — `@aws-sdk/client-s3`, `@aws-sdk/s3-request-presigner`, `jszip`
 
 ### Database Impact
 Nytt `CaseFile`-modell. Migrering generert statisk (samme teknikk som CR-024/025, men denne gangen skrevet direkte uten BOM via `.NET UTF8Encoding(false)` i stedet for PowerShell `Out-File` — se ISSUE-011 for hvorfor).

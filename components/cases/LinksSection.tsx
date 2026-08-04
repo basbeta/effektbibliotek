@@ -109,7 +109,8 @@ export default function LinksSection({ caseId, links: initialLinks, files: initi
     }
   }
 
-  async function handleDeleteFile(fileId: string) {
+  async function handleDeleteFile(fileId: string, filename: string) {
+    if (!window.confirm(`Slette «${filename}»? Dette kan ikke angres.`)) return;
     try {
       await fetch(`/api/cases/${caseId}/files/${fileId}`, { method: "DELETE" });
       setFiles((prev) => prev.filter((f) => f.id !== fileId));
@@ -130,34 +131,45 @@ export default function LinksSection({ caseId, links: initialLinks, files: initi
         <p className="text-sm font-semibold" style={{ color: "var(--color-text-primary)" }}>
           Materiale
         </p>
-        {canManage && !showForm && (
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploading}
-              className="text-sm disabled:opacity-60"
-              style={{ color: "var(--color-accent)" }}
-            >
-              {uploading ? "Laster opp..." : "+ Last opp fil"}
-            </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept={ACCEPTED_EXTENSIONS}
-              onChange={handleFileChange}
-              style={{ display: "none" }}
-            />
-            <button
-              type="button"
-              onClick={() => setShowForm(true)}
+        <div className="flex items-center gap-3">
+          {files.length > 1 && (
+            <a
+              href={`/api/cases/${caseId}/files/download-all`}
               className="text-sm"
-              style={{ color: "var(--color-accent)" }}
+              style={{ color: "var(--color-text-muted)" }}
             >
-              + Legg til lenke
-            </button>
-          </div>
-        )}
+              Last ned alle
+            </a>
+          )}
+          {canManage && !showForm && (
+            <>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                className="text-sm disabled:opacity-60"
+                style={{ color: "var(--color-accent)" }}
+              >
+                {uploading ? "Laster opp..." : "+ Last opp fil"}
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept={ACCEPTED_EXTENSIONS}
+                onChange={handleFileChange}
+                style={{ display: "none" }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowForm(true)}
+                className="text-sm"
+                style={{ color: "var(--color-accent)" }}
+              >
+                + Legg til lenke
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
       {links.length > 0 && (
@@ -211,28 +223,33 @@ export default function LinksSection({ caseId, links: initialLinks, files: initi
           {files.map((file) => (
             <li key={file.id} className="flex items-start justify-between gap-3">
               <div className="flex-1 min-w-0">
-                <a
-                  href={`/api/cases/${caseId}/files/${file.id}`}
-                  className="text-sm font-medium hover:underline"
-                  style={{ color: "var(--color-accent)" }}
-                >
+                <span className="text-sm font-medium" style={{ color: "var(--color-text-primary)" }}>
                   {file.filename}
-                </a>
+                </span>
                 <span className="text-xs ml-2" style={{ color: "var(--color-text-muted)" }}>
                   {formatBytes(file.sizeBytes)}
                 </span>
               </div>
-              {canManage && (
-                <button
-                  type="button"
-                  onClick={() => handleDeleteFile(file.id)}
-                  className="text-xs flex-shrink-0"
-                  style={{ color: "var(--color-text-muted)" }}
-                  title="Slett fil"
+              <div className="flex items-center gap-3 flex-shrink-0">
+                <a
+                  href={`/api/cases/${caseId}/files/${file.id}`}
+                  className="text-xs font-medium"
+                  style={{ color: "var(--color-accent)" }}
                 >
-                  ✕
-                </button>
-              )}
+                  Last ned
+                </a>
+                {canManage && (
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteFile(file.id, file.filename)}
+                    className="text-xs"
+                    style={{ color: "var(--color-text-muted)" }}
+                    title="Slett fil"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
             </li>
           ))}
         </ul>

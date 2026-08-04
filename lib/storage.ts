@@ -80,3 +80,9 @@ export async function getCaseFileDownloadUrl(
   });
   return getSignedUrl(client, command, { expiresIn: 300 });
 }
+
+export async function getCaseFileBuffer(storageKey: string): Promise<Buffer> {
+  const result = await client.send(new GetObjectCommand({ Bucket: BUCKET, Key: storageKey }));
+  const bytes = await result.Body!.transformToByteArray();
+  return Buffer.from(bytes);
+}

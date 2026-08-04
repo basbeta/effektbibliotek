@@ -62,9 +62,9 @@ Ingen målbar — `migrate deploy` og `db push` har lik oppstartskostnad.
 - [x] `prisma/migrations/20260804120000_init/migration.sql` finnes og reflekterer dagens `schema.prisma`
 - [x] Dockerfile er UENDRET i Deploy A (fortsatt `db push`) — bekreftet at rekkefølgen ikke bryter noe
 - [x] `docs/COOLIFY-DEPLOY.md` dokumenterer to-deploy-prosessen og engangs-mellomsteget tydelig
-- [ ] Deploy A pushet og bekreftet live (autodeploy)
-- [ ] Produkteier har kjørt `migrate resolve --applied` mot produksjonsdatabasen via Coolify Terminal (etter Deploy A)
-- [ ] Dockerfile CMD endret til `prisma migrate deploy` i en EGEN, senere commit (Deploy B)
+- [x] Deploy A pushet og bekreftet live (autodeploy) — commit 7c012ea
+- [x] Produkteier har kjørt `migrate resolve --applied` mot produksjonsdatabasen via Coolify Terminal — bekreftet 2026-08-04: "Migration 20260804120000_init marked as applied."
+- [x] Dockerfile CMD endret til `prisma migrate deploy` i en EGEN, senere commit (Deploy B)
 - [ ] Deploy B fullfører uten feil, bekreftet i deploy-loggen ("No pending migrations to apply")
 
 ## Required Tests
@@ -90,4 +90,6 @@ Krever produkteiers tilgang til Coolify sin database-ressurs for engangssteget (
 ## Validation Notes
 - `npx prisma migrate diff --from-empty --to-schema prisma/schema.prisma --script` brukt til å generere baseline-SQL-en (Prisma 7.8.0 — merk at `--to-schema-datamodel` er fjernet i denne versjonen, riktig flagg er `--to-schema`)
 - `migration.sql` gjennomlest manuelt og verifisert å reflektere alle modeller/enums/relasjoner i `schema.prisma` korrekt
-- `npm run build` / `npx tsc --noEmit`: ✓ (ingen kodeendring i denne CR-en)
+- `npm run build` / `npx tsc --noEmit`: ✓ (Deploy A, ingen kodeendring; kjørt på nytt etter Deploy B sin Dockerfile-endring, fortsatt ✓)
+- Deploy A verifisert live, deretter `npx prisma migrate resolve --applied 20260804120000_init` kjørt av produkteier via Coolify Terminal — output bekreftet: "Migration 20260804120000_init marked as applied." Datasource-linjen i output bekreftet at kommandoen traff produksjonsdatabasen (`j6dg0ut8t0fxm512u3ntpnfs:5432`), ikke en lokal/dev-database
+- Gjenstår: verifisere at Deploy B (denne committen) faktisk deployer uten feil i Coolify sin deploy-logg

@@ -134,6 +134,7 @@ export default function ApprovalSection({
         </div>
       ) : (
         <button
+          type="button"
           onClick={() => setExpanded((v) => !v)}
           className="flex items-center justify-between w-full mb-0 text-left"
           style={{ marginBottom: expanded ? "1rem" : 0 }}
@@ -191,6 +192,7 @@ export default function ApprovalSection({
                     Er du sikker? Dette genererer en ny lenke og gjør det mulig å sende inn på nytt.
                   </p>
                   <button
+                    type="button"
                     onClick={handleUnlock}
                     disabled={unlocking}
                     className="px-3 py-1.5 text-xs font-medium text-white rounded-lg disabled:opacity-60"
@@ -199,6 +201,7 @@ export default function ApprovalSection({
                     {unlocking ? "..." : "Bekreft"}
                   </button>
                   <button
+                    type="button"
                     onClick={() => setConfirmUnlock(false)}
                     className="px-3 py-1.5 text-xs rounded-lg"
                     style={{ border: "1px solid var(--color-border-strong)", color: "var(--color-text-secondary)" }}
@@ -208,6 +211,7 @@ export default function ApprovalSection({
                 </div>
               ) : (
                 <button
+                  type="button"
                   onClick={() => setConfirmUnlock(true)}
                   className="text-sm"
                   style={{ color: "var(--color-text-muted)" }}
@@ -281,6 +285,7 @@ export default function ApprovalSection({
                 </pre>
               </div>
               <button
+                type="button"
                 onClick={handleSend}
                 disabled={sending || !approverName.trim() || !approverEmail.trim()}
                 className="px-4 py-2 text-sm font-medium rounded-lg disabled:opacity-60 self-start"

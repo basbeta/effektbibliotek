@@ -16,6 +16,7 @@ master (alle CR-009–023-endringer er pushet direkte til master denne økten, i
 
 ## Blockers
 Manuelt Coolify/Hetzner-oppsett kan ikke utføres fra Claude Code-økten (ingen tilgang til Coolify-instansen). Krever produkteier/admin på `coolify.basbeta.no`.
+**CR-024 pågår som to-deploy-prosess** (autodeploy på push til master betyr push og deploy skjer i samme øyeblikk — ingen tidsluke til manuelle steg "rett før" en deploy): (1) Deploy A — kun `prisma/migrations/`-mappen lagt til, Dockerfile CMD uendret, trygt å pushe når som helst. (2) Etter Deploy A er live: produkteier kjører `npx prisma migrate resolve --applied 20260804120000_init` via Coolify sin Terminal-fane. (3) Kun deretter: egen Deploy B-commit bytter Dockerfile CMD til `migrate deploy`. Se docs/COOLIFY-DEPLOY.md §4b for fullt runbook. Dockerfile står nå tilbake på `db push` (Deploy A-tilstand) — IKKE bytt til `migrate deploy` før steg 2 er bekreftet utført.
 
 ## Risks / Tech Debt (per 2026-08-04)
 - **Ingen automatiserte tester i prosjektet.** All verifisering denne økten var `npm run build`/TypeScript-sjekk + manuell produksjonstesting av produkteier. Fungerer for nå, men skalerer dårlig etter hvert som appen vokser — regressonsrisiko ved fremtidige endringer er reelt.
@@ -57,6 +58,7 @@ Node.js 22 (matcher Dockerfile) installert på denne maskinen via `winget instal
 - CR-021 (Done, bekreftet i produksjon) — Bruksrettigheter skrivebeskyttet i redigeringsskjemaet når submitted_locked (viser hvem som godkjente + dato), håndhevet UI + server-side
 - CR-022 (Done, bekreftet i produksjon) — Tydeligere låst visning, "Lås opp godkjenning" direkte fra redigeringsskjemaet
 - CR-023 (Done, bekreftet i produksjon 2026-08-04) — ApprovalSection permanent utvidet når submitted_locked; redigerbar liste viser bold/dempet basert på avkrysning; låst visning bruker ✓/— (flat stil, matcher appens øvrige read-only lister — valgt fremfor ☑/☐ etter avklaring med produkteier)
+- CR-024 (In Progress) — Formelle Prisma-migreringer (ISSUE-009), rulles ut i to atskilte deploys pga. autodeploy (se Blockers): Deploy A (denne økten, Dockerfile uendret) klar til push. Deploy B (CMD → `migrate deploy`) venter på at produkteier kjører det manuelle `migrate resolve --applied`-steget mellom de to
 
 ## Production URL
 https://effektbibliotek.basbeta.no — live, innlogging bekreftet fungerende

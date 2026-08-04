@@ -86,13 +86,14 @@ Opened: 2026-08-03
 Resolved: 2026-08-03 — Bekreftet av produkteier: engangskode mottatt og innlogging fullført på effektbibliotek.basbeta.no.
 
 ISSUE-009
-Status: Open
+Status: In Progress
 Priority: Medium
 Area: prisma/ (skjemastyring)
 Description: Prosjektet har aldri hatt en `prisma/migrations`-mappe — skjema er alltid provisjonert med `prisma db push` (deklarativt, ingen reviewbar migreringshistorikk). CR-011 gjorde dette eksplisitt i Dockerfile i stedet for å late som `migrate deploy` fungerer. Fint for et beta-prosjekt uten verdifull produksjonsdata, men bør erstattes med formelle `prisma migrate`-migreringer før effektbiblioteket har ekte data som må bevares trygt gjennom skjemaendringer.
 Blocker for: Ingenting akkurat nå — bør løses før prosjektet forlater beta
 Opened: 2026-08-03
 Update: 2026-08-04 — CR-020 droppet ytterligere to kolonner (Case.usageLevel, UsageApproval.internalUseAllowed) via samme db push-mekanisme, uten problemer. Andre gang dette mønsteret har medført reelt (akseptert) datatap ved deploy — styrker argumentet for formelle migreringer før prosjektet har ekte produksjonsdata.
+Update: 2026-08-04 — CR-024 påbegynt: baseline-migrering generert, Dockerfile byttet til `migrate deploy`. Gjenstår: produkteier må kjøre `migrate resolve --applied` mot produksjonsdatabasen (se docs/COOLIFY-DEPLOY.md §4b) FØR neste deploy, deretter bekrefte deploy fullfører uten feil.
 
 ISSUE-010
 Status: Open

@@ -44,6 +44,26 @@ Merk: `effektbibliotek@basbeta.no` må finnes som avsenderadresse/alias godkjent
 2. `prisma migrate deploy` kjører automatisk ved container-oppstart (del av `CMD` i `Dockerfile`) — sjekk deploy-loggen for at migreringen fullfører uten feil
 3. Verifiser `https://effektbibliotek.basbeta.no` svarer med gyldig TLS-sertifikat
 
+### 4b. Engangssteg — baseline av eksisterende produksjonsdatabase (CR-024, kun én gang)
+
+Databasen på `effektbibliotek.basbeta.no` ble opprinnelig provisjonert med `prisma db push` (CR-011), ikke med formelle migreringer. Alle tabeller finnes allerede der. Å bytte Dockerfile CMD direkte til `prisma migrate deploy` er trygt KUN hvis baseline-migreringen allerede er markert som "applied" i produksjonsdatabasen — ellers vil `migrate deploy` prøve å opprette tabeller som allerede eksisterer og containeren crash-looper (samme feilmønster som CR-011).
+
+**Appen har autodeploy på push til `master`** — det finnes ingen tidsluke til å kjøre et kommando "rett før" en deploy, siden push OG deploy skjer i samme øyeblikk. Derfor gjøres dette i to separate, uavhengige deploys:
+
+**Deploy A (denne committen) — trygg, ingen atferdsendring:**
+`prisma/migrations/`-mappen er lagt til i repoet, men Dockerfile sin `CMD` er **uendret** (`prisma db push --accept-data-loss && npm run start`). Denne committen kan pushes og autodeployes helt normalt — migreringsfilene ligger i det nye image-et, men blir ikke brukt til noe ennå.
+
+**Manuelt steg, etter at Deploy A er live:**
+1. Coolify → effektbibliotek-applikasjonen → fanen **Terminal** (gir et shell inn i den kjørende containeren — som nå er det nye image-et fra Deploy A, og dermed har `prisma/migrations/` tilgjengelig)
+2. Kjør: `npx prisma migrate resolve --applied 20260804120000_init`
+3. Bekreft at kommandoen rapporterer migreringen som "applied" — den skal kun markere historikken (oppretter `_prisma_migrations`-tabellen og setter inn én rad), ikke kjøre noen SQL mot det eksisterende skjemaet
+4. (Valgfritt, men anbefalt) Verifiser i databasen: `SELECT * FROM "_prisma_migrations";` skal vise `20260804120000_init` med `finished_at` satt
+
+**Deploy B (egen, senere commit) — aktiverer `migrate deploy`:**
+Når steg 1–4 over er bekreftet utført, gjør vi en oppfølgings-commit som endrer Dockerfile CMD til `npx prisma migrate deploy && npm run start` og pusher den. Autodeploy trigges som normalt — `migrate deploy` finner at `20260804120000_init` allerede er anvendt, rapporterer "No pending migrations to apply", og appen starter normalt.
+
+Alle migreringer lagt til etter Deploy B anvendes automatisk av `migrate deploy` ved fremtidige deploys, uten manuelt inngrep.
+
 ## 5. Verifisering ende-til-ende
 
 - [ ] Logg inn med `@bas.no`-e-post, motta OTP via Brevo

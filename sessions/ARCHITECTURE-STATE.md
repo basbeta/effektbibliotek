@@ -78,4 +78,6 @@ Ingen sirkulære avhengigheter. Ingen direkte kryss-modul-tilgang.
 - Gammel Vercel/Neon-produksjon står urørt som fallback inntil Coolify-oppsettet er verifisert (se CR-008)
 
 ## Last Structural Change
+2026-08-04 — CR-024: Innførte formelle Prisma-migreringer. `prisma/migrations/20260804120000_init` er baseline-migreringen (reflekterer skjema slik det var etter CR-023). Dockerfile CMD byttet fra `prisma db push --accept-data-loss` til `prisma migrate deploy`. Krever ett manuelt engangssteg mot produksjonsdatabasen (`migrate resolve --applied`, se docs/COOLIFY-DEPLOY.md §4b) før neste deploy — se sessions/OPEN-ISSUES.md ISSUE-009.
+
 2026-07-31 — CR-008: Dockerfile lagt til, e-post byttet fra Gmail SMTP til Brevo SMTP, `specs/nfr.md` oppdatert for Hetzner/Coolify/PostgreSQL 18. Faktisk deploy og domeneoppsett gjenstår manuelt.

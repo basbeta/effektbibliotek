@@ -1,6 +1,6 @@
 # CR-026: Fjern manuell avkrysning av bruksrettigheter i redigeringsskjemaet, bruk Bruksgodkjenning-widgeten
 
-**Status:** In Progress
+**Status:** Done (bekreftet i produksjon av produkteier 2026-08-04)
 **Created:** 2026-08-04
 
 ---

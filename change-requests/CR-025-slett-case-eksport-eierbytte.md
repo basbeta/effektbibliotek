@@ -1,6 +1,6 @@
 # CR-025: Slett case (med sikkerhetsnett) + eier-initiert eierbytte
 
-**Status:** In Progress
+**Status:** Done (live i produksjon 2026-08-04, med en produksjonshendelse underveis — se ISSUE-011)
 **Created:** 2026-08-04
 
 ---

@@ -1,6 +1,6 @@
 # CR-027: Filopplasting til Materiale-seksjonen
 
-**Status:** In Progress
+**Status:** Done (pushet i seks commits, S3-env satt i Coolify — ikke eksplisitt bekreftet i produksjon ved sesjonsslutt)
 **Created:** 2026-08-04
 
 ---

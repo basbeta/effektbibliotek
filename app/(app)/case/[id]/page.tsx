@@ -17,6 +17,7 @@ import StatusBadge from "@/components/cases/StatusBadge";
 import UsageBadge from "@/components/cases/UsageBadge";
 import ApprovalSection from "@/components/cases/ApprovalSection";
 import OwnerNameEditor from "@/components/cases/OwnerNameEditor";
+import LinksSection from "@/components/cases/LinksSection";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -29,6 +30,8 @@ export default async function CaseDetailPage({ params }: Props) {
     include: {
       owner: { select: { name: true, email: true } },
       createdBy: { select: { name: true, email: true } },
+      links: { orderBy: { createdAt: "asc" } },
+      files: { orderBy: { createdAt: "asc" } },
       usageApprovals: { orderBy: { submittedAt: "desc" }, take: 1 },
     },
   });
@@ -305,6 +308,8 @@ export default async function CaseDetailPage({ params }: Props) {
         token={c.usageApprovalToken}
         appUrl={process.env.APP_URL ?? ""}
       />
+
+      <LinksSection caseId={c.id} links={c.links} files={c.files} canManage={canEdit} />
 
       <div
         className="rounded-xl p-4 text-xs mt-4"

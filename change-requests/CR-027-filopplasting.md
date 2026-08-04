@@ -23,6 +23,7 @@ La caseeiere legge til bilder og dokumenter direkte på casen, ikke bare ekstern
 - `EditCaseForm.tsx` sin slette-advarsel ("Farlig sone") lister nå også opplastede filer, ikke bare lenker
 - `DELETE /api/cases/[id]` sletter nå S3-objektene til en case sine filer FØR selve case-raden slettes (cascade tar kun DB-rader, ikke eksterne S3-objekter)
 - Oppfølging etter første gjennomgang: eksplisitt "Last ned"-lenke per fil (ikke bare filnavnet som lenke), ny `GET /api/cases/[id]/files/download-all` (zippet med `jszip`, kun eksponert i UI når en case har mer enn én fil), og `window.confirm()` før filsletting
+- Andre oppfølging: `LinksSection` (Materiale-widgeten) vises nå også på selve case-detaljsiden (`app/(app)/case/[id]/page.tsx`), ikke bare i redigeringsskjemaet. `canManage={canEdit}` der, samme mønster som `ApprovalSection` på samme side — eier/admin kan se, laste ned OG administrere materiale direkte fra case-siden; andre innloggede kan se og laste ned
 
 ---
 
@@ -36,6 +37,7 @@ La caseeiere legge til bilder og dokumenter direkte på casen, ikke bare ekstern
 - `lib/case-export.ts` (lister filnavn)
 - `components/cases/LinksSection.tsx` (utvidet for filopplasting, eksplisitt last ned/last ned alle, bekreft-på-slett)
 - `components/cases/EditCaseForm.tsx` (slette-dialogen lister filer)
+- `app/(app)/case/[id]/page.tsx` (viser nå Materiale-widgeten, ikke bare redigeringssiden)
 - `.env.example`, `docs/COOLIFY-DEPLOY.md` (nye S3_*-env-variabler)
 - `package.json` — `@aws-sdk/client-s3`, `@aws-sdk/s3-request-presigner`, `jszip`
 

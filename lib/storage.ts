@@ -5,6 +5,7 @@ import {
   GetObjectCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import JSZip from "jszip";
 
 const BUCKET = process.env.S3_BUCKET ?? "";
 const KEY_PREFIX = "effektbibliotek/case-materiale/";
@@ -85,4 +86,54 @@ export async function getCaseFileBuffer(storageKey: string): Promise<Buffer> {
   const result = await client.send(new GetObjectCommand({ Bucket: BUCKET, Key: storageKey }));
   const bytes = await result.Body!.transformToByteArray();
   return Buffer.from(bytes);
+}
+
+export function slugifyForFilename(input: string): string {
+  return input
+    .toLowerCase()
+    .replace(/[^a-z0-9æøå]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80);
+}
+
+/**
+ * Zips extra in-memory entries (e.g. a generated text summary) together with
+ * a case's uploaded files, fetched from S3. Duplicate filenames are
+ * disambiguated with a numeric suffix so nothing silently overwrites another
+ * entry inside the archive.
+ */
+export async function buildCaseZip(
+  extraEntries: { filename: string; content: string | Buffer }[],
+  files: { filename: string; storageKey: string }[]
+): Promise<Buffer> {
+  const zip = new JSZip();
+  const usedNames = new Set<string>();
+
+  function uniqueName(name: string): string {
+    if (!usedNames.has(name)) {
+      usedNames.add(name);
+      return name;
+    }
+    const dot = name.lastIndexOf(".");
+    const base = dot > 0 ? name.slice(0, dot) : name;
+    const ext = dot > 0 ? name.slice(dot) : "";
+    let i = 2;
+    let candidate = `${base}-${i}${ext}`;
+    while (usedNames.has(candidate)) {
+      i += 1;
+      candidate = `${base}-${i}${ext}`;
+    }
+    usedNames.add(candidate);
+    return candidate;
+  }
+
+  for (const entry of extraEntries) {
+    zip.file(uniqueName(entry.filename), entry.content);
+  }
+  for (const file of files) {
+    const buffer = await getCaseFileBuffer(file.storageKey);
+    zip.file(uniqueName(file.filename), buffer);
+  }
+
+  return zip.generateAsync({ type: "nodebuffer" });
 }

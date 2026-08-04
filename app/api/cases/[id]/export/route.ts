@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { buildCaseExportText } from "@/lib/case-export";
+import { buildCaseZip, slugifyForFilename } from "@/lib/storage";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -35,16 +36,17 @@ export async function GET(_request: NextRequest, { params }: RouteContext) {
     createdByName: c.createdBy.name,
   });
 
-  const filename = `case-${c.customerName}-${c.title}`
-    .toLowerCase()
-    .replace(/[^a-z0-9æøå]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 80);
+  const slug = slugifyForFilename(`case-${c.customerName}-${c.title}`) || "case";
 
-  return new NextResponse(text, {
+  const zipBuffer = await buildCaseZip(
+    [{ filename: `${slug}.txt`, content: text }],
+    c.files
+  );
+
+  return new NextResponse(new Uint8Array(zipBuffer), {
     headers: {
-      "Content-Type": "text/plain; charset=utf-8",
-      "Content-Disposition": `attachment; filename="${filename || "case"}.txt"`,
+      "Content-Type": "application/zip",
+      "Content-Disposition": `attachment; filename="${slug}.zip"`,
     },
   });
 }

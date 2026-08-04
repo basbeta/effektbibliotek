@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import JSZip from "jszip";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getCaseFileBuffer } from "@/lib/storage";
+import { buildCaseZip, slugifyForFilename } from "@/lib/storage";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -25,34 +24,13 @@ export async function GET(_request: NextRequest, { params }: RouteContext) {
     return NextResponse.json({ error: "Ingen filer å laste ned" }, { status: 404 });
   }
 
-  const zip = new JSZip();
-  const usedNames = new Set<string>();
-
-  for (const file of files) {
-    const buffer = await getCaseFileBuffer(file.storageKey);
-    let name = file.filename;
-    if (usedNames.has(name)) {
-      const dot = name.lastIndexOf(".");
-      const base = dot > 0 ? name.slice(0, dot) : name;
-      const ext = dot > 0 ? name.slice(dot) : "";
-      name = `${base}-${file.id}${ext}`;
-    }
-    usedNames.add(name);
-    zip.file(name, buffer);
-  }
-
-  const zipBuffer = await zip.generateAsync({ type: "nodebuffer" });
-
-  const zipFilename = `materiale-${c.customerName}-${c.title}`
-    .toLowerCase()
-    .replace(/[^a-z0-9æøå]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 80);
+  const zipBuffer = await buildCaseZip([], files);
+  const slug = slugifyForFilename(`materiale-${c.customerName}-${c.title}`) || "materiale";
 
   return new NextResponse(new Uint8Array(zipBuffer), {
     headers: {
       "Content-Type": "application/zip",
-      "Content-Disposition": `attachment; filename="${zipFilename || "materiale"}.zip"`,
+      "Content-Disposition": `attachment; filename="${slug}.zip"`,
     },
   });
 }

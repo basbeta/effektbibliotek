@@ -138,7 +138,7 @@ export function buildCaseExportText(c: CaseExportData): string {
   if (c.files.length === 0) {
     lines.push("(ingen)");
   } else {
-    lines.push("Selve filinnholdet er ikke inkludert i denne teksteksporten — last ned filene enkeltvis fra casen før sletting om nødvendig.");
+    lines.push("Selve filene ligger i samme .zip-arkiv som denne tekstfilen.");
     for (const file of c.files) {
       lines.push(`- ${file.filename} (${formatBytes(file.sizeBytes)})`);
     }

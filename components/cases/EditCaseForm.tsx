@@ -69,24 +69,34 @@ interface LastApproval {
   submittedAt: string | Date;
 }
 
+interface ApprovalHistoryItem {
+  submittedByName: string;
+  submittedAt: string | Date;
+}
+
 export default function EditCaseForm({
   initial,
   isAdmin,
+  isOwner,
   links,
   usageApprovalStatus,
   lastApproval,
+  usageApprovals,
 }: {
   initial: CaseData;
   isAdmin?: boolean;
+  isOwner?: boolean;
   links?: LinkItem[];
   usageApprovalStatus?: string;
   lastApproval?: LastApproval | null;
+  usageApprovals?: ApprovalHistoryItem[];
 }) {
   const router = useRouter();
   const [approvalStatus, setApprovalStatus] = useState(usageApprovalStatus);
   const [confirmUnlock, setConfirmUnlock] = useState(false);
   const [unlocking, setUnlocking] = useState(false);
   const usageRightsLocked = approvalStatus === "submitted_locked" && !!lastApproval;
+  const canManageCase = !!isAdmin || !!isOwner;
   const [form, setForm] = useState({
     customerName: n(initial.customerName),
     title: n(initial.title),
@@ -123,10 +133,13 @@ export default function EditCaseForm({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [allUsers, setAllUsers] = useState<{ email: string; name: string }[]>([]);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
 
-  // fetch user list for admin owner-change
+  // fetch user list for owner-change (available to the owner themselves, not just admin)
   const loadedUsersRef = useRef(false);
-  if (isAdmin && !loadedUsersRef.current) {
+  if (canManageCase && !loadedUsersRef.current) {
     loadedUsersRef.current = true;
     fetch("/api/admin/users/list")
       .then((r) => r.ok ? r.json() : [])
@@ -160,6 +173,23 @@ export default function EditCaseForm({
       setError("Noe gikk galt.");
     } finally {
       setUnlocking(false);
+    }
+  }
+
+  async function handleDelete() {
+    setDeleting(true);
+    setDeleteError("");
+    try {
+      const res = await fetch(`/api/cases/${initial.id}`, { method: "DELETE" });
+      if (!res.ok) {
+        setDeleteError("Kunne ikke slette casen.");
+        return;
+      }
+      router.push("/bibliotek");
+    } catch {
+      setDeleteError("Noe gikk galt.");
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -230,8 +260,8 @@ export default function EditCaseForm({
             ))}
           </select>
         </Field>
-        {isAdmin && allUsers.length > 0 && (
-          <Field label="Ansvarlig (admin)">
+        {canManageCase && allUsers.length > 0 && (
+          <Field label="Ansvarlig">
             <select value={form.ownerEmail} onChange={(e) => set("ownerEmail", e.target.value)} className={inputCls} style={inputStyle}>
               {allUsers.map((u) => (
                 <option key={u.email} value={u.email}>{u.name} ({u.email})</option>
@@ -444,6 +474,100 @@ export default function EditCaseForm({
       </FormSection>
 
       <LinksSection caseId={initial.id} links={links ?? []} canManage={true} />
+
+      {canManageCase && (
+        <FormSection title="Farlig sone">
+          <a
+            href={`/api/cases/${initial.id}/export`}
+            className="text-sm inline-block"
+            style={{ color: "var(--color-text-muted)" }}
+          >
+            Eksporter alt innhold (tekst, lenker, godkjenninger)
+          </a>
+
+          {confirmDelete ? (
+            <div
+              className="rounded-xl p-4 space-y-3"
+              style={{ backgroundColor: "var(--color-error-bg)", border: "1px solid var(--color-error-text)" }}
+            >
+              <p className="text-sm font-semibold" style={{ color: "var(--color-error-text)" }}>
+                Dette vil slette casen «{initial.title}» permanent. Dette kan ikke angres.
+              </p>
+
+              <div>
+                <p className="text-xs font-medium mb-1" style={{ color: "var(--color-text-secondary)" }}>
+                  Tilknyttede lenker/filer som slettes:
+                </p>
+                {links && links.length > 0 ? (
+                  <ul className="text-xs space-y-0.5" style={{ color: "var(--color-text-secondary)" }}>
+                    {links.map((l) => (
+                      <li key={l.id}>— {l.title}: {l.url}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-xs" style={{ color: "var(--color-text-muted)" }}>(ingen)</p>
+                )}
+              </div>
+
+              {usageApprovals && usageApprovals.length > 0 && (
+                <div>
+                  <p className="text-xs font-medium mb-1" style={{ color: "var(--color-text-secondary)" }}>
+                    Denne casen har følgende godkjenninger fra {initial.customerName}:
+                  </p>
+                  <ul className="text-xs space-y-0.5" style={{ color: "var(--color-text-secondary)" }}>
+                    {usageApprovals.map((a, i) => (
+                      <li key={i}>
+                        — lagt inn av {a.submittedByName} den {formatDate(a.submittedAt)}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              <a
+                href={`/api/cases/${initial.id}/export`}
+                className="text-xs inline-block font-medium"
+                style={{ color: "var(--color-accent)" }}
+              >
+                Eksporter alt før du sletter
+              </a>
+
+              {deleteError && (
+                <p className="text-sm" style={{ color: "var(--color-error-text)" }}>{deleteError}</p>
+              )}
+
+              <div className="flex items-center gap-3 pt-1">
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className="px-3 py-1.5 text-xs font-medium text-white rounded-lg disabled:opacity-60"
+                  style={{ backgroundColor: "var(--color-destructive-bg)" }}
+                >
+                  {deleting ? "Sletter..." : "Ja, slett permanent"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConfirmDelete(false)}
+                  className="px-3 py-1.5 text-xs rounded-lg"
+                  style={{ border: "1px solid var(--color-border-strong)", color: "var(--color-text-secondary)" }}
+                >
+                  Avbryt
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setConfirmDelete(true)}
+              className="text-sm font-medium block"
+              style={{ color: "var(--color-error-text)" }}
+            >
+              Slett case
+            </button>
+          )}
+        </FormSection>
+      )}
 
       {error && (
         <p className="text-sm" style={{ color: "var(--color-error-text)" }}>

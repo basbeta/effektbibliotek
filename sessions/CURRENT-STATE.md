@@ -3,16 +3,17 @@
 > Updated at the end of every session. Read by Claude at startup.
 
 ## Current Phase
-MIGRERING NESTEN FERDIG — CR-008: porting fra Vercel/Neon til Hetzner/Coolify/PostgreSQL 18. Appen kjører stabilt på `effektbibliotek.basbeta.no`. Innlogging (CR-009–011), feilsporing (CR-012), direkte utsending av bruksgodkjenning (CR-013), rediger eget navn (CR-014), og hele det forenklede bruksrettighets-systemet (CR-020–023, inkl. låst/opplåst UI) er alle bekreftet fungerende i produksjon av produkteier per 2026-08-04. CR-015–019 (e-postforhåndsvisning, forhåndsutfylling, personvern/GDPR-tekst, reply-to, trekkspill) er deployet og ble funksjonelt utøvd gjennom den samme produksjonstestingen (ekte godkjenningsdata synlig i skjermbilder fra 3.–4. aug), men er ikke bekreftet feature-for-feature enkeltvis — se Next Recommended Actions punkt 1.
+MIGRERING NESTEN FERDIG — CR-008: porting fra Vercel/Neon til Hetzner/Coolify/PostgreSQL 18. Appen kjører stabilt på `effektbibliotek.basbeta.no`. Innlogging (CR-009–011), feilsporing (CR-012), direkte utsending av bruksgodkjenning (CR-013), rediger eget navn (CR-014), det forenklede bruksrettighets-systemet (CR-020–023), og formelle Prisma-migreringer (CR-024) er alle bekreftet fungerende i produksjon av produkteier per 2026-08-04. CR-015–019 (e-postforhåndsvisning, forhåndsutfylling, personvern/GDPR-tekst, reply-to, trekkspill) er deployet og ble funksjonelt utøvd gjennom den samme produksjonstestingen, men er ikke bekreftet feature-for-feature enkeltvis — se Next Recommended Actions punkt 1. **CR-025 (case-sletting, eksport, eier-initiert eierbytte) er implementert denne økten, bygget og typesjekket lokalt, men IKKE pushet/deployet ennå** — venter på gjennomgang.
 
 ## Current Objectives
-1. (Valgfritt, lav prioritet) Bekreft CR-015–019 individuelt hvis det er ønskelig med fullstendig sikkerhet — se Next Recommended Actions
-2. Ende-til-ende-test av gjenstående flyter: case-opprettelse, redigering av felt utenom bruksrettigheter
-3. Fullføre resten av `docs/COOLIFY-DEPLOY.md` (backup, Uptime Kuma)
-4. Deretter fjerne Vercel/Neon, marker CR-008 som Done
+1. Push og deploy CR-025 (slett case, eksport, eierbytte for eier), deretter manuell E2E-verifisering i produksjon
+2. (Valgfritt, lav prioritet) Bekreft CR-015–019 individuelt hvis det er ønskelig med fullstendig sikkerhet — se Next Recommended Actions
+3. Ende-til-ende-test av gjenstående flyter: case-opprettelse, redigering av felt utenom bruksrettigheter
+4. Fullføre resten av `docs/COOLIFY-DEPLOY.md` (backup, Uptime Kuma)
+5. Deretter fjerne Vercel/Neon, marker CR-008 som Done
 
 ## Current Branch
-master (alle CR-009–023-endringer er pushet direkte til master denne økten, ingen feature-branch brukt)
+master (alle endringer CR-009–024 er pushet direkte til master, ingen feature-branch brukt. CR-025 har ukommiterte endringer i arbeidskatalogen, bygget og typesjekket, klar for commit/push — se Current Objectives)
 
 ## Blockers
 Manuelt Coolify/Hetzner-oppsett kan ikke utføres fra Claude Code-økten (ingen tilgang til Coolify-instansen). Krever produkteier/admin på `coolify.basbeta.no`.
@@ -58,6 +59,7 @@ Node.js 22 (matcher Dockerfile) installert på denne maskinen via `winget instal
 - CR-022 (Done, bekreftet i produksjon) — Tydeligere låst visning, "Lås opp godkjenning" direkte fra redigeringsskjemaet
 - CR-023 (Done, bekreftet i produksjon 2026-08-04) — ApprovalSection permanent utvidet når submitted_locked; redigerbar liste viser bold/dempet basert på avkrysning; låst visning bruker ✓/— (flat stil, matcher appens øvrige read-only lister — valgt fremfor ☑/☐ etter avklaring med produkteier)
 - CR-024 (Done, bekreftet i produksjon 2026-08-04) — Formelle Prisma-migreringer (ISSUE-009), rullet ut i to atskilte deploys pga. autodeploy på master: Deploy A (migreringsfiler, uendret CMD) → manuelt `migrate resolve --applied` mot prod via Coolify Terminal → Deploy B (CMD → `migrate deploy`). Begge deploys bekreftet vellykket, appen kjører normalt
+- CR-025 (In Progress, IKKE pushet) — Slett case (eier eller admin, med advarsel-dialog: lenkeliste, godkjenningshistorikk-varsel, eksporter-knapp), eksport av full case-tekst/lenker/godkjenninger, eierbytte-dropdown nå synlig for eieren selv (ikke bare admin). Skjemaendring: `onDelete: Cascade` på UsageApproval/CaseLink, ny migrering `20260804130000_case_cascade_delete`. Bygget og typesjekket lokalt, ikke testet mot faktisk database
 
 ## Production URL
 https://effektbibliotek.basbeta.no — live, innlogging bekreftet fungerende
@@ -90,6 +92,19 @@ https://effektbibliotek.vercel.app (gammel, beholdes urørt inntil Coolify er fu
 - app/(app)/mine-caser/page.tsx, oppfolging/page.tsx — oppdatert datamapping for nye felt (CR-020)
 - .env.example, docs/COOLIFY-DEPLOY.md — SENTRY_DSN/NEXT_PUBLIC_SENTRY_DSN (CR-012), APP_URL (CR-013)
 - package.json/package-lock.json — @sentry/nextjs lagt til (CR-012)
+
+## Nylig endret (CR-024–025, 2026-08-04)
+- Dockerfile — `prisma migrate deploy` (byttet fra `db push`, CR-024)
+- prisma/schema.prisma — `onDelete: Cascade` på UsageApproval/CaseLink (CR-025)
+- prisma/migrations/20260804120000_init — baseline-migrering (CR-024)
+- prisma/migrations/20260804130000_case_cascade_delete — cascade-migrering (CR-025)
+- lib/case-export.ts — ny, bygger tekst-eksport av case/lenker/godkjenninger (CR-025)
+- app/api/cases/[id]/route.ts — ny DELETE-handler (CR-025)
+- app/api/cases/[id]/export/route.ts — ny (CR-025)
+- app/api/admin/users/list/route.ts — tilgang relaksert til alle innloggede (CR-025)
+- components/cases/EditCaseForm.tsx — eierbytte-dropdown og "Farlig sone"-slette-dialog for eier ELLER admin (CR-025)
+- app/(app)/case/[id]/page.tsx — eksporter-knapp (CR-025)
+- app/(app)/case/[id]/rediger/page.tsx — henter full usageApprovals-historikk, isOwner-prop (CR-025)
 
 ## Tidligere sesjoners systemer (uendret denne økten)
 - app/api/cases/[id]/unlock-approval/route.ts, components/cases/LinksSection.tsx, app/(app)/admin/*, app/api/admin/*, components/layout/SideNav.tsx, proxy.ts
@@ -128,13 +143,14 @@ https://effektbibliotek.vercel.app (gammel, beholdes urørt inntil Coolify er fu
 - Rediger eget navn (CR-014): ✓ bekreftet
 - Forenklet bruksrettighets-system, låst/opplåst UI (CR-020–023): ✓ bekreftet av produkteier 2026-08-04, inkl. skjemaendring (kolonner droppet) uten problemer
 - Formelle Prisma-migreringer (CR-024): ✓ bekreftet av produkteier 2026-08-04 — begge deploys (baseline-migrering, deretter CMD-bytte til `migrate deploy`) fullførte uten feil, appen kjører normalt
+- Slett case / eksport / eierbytte for eier (CR-025): `npm run build` ✓ (inkl. TypeScript-sjekk). IKKE testet mot faktisk database eller i produksjon ennå — ikke pushet
 
 ## Next Actions (prioritert)
-1. **(Anbefalt, lav innsats)** Bekreft CR-015, CR-016, CR-018, CR-019 hver for seg hvis full sikkerhet ønskes: (a) sammenlign e-postforhåndsvisning mot faktisk mottatt e-post ord for ord, (b) svar på en godkjenningsforespørsel-e-post og verifiser at svaret går til caseeieren (reply-to), (c) les gjennom kvitteringssiden og personvernteksten på selve godkjenningssiden (ikke bare i e-post)
-2. Opprett admin-bruker i produksjonsdatabasen (første login + manuell `isAdmin`-sett i Coolify sin database-ressurs) — ISSUE-006, fortsatt åpen
-3. Ende-til-ende-test av gjenstående flyter: case-opprettelse, redigering av felt utenom bruksrettigheter (de er nå grundig testet)
-4. Utføre resterende `docs/COOLIFY-DEPLOY.md`-steg (backup, Uptime Kuma) — ISSUE-007, delvis løst
-5. Når Coolify-oppsettet er verifisert stabilt over noen dager: fjern Vercel-prosjektet og slett Neon-databasen (ingen data å ta vare på), marker CR-008 som Done
-6. ~~Vurder å innføre formelle `prisma migrate`-migreringer~~ — **løst 2026-08-04, CR-024**
+1. **Push og deploy CR-025**, deretter manuell E2E-verifisering: opprett en test-case med lenker og godkjenningshistorikk, bekreft eksport laster ned korrekt innhold, bekreft slette-dialogen viser riktig advarsel, bekreft sletting faktisk fjerner casen og alt tilknyttet (lenker + godkjenninger) fra databasen, bekreft eierbytte fungerer for en ikke-admin eier
+2. **(Anbefalt, lav innsats)** Bekreft CR-015, CR-016, CR-018, CR-019 hver for seg hvis full sikkerhet ønskes: (a) sammenlign e-postforhåndsvisning mot faktisk mottatt e-post ord for ord, (b) svar på en godkjenningsforespørsel-e-post og verifiser at svaret går til caseeieren (reply-to), (c) les gjennom kvitteringssiden og personvernteksten på selve godkjenningssiden (ikke bare i e-post)
+3. Opprett admin-bruker i produksjonsdatabasen (første login + manuell `isAdmin`-sett i Coolify sin database-ressurs) — ISSUE-006, fortsatt åpen
+4. Ende-til-ende-test av gjenstående flyter: case-opprettelse, redigering av felt utenom bruksrettigheter (de er nå grundig testet)
+5. Utføre resterende `docs/COOLIFY-DEPLOY.md`-steg (backup, Uptime Kuma) — ISSUE-007, delvis løst
+6. Når Coolify-oppsettet er verifisert stabilt over noen dager: fjern Vercel-prosjektet og slett Neon-databasen (ingen data å ta vare på), marker CR-008 som Done
 7. Vurder om `docs_extracted.txt` skal gitignores (sensitiv prod-dokumentasjon) — ISSUE-005, fortsatt åpen
 8. Vurder om det skal legges til en enkel automatisert test/smoke-test-suite — hele denne økten er verifisert med `npm run build` + manuell produksjonstesting, ingen automatiserte tester finnes ennå i prosjektet

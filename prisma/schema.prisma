@@ -89,7 +89,7 @@ model Case {
 model UsageApproval {
   id     String @id @default(cuid())
   caseId String
-  case   Case   @relation(fields: [caseId], references: [id])
+  case   Case   @relation(fields: [caseId], references: [id], onDelete: Cascade)
 
   submittedAt          DateTime @default(now())
   submittedByName      String
@@ -115,7 +115,7 @@ model UsageApproval {
 model CaseLink {
   id     String @id @default(cuid())
   caseId String
-  case   Case   @relation(fields: [caseId], references: [id])
+  case   Case   @relation(fields: [caseId], references: [id], onDelete: Cascade)
 
   title       String
   url         String

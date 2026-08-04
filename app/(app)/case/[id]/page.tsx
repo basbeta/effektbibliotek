@@ -44,9 +44,9 @@ export default async function CaseDetailPage({ params }: Props) {
         <Link href="/bibliotek" className="text-sm" style={{ color: "var(--color-text-muted)" }}>
           ← Bibliotek
         </Link>
-        {canEdit && (
-          <Link
-            href={`/case/${c.id}/rediger`}
+        <div className="flex items-center gap-2">
+          <a
+            href={`/api/cases/${c.id}/export`}
             className="px-4 py-2 text-sm font-medium rounded-lg"
             style={{
               backgroundColor: "var(--color-surface)",
@@ -54,9 +54,22 @@ export default async function CaseDetailPage({ params }: Props) {
               color: "var(--color-text-secondary)",
             }}
           >
-            Rediger
-          </Link>
-        )}
+            Eksporter
+          </a>
+          {canEdit && (
+            <Link
+              href={`/case/${c.id}/rediger`}
+              className="px-4 py-2 text-sm font-medium rounded-lg"
+              style={{
+                backgroundColor: "var(--color-surface)",
+                border: "1px solid var(--color-border-strong)",
+                color: "var(--color-text-secondary)",
+              }}
+            >
+              Rediger
+            </Link>
+          )}
+        </div>
       </div>
 
       {c.ndaRestricted && (

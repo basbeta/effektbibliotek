@@ -69,7 +69,7 @@ Ingen sirkulære avhengigheter. Ingen direkte kryss-modul-tilgang.
 - Public route `/godkjenning/:caseId/:token` bruker egen shell — ingen intern navigasjon
 - E-postkall isolert i `lib/email.ts` for enkel provider-bytte
 - OTP lagres hashet i database, aldri i klartekst
-- Bruksgodkjenning-historikk er append-only, aldri overskriv
+- Bruksgodkjenning-historikk er append-only, aldri overskriv. **Unntak (CR-025, 2026-08-04):** full sletting av selve casen (eier- eller admin-initiert, via eksplisitt bekreftelsesdialog) cascade-sletter også dens `UsageApproval`- og `CaseLink`-historikk. Dette er det ene, bevisst valgte unntaket fra append-only-prinsippet — historikk overskrives eller endres aldri stille, men kan fjernes i sin helhet sammen med casen den tilhører, med eksport tilgjengelig som sikkerhetsnett rett før sletting
 
 ## External Dependencies
 - PostgreSQL 18 (Coolify/Hetzner) — connection string i `DATABASE_URL`
@@ -78,6 +78,8 @@ Ingen sirkulære avhengigheter. Ingen direkte kryss-modul-tilgang.
 - Gammel Vercel/Neon-produksjon står urørt som fallback inntil Coolify-oppsettet er verifisert (se CR-008)
 
 ## Last Structural Change
+2026-08-04 — CR-025: Case-sletting, eksport og eier-initiert eierbytte. `onDelete: Cascade` lagt til på `UsageApproval.case` og `CaseLink.case` (ny migrering `20260804130000_case_cascade_delete`, generert statisk uten live DB). Ny `DELETE /api/cases/[id]` (eier eller admin) og `GET /api/cases/[id]/export`. `/api/admin/users/list` åpnet for alle innloggede brukere. Se append-only-unntaket over.
+
 2026-08-04 — CR-024: Innførte formelle Prisma-migreringer. `prisma/migrations/20260804120000_init` er baseline-migreringen (reflekterer skjema slik det var etter CR-023). Dockerfile CMD byttet fra `prisma db push --accept-data-loss` til `prisma migrate deploy`, rullet ut i to atskilte deploys pga. autodeploy på master (se sessions/DECISIONS.md for full rekkefølge). Bekreftet vellykket i produksjon 2026-08-04 — se sessions/OPEN-ISSUES.md ISSUE-009 (Resolved).
 
 2026-07-31 — CR-008: Dockerfile lagt til, e-post byttet fra Gmail SMTP til Brevo SMTP, `specs/nfr.md` oppdatert for Hetzner/Coolify/PostgreSQL 18. Faktisk deploy og domeneoppsett gjenstår manuelt.

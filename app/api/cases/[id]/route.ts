@@ -100,3 +100,24 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
   const updated = await prisma.case.update({ where: { id }, data: updateData });
   return NextResponse.json(updated);
 }
+
+export async function DELETE(_request: NextRequest, { params }: RouteContext) {
+  const session = await getSession();
+  if (!session.userEmail) {
+    return NextResponse.json({ error: "Ikke innlogget" }, { status: 401 });
+  }
+
+  const { id } = await params;
+
+  const existing = await prisma.case.findUnique({ where: { id } });
+  if (!existing) {
+    return NextResponse.json({ error: "Case ikke funnet" }, { status: 404 });
+  }
+
+  if (existing.ownerEmail !== session.userEmail && !session.isAdmin) {
+    return NextResponse.json({ error: "Ikke tilgang" }, { status: 403 });
+  }
+
+  await prisma.case.delete({ where: { id } });
+  return NextResponse.json({ ok: true });
+}

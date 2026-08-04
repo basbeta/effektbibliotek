@@ -14,12 +14,13 @@ export default async function RedigerCasePage({ params }: Props) {
     where: { id },
     include: {
       links: { orderBy: { createdAt: "asc" } },
-      usageApprovals: { orderBy: { submittedAt: "desc" }, take: 1 },
+      usageApprovals: { orderBy: { submittedAt: "desc" } },
     },
   });
   if (!c) notFound();
 
-  if (c.ownerEmail !== session.userEmail && !session.isAdmin) {
+  const isOwner = c.ownerEmail === session.userEmail;
+  if (!isOwner && !session.isAdmin) {
     redirect(`/case/${id}`);
   }
 
@@ -41,9 +42,11 @@ export default async function RedigerCasePage({ params }: Props) {
       <EditCaseForm
         initial={c}
         isAdmin={session.isAdmin}
+        isOwner={isOwner}
         links={c.links}
         usageApprovalStatus={c.usageApprovalStatus}
         lastApproval={c.usageApprovals[0] ?? null}
+        usageApprovals={c.usageApprovals}
       />
     </div>
   );

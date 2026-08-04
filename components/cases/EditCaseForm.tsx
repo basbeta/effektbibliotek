@@ -14,6 +14,7 @@ import {
 import { formatDate } from "@/lib/format";
 
 import LinksSection from "@/components/cases/LinksSection";
+import ApprovalSection from "@/components/cases/ApprovalSection";
 
 type SelectValue = string;
 
@@ -42,12 +43,6 @@ interface CaseData {
   measurementPeriod: string | null;
   dataSource: string | null;
   evidenceLevel: string | null;
-  ndaRestricted: boolean;
-  anonymizedUseOnly: boolean;
-  websiteUseAllowed: boolean;
-  presentationUseAllowed: boolean;
-  tenderUseAllowed: boolean;
-  competitionUseAllowed: boolean;
   ownerEmail: string;
 }
 
@@ -63,15 +58,18 @@ interface LinkItem {
   description: string | null;
 }
 
-interface LastApproval {
+interface ApprovalHistoryItem {
+  submittedAt: string | Date;
   submittedByName: string;
   submittedByEmail: string;
-  submittedAt: string | Date;
-}
-
-interface ApprovalHistoryItem {
-  submittedByName: string;
-  submittedAt: string | Date;
+  submittedByRole: string | null;
+  note: string | null;
+  ndaRestricted: boolean;
+  anonymizedUseOnly: boolean;
+  websiteUseAllowed: boolean;
+  presentationUseAllowed: boolean;
+  tenderUseAllowed: boolean;
+  competitionUseAllowed: boolean;
 }
 
 export default function EditCaseForm({
@@ -80,22 +78,26 @@ export default function EditCaseForm({
   isOwner,
   links,
   usageApprovalStatus,
-  lastApproval,
   usageApprovals,
+  approverName,
+  approverEmail,
+  ownerName,
+  token,
+  appUrl,
 }: {
   initial: CaseData;
   isAdmin?: boolean;
   isOwner?: boolean;
   links?: LinkItem[];
   usageApprovalStatus?: string;
-  lastApproval?: LastApproval | null;
   usageApprovals?: ApprovalHistoryItem[];
+  approverName?: string | null;
+  approverEmail?: string | null;
+  ownerName: string;
+  token?: string | null;
+  appUrl: string;
 }) {
   const router = useRouter();
-  const [approvalStatus, setApprovalStatus] = useState(usageApprovalStatus);
-  const [confirmUnlock, setConfirmUnlock] = useState(false);
-  const [unlocking, setUnlocking] = useState(false);
-  const usageRightsLocked = approvalStatus === "submitted_locked" && !!lastApproval;
   const canManageCase = !!isAdmin || !!isOwner;
   const [form, setForm] = useState({
     customerName: n(initial.customerName),
@@ -121,12 +123,6 @@ export default function EditCaseForm({
     measurementPeriod: n(initial.measurementPeriod),
     dataSource: n(initial.dataSource),
     evidenceLevel: n(initial.evidenceLevel),
-    ndaRestricted: initial.ndaRestricted,
-    anonymizedUseOnly: initial.anonymizedUseOnly,
-    websiteUseAllowed: initial.websiteUseAllowed,
-    presentationUseAllowed: initial.presentationUseAllowed,
-    tenderUseAllowed: initial.tenderUseAllowed,
-    competitionUseAllowed: initial.competitionUseAllowed,
     ownerEmail: initial.ownerEmail,
   });
 
@@ -155,25 +151,6 @@ export default function EditCaseForm({
     const arr = form[field as keyof typeof form] as string[];
     const next = arr.includes(value) ? arr.filter((v) => v !== value) : [...arr, value];
     set(field, next);
-  }
-
-  async function handleUnlock() {
-    setUnlocking(true);
-    setError("");
-    try {
-      const res = await fetch(`/api/cases/${initial.id}/unlock-approval`, { method: "POST" });
-      if (!res.ok) {
-        setError("Kunne ikke låse opp.");
-        return;
-      }
-      setApprovalStatus("open");
-      setConfirmUnlock(false);
-      router.refresh();
-    } catch {
-      setError("Noe gikk galt.");
-    } finally {
-      setUnlocking(false);
-    }
   }
 
   async function handleDelete() {
@@ -361,111 +338,19 @@ export default function EditCaseForm({
         </Field>
       </FormSection>
 
-      <FormSection title="Bruksrettigheter">
-        {usageRightsLocked ? (
-          <div className="space-y-3">
-            {lastApproval && (
-              <p className="text-xs pb-3" style={{ color: "var(--color-text-muted)", borderBottom: "1px solid var(--color-border-subtle)" }}>
-                Godkjent hos kunde av {lastApproval.submittedByName} ({lastApproval.submittedByEmail}) den {formatDate(lastApproval.submittedAt)}
-              </p>
-            )}
-            <div className="space-y-1.5">
-              {(
-                [
-                  ["ndaRestricted", "NDA / Skal ikke deles"],
-                  ["anonymizedUseOnly", "Kun anonymisert bruk"],
-                  ["websiteUseAllowed", "Kan brukes som case på hjemmeside"],
-                  ["presentationUseAllowed", "Kan brukes som case i presentasjoner"],
-                  ["tenderUseAllowed", "Kan brukes som case i anbudsbesvarelser"],
-                  ["competitionUseAllowed", "Kan brukes som case i konkurranse/award-show"],
-                ] as [keyof typeof form, string][]
-              ).map(([key, label]) => (
-                <p
-                  key={key}
-                  className="text-sm"
-                  style={{
-                    color: form[key] ? "var(--color-text-primary)" : "var(--color-text-muted)",
-                    fontWeight: form[key] ? 600 : 400,
-                    opacity: form[key] ? 1 : 0.55,
-                  }}
-                >
-                  {form[key] ? "✓" : "—"} {label}
-                </p>
-              ))}
-            </div>
-            <div className="pt-3" style={{ borderTop: "1px solid var(--color-border-subtle)" }}>
-              {confirmUnlock ? (
-                <div className="flex items-center gap-3">
-                  <p className="text-sm flex-1" style={{ color: "var(--color-warning-text)" }}>
-                    Er du sikker? Dette genererer en ny lenke og gjør det mulig å sende inn på nytt.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={handleUnlock}
-                    disabled={unlocking}
-                    className="px-3 py-1.5 text-xs font-medium text-white rounded-lg disabled:opacity-60"
-                    style={{ backgroundColor: "var(--color-destructive-bg)" }}
-                  >
-                    {unlocking ? "..." : "Bekreft"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setConfirmUnlock(false)}
-                    className="px-3 py-1.5 text-xs rounded-lg"
-                    style={{ border: "1px solid var(--color-border-strong)", color: "var(--color-text-secondary)" }}
-                  >
-                    Avbryt
-                  </button>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setConfirmUnlock(true)}
-                  className="text-sm"
-                  style={{ color: "var(--color-text-muted)" }}
-                >
-                  Lås opp godkjenning
-                </button>
-              )}
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            <CheckboxField
-              checked={form.ndaRestricted}
-              onChange={(v) => set("ndaRestricted", v)}
-              label="NDA / Skal ikke deles"
-              description="Overstyrer alle andre bruksvalg. Vises tydelig i biblioteket."
-            />
-            <CheckboxField
-              checked={form.anonymizedUseOnly}
-              onChange={(v) => set("anonymizedUseOnly", v)}
-              label="Kun anonymisert bruk"
-              description="Overstyrer de øvrige bruksvalgene under."
-            />
-            <CheckboxField
-              checked={form.websiteUseAllowed}
-              onChange={(v) => set("websiteUseAllowed", v)}
-              label="Kan brukes som case på hjemmeside"
-            />
-            <CheckboxField
-              checked={form.presentationUseAllowed}
-              onChange={(v) => set("presentationUseAllowed", v)}
-              label="Kan brukes som case i presentasjoner"
-            />
-            <CheckboxField
-              checked={form.tenderUseAllowed}
-              onChange={(v) => set("tenderUseAllowed", v)}
-              label="Kan brukes som case i anbudsbesvarelser"
-            />
-            <CheckboxField
-              checked={form.competitionUseAllowed}
-              onChange={(v) => set("competitionUseAllowed", v)}
-              label="Kan brukes som case i konkurranse/award-show"
-            />
-          </div>
-        )}
-      </FormSection>
+      <ApprovalSection
+        caseId={initial.id}
+        status={usageApprovalStatus ?? "not_requested"}
+        canManage={canManageCase}
+        lastApproval={usageApprovals?.[0] ?? null}
+        approverName={approverName ?? null}
+        approverEmail={approverEmail ?? null}
+        caseTitle={form.title || initial.title}
+        ownerName={ownerName}
+        ownerEmail={form.ownerEmail}
+        token={token ?? null}
+        appUrl={appUrl}
+      />
 
       <FormSection title="Interne notater">
         <Field label="Interne notater">
@@ -677,43 +562,3 @@ function CheckboxGroup({
   );
 }
 
-function CheckboxField({
-  checked,
-  onChange,
-  label,
-  description,
-}: {
-  checked: boolean;
-  onChange: (v: boolean) => void;
-  label: string;
-  description?: string;
-}) {
-  return (
-    <label className="flex items-start gap-3 cursor-pointer">
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={(e) => onChange(e.target.checked)}
-        className="mt-0.5 h-4 w-4 rounded"
-        style={{ accentColor: "var(--color-accent)" }}
-      />
-      <div>
-        <span
-          className="text-sm"
-          style={{
-            color: checked ? "var(--color-text-primary)" : "var(--color-text-muted)",
-            fontWeight: checked ? 600 : 400,
-            opacity: checked ? 1 : 0.7,
-          }}
-        >
-          {label}
-        </span>
-        {description && (
-          <p className="text-xs mt-0.5" style={{ color: "var(--color-text-muted)" }}>
-            {description}
-          </p>
-        )}
-      </div>
-    </label>
-  );
-}

@@ -3,24 +3,27 @@
 > Updated at the end of every session. Read by Claude at startup.
 
 ## Current Phase
-MIGRERING NESTEN FERDIG — CR-008: porting fra Vercel/Neon til Hetzner/Coolify/PostgreSQL 18. Appen kjører stabilt på `effektbibliotek.basbeta.no`. Innlogging (CR-009–011), feilsporing (CR-012), direkte utsending av bruksgodkjenning (CR-013), rediger eget navn (CR-014), det forenklede bruksrettighets-systemet (CR-020–023), og formelle Prisma-migreringer (CR-024) er alle bekreftet fungerende i produksjon av produkteier per 2026-08-04. CR-015–019 (e-postforhåndsvisning, forhåndsutfylling, personvern/GDPR-tekst, reply-to, trekkspill) er deployet og ble funksjonelt utøvd gjennom den samme produksjonstestingen, men er ikke bekreftet feature-for-feature enkeltvis — se Next Recommended Actions punkt 1. **CR-025 (case-sletting, eksport, eier-initiert eierbytte) er implementert denne økten, bygget og typesjekket lokalt, men IKKE pushet/deployet ennå** — venter på gjennomgang.
+MIGRERING NESTEN FERDIG — CR-008: porting fra Vercel/Neon til Hetzner/Coolify/PostgreSQL 18. Appen kjører stabilt på `effektbibliotek.basbeta.no`. Innlogging (CR-009–011), feilsporing (CR-012), direkte utsending av bruksgodkjenning (CR-013), rediger eget navn (CR-014), og det forenklede bruksrettighets-systemet (CR-020–023) er alle bekreftet fungerende i produksjon av produkteier per 2026-08-04. CR-015–019 er deployet og ble funksjonelt utøvd gjennom den samme produksjonstestingen, men er ikke bekreftet feature-for-feature enkeltvis — se Next Recommended Actions punkt 1. **CR-025 (case-sletting, eksport, eier-initiert eierbytte) er pushet og live, men forårsaket en kort produksjonsnedetid** (BOM i migreringsfil crash-loopet containeren til Coolify sin restart-grense — se ISSUE-011) — nødløsning (revert til `db push`) er bekreftet stabil av produkteier, selve CR-025-funksjonaliteten (cascade delete, sletting, eksport, eierbytte) fungerer. Appen kjører nå på `db push` igjen, IKKE `migrate deploy` (ISSUE-011 er en åpen opprydding). **CR-026 (bruk Bruksgodkjenning-widgeten i redigeringsskjemaet i stedet for egne avkrysningsbokser) er implementert denne økten, bygget og typesjekket lokalt, men IKKE pushet ennå.**
 
 ## Current Objectives
-1. Push og deploy CR-025 (slett case, eksport, eierbytte for eier), deretter manuell E2E-verifisering i produksjon
-2. (Valgfritt, lav prioritet) Bekreft CR-015–019 individuelt hvis det er ønskelig med fullstendig sikkerhet — se Next Recommended Actions
-3. Ende-til-ende-test av gjenstående flyter: case-opprettelse, redigering av felt utenom bruksrettigheter
-4. Fullføre resten av `docs/COOLIFY-DEPLOY.md` (backup, Uptime Kuma)
-5. Deretter fjerne Vercel/Neon, marker CR-008 som Done
+1. Push CR-026 og verifiser i produksjon
+2. Rydd opp ISSUE-011: kjør `migrate resolve --rolled-back 20260804130000_case_cascade_delete` via Coolify Terminal, deretter egen commit som bytter Dockerfile CMD tilbake til `migrate deploy`
+3. Manuell E2E-verifisering av CR-025 i produksjon (opprett testcase, lenker, godkjenning → eksporter → slett)
+4. (Valgfritt, lav prioritet) Bekreft CR-015–019 individuelt hvis det er ønskelig med fullstendig sikkerhet — se Next Recommended Actions
+5. Ende-til-ende-test av gjenstående flyter: case-opprettelse, redigering av felt utenom bruksrettigheter
+6. Fullføre resten av `docs/COOLIFY-DEPLOY.md` (backup, Uptime Kuma)
+7. Deretter fjerne Vercel/Neon, marker CR-008 som Done
 
 ## Current Branch
-master (alle endringer CR-009–024 er pushet direkte til master, ingen feature-branch brukt. CR-025 har ukommiterte endringer i arbeidskatalogen, bygget og typesjekket, klar for commit/push — se Current Objectives)
+master (alle endringer CR-009–025 + emergency-fix er pushet direkte til master, ingen feature-branch brukt. CR-026 har ukommiterte endringer i arbeidskatalogen, bygget og typesjekket, klar for commit/push — se Current Objectives)
 
 ## Blockers
 Manuelt Coolify/Hetzner-oppsett kan ikke utføres fra Claude Code-økten (ingen tilgang til Coolify-instansen). Krever produkteier/admin på `coolify.basbeta.no`.
+**Appen kjører midlertidig på `prisma db push` igjen** (ikke `migrate deploy`) etter CR-025-nedetiden — se ISSUE-011 for hva som gjenstår for å trygt gå tilbake.
 
 ## Risks / Tech Debt (per 2026-08-04)
 - **Ingen automatiserte tester i prosjektet.** All verifisering denne økten var `npm run build`/TypeScript-sjekk + manuell produksjonstesting av produkteier. Fungerer for nå, men skalerer dårlig etter hvert som appen vokser — regressonsrisiko ved fremtidige endringer er reelt.
-- ~~`prisma db push` i stedet for formelle migreringer~~ (ISSUE-009, **løst 2026-08-04 via CR-024**) — appen bruker nå `prisma migrate deploy` med en reviewbar migreringshistorikk. Fremtidige skjemaendringer skal gjøres med `prisma migrate dev` lokalt.
+- **`prisma migrate deploy` midlertidig avslått igjen** (ISSUE-011, ny 2026-08-04) — en BOM i en migreringsfil (skrevet av PowerShell) crash-loopet produksjon til Coolify sin restart-grense. Appen kjører nå på `db push` inntil den stuck migration-tilstanden er ryddet opp og CMD byttes tilbake.
 - **CR-015, 016, 018, 019 ikke enkeltvis bekreftet** (ISSUE-010) — lav risiko, men reply-to-headeren (CR-018) spesielt er kun kodebekreftet, ikke funksjonelt testet med et faktisk svar.
 - **Ingen tilgang til Coolify-instansen fra Claude Code-økter** — enhver fremtidig feilsøking som krever env-var-endringer, redeploy-trigger, eller database-terminal må gjøres av produkteier manuelt, med skjermbilder/copy-paste av logger tilbake til denne økten. Dette var flaskehalsen i mesteparten av CR-009–011-feilsøkingen.
 - **Vercel/Neon (gammel produksjon) står fortsatt aktiv** som fallback — ingen data av verdi der, men bør ryddes opp når Coolify er verifisert stabilt over noen dager (se Next Actions).
@@ -59,7 +62,8 @@ Node.js 22 (matcher Dockerfile) installert på denne maskinen via `winget instal
 - CR-022 (Done, bekreftet i produksjon) — Tydeligere låst visning, "Lås opp godkjenning" direkte fra redigeringsskjemaet
 - CR-023 (Done, bekreftet i produksjon 2026-08-04) — ApprovalSection permanent utvidet når submitted_locked; redigerbar liste viser bold/dempet basert på avkrysning; låst visning bruker ✓/— (flat stil, matcher appens øvrige read-only lister — valgt fremfor ☑/☐ etter avklaring med produkteier)
 - CR-024 (Done, bekreftet i produksjon 2026-08-04) — Formelle Prisma-migreringer (ISSUE-009), rullet ut i to atskilte deploys pga. autodeploy på master: Deploy A (migreringsfiler, uendret CMD) → manuelt `migrate resolve --applied` mot prod via Coolify Terminal → Deploy B (CMD → `migrate deploy`). Begge deploys bekreftet vellykket, appen kjører normalt
-- CR-025 (In Progress, IKKE pushet) — Slett case (eier eller admin, med advarsel-dialog: lenkeliste, godkjenningshistorikk-varsel, eksporter-knapp), eksport av full case-tekst/lenker/godkjenninger, eierbytte-dropdown nå synlig for eieren selv (ikke bare admin). Skjemaendring: `onDelete: Cascade` på UsageApproval/CaseLink, ny migrering `20260804130000_case_cascade_delete`. Bygget og typesjekket lokalt, ikke testet mot faktisk database
+- CR-025 (Done, live i produksjon 2026-08-04 — med en hendelse underveis) — Slett case (eier eller admin, med advarsel-dialog: lenkeliste, godkjenningshistorikk-varsel, eksporter-knapp), eksport av full case-tekst/lenker/godkjenninger, eierbytte-dropdown nå synlig for eieren selv (ikke bare admin). Skjemaendring: `onDelete: Cascade` på UsageApproval/CaseLink. Migreringsfilen hadde en BOM som crash-loopet produksjon (se ISSUE-011) — nødløsning (revert til `db push`) bekreftet stabil, selve funksjonaliteten fungerer
+- CR-026 (In Progress, IKKE pushet) — Redigeringsskjemaets "Bruksrettigheter"-avkrysningsbokser erstattet med samme ApprovalSection/Bruksgodkjenning-widget som case-siden bruker. Fjerner en duplisert UI og duplisert lås/opplås-logikk. Bygget og typesjekket lokalt
 
 ## Production URL
 https://effektbibliotek.basbeta.no — live, innlogging bekreftet fungerende
@@ -93,18 +97,18 @@ https://effektbibliotek.vercel.app (gammel, beholdes urørt inntil Coolify er fu
 - .env.example, docs/COOLIFY-DEPLOY.md — SENTRY_DSN/NEXT_PUBLIC_SENTRY_DSN (CR-012), APP_URL (CR-013)
 - package.json/package-lock.json — @sentry/nextjs lagt til (CR-012)
 
-## Nylig endret (CR-024–025, 2026-08-04)
-- Dockerfile — `prisma migrate deploy` (byttet fra `db push`, CR-024)
+## Nylig endret (CR-024–026, 2026-08-04)
+- Dockerfile — `prisma migrate deploy` (CR-024), deretter revertert tilbake til `db push --accept-data-loss` (emergency-fix etter CR-025-nedetiden, se ISSUE-011) — dette er GJELDENDE tilstand akkurat nå
 - prisma/schema.prisma — `onDelete: Cascade` på UsageApproval/CaseLink (CR-025)
-- prisma/migrations/20260804120000_init — baseline-migrering (CR-024)
-- prisma/migrations/20260804130000_case_cascade_delete — cascade-migrering (CR-025)
+- prisma/migrations/20260804120000_init — baseline-migrering (CR-024), BOM fjernet i emergency-fix
+- prisma/migrations/20260804130000_case_cascade_delete — cascade-migrering (CR-025), BOM fjernet i emergency-fix, ikke ennå faktisk anvendt av `migrate deploy` (se ISSUE-011)
 - lib/case-export.ts — ny, bygger tekst-eksport av case/lenker/godkjenninger (CR-025)
 - app/api/cases/[id]/route.ts — ny DELETE-handler (CR-025)
 - app/api/cases/[id]/export/route.ts — ny (CR-025)
 - app/api/admin/users/list/route.ts — tilgang relaksert til alle innloggede (CR-025)
-- components/cases/EditCaseForm.tsx — eierbytte-dropdown og "Farlig sone"-slette-dialog for eier ELLER admin (CR-025)
+- components/cases/EditCaseForm.tsx — "Farlig sone"-slette-dialog og eierbytte-dropdown for eier ELLER admin (CR-025); Bruksrettigheter-avkrysningsbokser fjernet, erstattet med ApprovalSection-widget (CR-026)
 - app/(app)/case/[id]/page.tsx — eksporter-knapp (CR-025)
-- app/(app)/case/[id]/rediger/page.tsx — henter full usageApprovals-historikk, isOwner-prop (CR-025)
+- app/(app)/case/[id]/rediger/page.tsx — henter full usageApprovals-historikk, isOwner-prop (CR-025); henter owner.name, sender approverName/approverEmail/ownerName/token/appUrl til EditCaseForm (CR-026)
 
 ## Tidligere sesjoners systemer (uendret denne økten)
 - app/api/cases/[id]/unlock-approval/route.ts, components/cases/LinksSection.tsx, app/(app)/admin/*, app/api/admin/*, components/layout/SideNav.tsx, proxy.ts
@@ -121,7 +125,7 @@ https://effektbibliotek.vercel.app (gammel, beholdes urørt inntil Coolify er fu
 - `Promise.allSettled()` for e-postutsending (feil i e-post stopper ikke godkjenning)
 - `prisma generate && next build` i build-script — kjøres nå inne i Docker-imaget, ikke på Vercel
 - Prisma 7 driver adapter er "engine-less" (ingen Rust query-engine-binær) — Dockerfile trenger ikke kopiere Prisma-engines separat
-- `prisma migrate deploy` kjøres i container-`CMD` ved hver oppstart (idempotent) i stedet for som eget Coolify-hook — **fra CR-024 (2026-08-04) er dette nå faktisk sant**, se linjen under om CR-011/CR-024-historikken
+- `prisma migrate deploy` kjøres i container-`CMD` ved hver oppstart (idempotent) i stedet for som eget Coolify-hook — dette var faktisk sant en kort periode etter CR-024 (2026-08-04), men appen kjører **midlertidig tilbake på `db push`** etter CR-025-nedetiden (ISSUE-011), se linjen under om historikken
 - Node 22 Alpine i Dockerfile for å matche faktisk utviklingsmiljø (avviker fra `basbeta-bootstrap`-malens Node 20)
 - nodemailer-transportøren i lib/email.ts hadde ingen connection/socket-timeout — en feilkonfigurert eller nettverksmessig utilgjengelig SMTP-server hang requesten på ubestemt tid i stedet for å feile (CR-009)
 - `pg.Pool` (brukt av `@prisma/adapter-pg`) sin default `connectionTimeoutMillis` er `0` — ingen timeout, venter for alltid ved utilgjengelig database. Satt eksplisitt til 10s i lib/prisma.ts (CR-010). Samme bugklasse som CR-009, bare ett lag lenger opp i requesten
@@ -130,6 +134,7 @@ https://effektbibliotek.vercel.app (gammel, beholdes urørt inntil Coolify er fu
 - `NEXT_PUBLIC_*`-variabler bygges statisk inn i koden ved `next build`, også i server-only kode — en variabel som ikke er tilgjengelig ved selve build-steget (kun "Runtime" i Coolify, ikke "Buildtime") blir permanent `undefined`, uansett senere runtime-endringer. Bruk aldri dette prefikset for verdier som kun trengs server-side (CR-013)
 - Sentry sin transport følger ikke HTTP-redirects — hvis Bugsink-hosten redirecter HTTP→HTTPS, feiler event-sending stille med kun en `debug: true`-synlig 307-logglinje, ingen synlig feil ellers (CR-012)
 - I dette prosjektet er skrivebeskyttede/read-only informasjonslister stilt med flat ✓/— i stedet for checkbox-glyfer (☑/☐) — sistnevnte oppleves som en inert/deaktivert form, ikke informasjon (CR-023, avklart med produkteier via mockup-spørsmål)
+- **PowerShell sin `Out-File -Encoding utf8` skriver en UTF-8 BOM** (`ef bb bf`) først i filen. For migration.sql-filer som faktisk kjøres av Postgres (ikke bare leses/diffes), avviser Postgres hele scriptet med en syntax-feil ved posisjon 0. Bruk `[System.IO.File]::WriteAllBytes` med BOM-en manuelt fjernet, eller `-Encoding utf8NoBOM`, for enhver fil generert via PowerShell som skal kjøres som SQL (CR-025/ISSUE-011 — crash-loopet produksjon til Coolify sin restart-grense og krevde manuell "Redeploy" for å komme tilbake)
 
 ## Validation Status
 - Build (lokal, `npm run build`): ✓ — kjørt og bekreftet grønt etter HVER commit fra CR-011 og utover (Node 22 installert lokalt spesifikt for dette, se notat over)
@@ -142,8 +147,9 @@ https://effektbibliotek.vercel.app (gammel, beholdes urørt inntil Coolify er fu
 - Direkte utsending av bruksgodkjenning (CR-013): ✓ bekreftet — e-post sendt og godkjenningslenke fungerer
 - Rediger eget navn (CR-014): ✓ bekreftet
 - Forenklet bruksrettighets-system, låst/opplåst UI (CR-020–023): ✓ bekreftet av produkteier 2026-08-04, inkl. skjemaendring (kolonner droppet) uten problemer
-- Formelle Prisma-migreringer (CR-024): ✓ bekreftet av produkteier 2026-08-04 — begge deploys (baseline-migrering, deretter CMD-bytte til `migrate deploy`) fullførte uten feil, appen kjører normalt
-- Slett case / eksport / eierbytte for eier (CR-025): `npm run build` ✓ (inkl. TypeScript-sjekk). IKKE testet mot faktisk database eller i produksjon ennå — ikke pushet
+- Formelle Prisma-migreringer (CR-024): delvis — baseline-migreringen ble bekreftet vellykket 2026-08-04, men appen kjører nå midlertidig tilbake på `db push` igjen etter CR-025-nedetiden (se ISSUE-011)
+- Slett case / eksport / eierbytte for eier (CR-025): ✓ live i produksjon 2026-08-04. `onDelete: Cascade` bekreftet anvendt ("database er nå i sync med Prisma-skjema"). Manuell E2E-test av selve slette/eksport/eierbytte-flytene i UI-et gjenstår
+- Bruksrettigheter via ApprovalSection i redigeringsskjemaet (CR-026): `npm run build` ✓ (inkl. TypeScript-sjekk). IKKE testet i faktisk produksjon ennå — ikke pushet
 
 ## Next Actions (prioritert)
 1. **Push og deploy CR-025**, deretter manuell E2E-verifisering: opprett en test-case med lenker og godkjenningshistorikk, bekreft eksport laster ned korrekt innhold, bekreft slette-dialogen viser riktig advarsel, bekreft sletting faktisk fjerner casen og alt tilknyttet (lenker + godkjenninger) fra databasen, bekreft eierbytte fungerer for en ikke-admin eier

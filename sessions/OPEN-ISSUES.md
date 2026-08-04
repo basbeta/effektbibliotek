@@ -102,3 +102,12 @@ Area: components/cases/ApprovalSection.tsx, app/godkjenning/[caseId]/[token]/*
 Description: CR-015 (e-postforhåndsvisning), CR-016 (kvitteringstekst/footer), CR-018 (reply-to), CR-019 (personvernteksten på selve godkjenningssiden, ikke bare i e-post) er alle deployet og ble funksjonelt utøvd gjennom senere testing (ekte godkjenningsdata synlig i skjermbilder), men er ikke bekreftet feature-for-feature enkeltvis. Spesielt reply-to-headeren (CR-018) er umulig å verifisere uten faktisk å sende et svar på en godkjenningsforespørsel-e-post.
 Blocker for: Ingenting — lav risiko, kun ønskelig for full sikkerhet
 Opened: 2026-08-04
+
+ISSUE-011
+Status: Open
+Priority: Medium
+Area: prisma/ (skjemastyring), Dockerfile
+Description: CR-025 sin migrering (`20260804130000_case_cascade_delete`) hadde en UTF-8 BOM (byte-order-mark) i migration.sql, skrevet inn av PowerShell sin `Out-File -Encoding utf8`. Da `prisma migrate deploy` faktisk kjørte filen i produksjon (autodeploy), avviste Postgres hele scriptet med en syntax-feil ved posisjon 0 — containeren crash-loopet til Coolify nådde restart-grensen (10/10) og stoppet helt, som var en reell nedetid. Nødløsning: Dockerfile CMD revertert til `prisma db push --accept-data-loss` (commit 197ab57), som ikke leser `_prisma_migrations` og derfor omgikk problemet — bekreftet stabilt av produkteier. Samme BOM ble funnet og fjernet fra BEGGE migreringsfilene (også CR-024 sin baseline, som aldri hadde blitt oppdaget siden `migrate resolve --applied` aldri kjører filens SQL).
+Blocker for: Å gå tilbake til `prisma migrate deploy` (appen kjører nå permanent på `db push` igjen inntil dette er ryddet opp)
+Opened: 2026-08-04
+Update: 2026-08-04 — For å faktisk gå tilbake til `migrate deploy`: (1) kjør `npx prisma migrate resolve --rolled-back 20260804130000_case_cascade_delete` mot produksjonsdatabasen via Coolify Terminal (trygt — migreringen ble aldri faktisk anvendt, kun avvist ved parse-tidspunktet), (2) bytt Dockerfile CMD tilbake til `prisma migrate deploy` i en egen commit, (3) deploy og bekreft ren logg. Ikke gjort ennå.

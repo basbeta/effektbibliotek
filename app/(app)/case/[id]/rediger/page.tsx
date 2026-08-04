@@ -13,6 +13,7 @@ export default async function RedigerCasePage({ params }: Props) {
   const c = await prisma.case.findUnique({
     where: { id },
     include: {
+      owner: { select: { name: true } },
       links: { orderBy: { createdAt: "asc" } },
       usageApprovals: { orderBy: { submittedAt: "desc" } },
     },
@@ -45,8 +46,12 @@ export default async function RedigerCasePage({ params }: Props) {
         isOwner={isOwner}
         links={c.links}
         usageApprovalStatus={c.usageApprovalStatus}
-        lastApproval={c.usageApprovals[0] ?? null}
         usageApprovals={c.usageApprovals}
+        approverName={c.approverName}
+        approverEmail={c.approverEmail}
+        ownerName={c.owner.name}
+        token={c.usageApprovalToken}
+        appUrl={process.env.APP_URL ?? ""}
       />
     </div>
   );

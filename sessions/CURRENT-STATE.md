@@ -3,11 +3,11 @@
 > Updated at the end of every session. Read by Claude at startup.
 
 ## Current Phase
-MIGRERING NESTEN FERDIG — CR-008: porting fra Vercel/Neon til Hetzner/Coolify/PostgreSQL 18. Appen kjører stabilt på `effektbibliotek.basbeta.no`. Innlogging (CR-009–011), feilsporing (CR-012), direkte utsending av bruksgodkjenning (CR-013), rediger eget navn (CR-014), og det forenklede bruksrettighets-systemet (CR-020–023) er alle bekreftet fungerende i produksjon av produkteier per 2026-08-04. CR-015–019 er deployet og ble funksjonelt utøvd gjennom den samme produksjonstestingen, men er ikke bekreftet feature-for-feature enkeltvis — se Next Recommended Actions punkt 1. **CR-025 (case-sletting, eksport, eier-initiert eierbytte) er pushet og live, men forårsaket en kort produksjonsnedetid** (BOM i migreringsfil crash-loopet containeren til Coolify sin restart-grense — se ISSUE-011) — nødløsning (revert til `db push`) er bekreftet stabil av produkteier, selve CR-025-funksjonaliteten (cascade delete, sletting, eksport, eierbytte) fungerer. Appen kjører nå på `db push` igjen, IKKE `migrate deploy` (ISSUE-011 er en åpen opprydding). **CR-026 (bruk Bruksgodkjenning-widgeten i redigeringsskjemaet i stedet for egne avkrysningsbokser) er implementert denne økten, bygget og typesjekket lokalt, men IKKE pushet ennå.**
+MIGRERING NESTEN FERDIG — CR-008: porting fra Vercel/Neon til Hetzner/Coolify/PostgreSQL 18. Appen kjører stabilt på `effektbibliotek.basbeta.no`. Innlogging (CR-009–011), feilsporing (CR-012), direkte utsending av bruksgodkjenning (CR-013), rediger eget navn (CR-014), det forenklede bruksrettighets-systemet (CR-020–023), CR-025 (case-sletting/eksport/eierbytte) og CR-026 (Bruksgodkjenning-widget i redigeringsskjemaet) er alle bekreftet fungerende i produksjon av produkteier per 2026-08-04. CR-015–019 er deployet og ble funksjonelt utøvd gjennom den samme produksjonstestingen, men er ikke bekreftet feature-for-feature enkeltvis — se Next Recommended Actions punkt 1. Appen kjører fortsatt på `prisma db push` (ikke `migrate deploy`) etter CR-025-nedetiden — se ISSUE-011, åpen opprydding. **CR-027 (filopplasting til Materiale-seksjonen — bilder/PDF/Word, 100MB per case, lagret i Hetzner Object Storage) er implementert denne økten, bygget og typesjekket lokalt, men IKKE pushet ennå** — krever at produkteier setter `S3_*`-env-variabler i Coolify før funksjonen virker i produksjon.
 
 ## Current Objectives
-1. Push CR-026 og verifiser i produksjon
-2. Rydd opp ISSUE-011: kjør `migrate resolve --rolled-back 20260804130000_case_cascade_delete` via Coolify Terminal, deretter egen commit som bytter Dockerfile CMD tilbake til `migrate deploy`
+1. Push CR-027, sett `S3_ENDPOINT`/`S3_REGION`/`S3_BUCKET`/`S3_ACCESS_KEY_ID`/`S3_SECRET_ACCESS_KEY` i Coolify, verifiser opplasting/nedlasting/sletting i produksjon
+2. Rydd opp ISSUE-011: kjør `migrate resolve --rolled-back 20260804130000_case_cascade_delete` via Coolify Terminal, deretter egen commit som bytter Dockerfile CMD tilbake til `migrate deploy` (vil da også plukke opp CR-027 sin `CaseFile`-migrering)
 3. Manuell E2E-verifisering av CR-025 i produksjon (opprett testcase, lenker, godkjenning → eksporter → slett)
 4. (Valgfritt, lav prioritet) Bekreft CR-015–019 individuelt hvis det er ønskelig med fullstendig sikkerhet — se Next Recommended Actions
 5. Ende-til-ende-test av gjenstående flyter: case-opprettelse, redigering av felt utenom bruksrettigheter
@@ -15,7 +15,7 @@ MIGRERING NESTEN FERDIG — CR-008: porting fra Vercel/Neon til Hetzner/Coolify/
 7. Deretter fjerne Vercel/Neon, marker CR-008 som Done
 
 ## Current Branch
-master (alle endringer CR-009–025 + emergency-fix er pushet direkte til master, ingen feature-branch brukt. CR-026 har ukommiterte endringer i arbeidskatalogen, bygget og typesjekket, klar for commit/push — se Current Objectives)
+master (alle endringer CR-009–026 + emergency-fix er pushet direkte til master, ingen feature-branch brukt. CR-027 har ukommiterte endringer i arbeidskatalogen, bygget og typesjekket, klar for commit/push — se Current Objectives)
 
 ## Blockers
 Manuelt Coolify/Hetzner-oppsett kan ikke utføres fra Claude Code-økten (ingen tilgang til Coolify-instansen). Krever produkteier/admin på `coolify.basbeta.no`.
@@ -63,7 +63,8 @@ Node.js 22 (matcher Dockerfile) installert på denne maskinen via `winget instal
 - CR-023 (Done, bekreftet i produksjon 2026-08-04) — ApprovalSection permanent utvidet når submitted_locked; redigerbar liste viser bold/dempet basert på avkrysning; låst visning bruker ✓/— (flat stil, matcher appens øvrige read-only lister — valgt fremfor ☑/☐ etter avklaring med produkteier)
 - CR-024 (Done, bekreftet i produksjon 2026-08-04) — Formelle Prisma-migreringer (ISSUE-009), rullet ut i to atskilte deploys pga. autodeploy på master: Deploy A (migreringsfiler, uendret CMD) → manuelt `migrate resolve --applied` mot prod via Coolify Terminal → Deploy B (CMD → `migrate deploy`). Begge deploys bekreftet vellykket, appen kjører normalt
 - CR-025 (Done, live i produksjon 2026-08-04 — med en hendelse underveis) — Slett case (eier eller admin, med advarsel-dialog: lenkeliste, godkjenningshistorikk-varsel, eksporter-knapp), eksport av full case-tekst/lenker/godkjenninger, eierbytte-dropdown nå synlig for eieren selv (ikke bare admin). Skjemaendring: `onDelete: Cascade` på UsageApproval/CaseLink. Migreringsfilen hadde en BOM som crash-loopet produksjon (se ISSUE-011) — nødløsning (revert til `db push`) bekreftet stabil, selve funksjonaliteten fungerer
-- CR-026 (In Progress, IKKE pushet) — Redigeringsskjemaets "Bruksrettigheter"-avkrysningsbokser erstattet med samme ApprovalSection/Bruksgodkjenning-widget som case-siden bruker. Fjerner en duplisert UI og duplisert lås/opplås-logikk. Bygget og typesjekket lokalt
+- CR-026 (Done, bekreftet i produksjon 2026-08-04) — Redigeringsskjemaets "Bruksrettigheter"-avkrysningsbokser erstattet med samme ApprovalSection/Bruksgodkjenning-widget som case-siden bruker. Fjerner en duplisert UI og duplisert lås/opplås-logikk. Bugfix underveis: ApprovalSection sine 5 knapper manglet `type="button"`, trigget skjema-innsending av EditCaseForm i stedet for å bare toggle trekkspillet — fikset
+- CR-027 (In Progress, IKKE pushet) — Filopplasting til "Materiale"-seksjonen (bilder jpg/png/webp/gif, PDF, doc/docx), 100MB total-grense per case, lagret i Hetzner Object Storage (S3-kompatibel, delt bucket med backup, egen prefiks `effektbibliotek/case-materiale/`). Nytt `CaseFile`-modell, nye API-routes for opplasting/nedlasting/sletting, `Materiale`-widgeten viser nå både lenker og filer. Samme manglende-`type="button"`-bug funnet og fikset i `LinksSection.tsx` sine egne knapper. Krever `S3_*`-env-variabler satt i Coolify før den fungerer i produksjon
 
 ## Production URL
 https://effektbibliotek.basbeta.no — live, innlogging bekreftet fungerende
@@ -97,18 +98,26 @@ https://effektbibliotek.vercel.app (gammel, beholdes urørt inntil Coolify er fu
 - .env.example, docs/COOLIFY-DEPLOY.md — SENTRY_DSN/NEXT_PUBLIC_SENTRY_DSN (CR-012), APP_URL (CR-013)
 - package.json/package-lock.json — @sentry/nextjs lagt til (CR-012)
 
-## Nylig endret (CR-024–026, 2026-08-04)
+## Nylig endret (CR-024–027, 2026-08-04)
 - Dockerfile — `prisma migrate deploy` (CR-024), deretter revertert tilbake til `db push --accept-data-loss` (emergency-fix etter CR-025-nedetiden, se ISSUE-011) — dette er GJELDENDE tilstand akkurat nå
-- prisma/schema.prisma — `onDelete: Cascade` på UsageApproval/CaseLink (CR-025)
+- prisma/schema.prisma — `onDelete: Cascade` på UsageApproval/CaseLink (CR-025), nytt `CaseFile`-modell med `onDelete: Cascade` fra start (CR-027)
 - prisma/migrations/20260804120000_init — baseline-migrering (CR-024), BOM fjernet i emergency-fix
 - prisma/migrations/20260804130000_case_cascade_delete — cascade-migrering (CR-025), BOM fjernet i emergency-fix, ikke ennå faktisk anvendt av `migrate deploy` (se ISSUE-011)
-- lib/case-export.ts — ny, bygger tekst-eksport av case/lenker/godkjenninger (CR-025)
-- app/api/cases/[id]/route.ts — ny DELETE-handler (CR-025)
-- app/api/cases/[id]/export/route.ts — ny (CR-025)
+- prisma/migrations/20260804140000_case_file — ny, `CaseFile`-tabell (CR-027), generert BOM-fritt fra start denne gangen
+- lib/case-export.ts — ny, bygger tekst-eksport av case/lenker/godkjenninger (CR-025); lister nå også opplastede filnavn (CR-027)
+- lib/storage.ts — ny, S3-klient-wrapper for Hetzner Object Storage (CR-027)
+- lib/format.ts — ny `formatBytes()`-hjelpefunksjon (CR-027)
+- app/api/cases/[id]/route.ts — ny DELETE-handler (CR-025), rydder nå også opp S3-objekter før sletting (CR-027)
+- app/api/cases/[id]/export/route.ts — ny (CR-025), henter nå også `files` (CR-027)
+- app/api/cases/[id]/files/route.ts, files/[fileId]/route.ts — nye, opplasting/nedlasting/sletting (CR-027)
 - app/api/admin/users/list/route.ts — tilgang relaksert til alle innloggede (CR-025)
-- components/cases/EditCaseForm.tsx — "Farlig sone"-slette-dialog og eierbytte-dropdown for eier ELLER admin (CR-025); Bruksrettigheter-avkrysningsbokser fjernet, erstattet med ApprovalSection-widget (CR-026)
+- components/cases/LinksSection.tsx — utvidet til å vise/administrere opplastede filer i tillegg til lenker (CR-027). Bifunn: manglende `type="button"` på to eksisterende knapper, fikset
+- components/cases/EditCaseForm.tsx — "Farlig sone"-slette-dialog og eierbytte-dropdown for eier ELLER admin (CR-025); Bruksrettigheter-avkrysningsbokser fjernet, erstattet med ApprovalSection-widget (CR-026); slette-dialogen lister nå også filer (CR-027)
+- components/cases/ApprovalSection.tsx — manglende `type="button"` på alle 5 knapper, fikset (CR-026 bugfix)
 - app/(app)/case/[id]/page.tsx — eksporter-knapp (CR-025)
-- app/(app)/case/[id]/rediger/page.tsx — henter full usageApprovals-historikk, isOwner-prop (CR-025); henter owner.name, sender approverName/approverEmail/ownerName/token/appUrl til EditCaseForm (CR-026)
+- app/(app)/case/[id]/rediger/page.tsx — henter full usageApprovals-historikk, isOwner-prop (CR-025); henter owner.name, sender approverName/approverEmail/ownerName/token/appUrl til EditCaseForm (CR-026); henter og sender `files` (CR-027)
+- .env.example, docs/COOLIFY-DEPLOY.md — nye S3_*-env-variabler (CR-027)
+- package.json/package-lock.json — `@aws-sdk/client-s3`, `@aws-sdk/s3-request-presigner` lagt til (CR-027)
 
 ## Tidligere sesjoners systemer (uendret denne økten)
 - app/api/cases/[id]/unlock-approval/route.ts, components/cases/LinksSection.tsx, app/(app)/admin/*, app/api/admin/*, components/layout/SideNav.tsx, proxy.ts
@@ -134,7 +143,8 @@ https://effektbibliotek.vercel.app (gammel, beholdes urørt inntil Coolify er fu
 - `NEXT_PUBLIC_*`-variabler bygges statisk inn i koden ved `next build`, også i server-only kode — en variabel som ikke er tilgjengelig ved selve build-steget (kun "Runtime" i Coolify, ikke "Buildtime") blir permanent `undefined`, uansett senere runtime-endringer. Bruk aldri dette prefikset for verdier som kun trengs server-side (CR-013)
 - Sentry sin transport følger ikke HTTP-redirects — hvis Bugsink-hosten redirecter HTTP→HTTPS, feiler event-sending stille med kun en `debug: true`-synlig 307-logglinje, ingen synlig feil ellers (CR-012)
 - I dette prosjektet er skrivebeskyttede/read-only informasjonslister stilt med flat ✓/— i stedet for checkbox-glyfer (☑/☐) — sistnevnte oppleves som en inert/deaktivert form, ikke informasjon (CR-023, avklart med produkteier via mockup-spørsmål)
-- **PowerShell sin `Out-File -Encoding utf8` skriver en UTF-8 BOM** (`ef bb bf`) først i filen. For migration.sql-filer som faktisk kjøres av Postgres (ikke bare leses/diffes), avviser Postgres hele scriptet med en syntax-feil ved posisjon 0. Bruk `[System.IO.File]::WriteAllBytes` med BOM-en manuelt fjernet, eller `-Encoding utf8NoBOM`, for enhver fil generert via PowerShell som skal kjøres som SQL (CR-025/ISSUE-011 — crash-loopet produksjon til Coolify sin restart-grense og krevde manuell "Redeploy" for å komme tilbake)
+- **PowerShell sin `Out-File -Encoding utf8` skriver en UTF-8 BOM** (`ef bb bf`) først i filen. For migration.sql-filer som faktisk kjøres av Postgres (ikke bare leses/diffes), avviser Postgres hele scriptet med en syntax-feil ved posisjon 0. Bruk `[System.IO.File]::WriteAllBytes` med BOM-en manuelt fjernet, eller `-Encoding utf8NoBOM`, for enhver fil generert via PowerShell som skal kjøres som SQL (CR-025/ISSUE-011 — crash-loopet produksjon til Coolify sin restart-grense og krevde manuell "Redeploy" for å komme tilbake). Windows PowerShell 5.1 (denne maskinen) støtter IKKE `-Encoding utf8NoBOM` (lagt til i PowerShell 6+/Core) — bruk `[System.IO.File]::WriteAllText($path, $content, (New-Object System.Text.UTF8Encoding($false)))` i stedet (CR-027, migreringen generert BOM-fritt fra start med denne metoden)
+- Hetzner Object Storage (S3-kompatibel) krever `forcePathStyle: true` i `@aws-sdk/client-s3` sin `S3Client`-config — Coolify sitt "S3 Storages"-panel viser Endpoint og Bucket som separate felt (ikke `bucket.endpoint`-virtual-hosted-stil), som indikerer path-style-adressering (CR-027, `lib/storage.ts`)
 
 ## Validation Status
 - Build (lokal, `npm run build`): ✓ — kjørt og bekreftet grønt etter HVER commit fra CR-011 og utover (Node 22 installert lokalt spesifikt for dette, se notat over)
@@ -149,14 +159,16 @@ https://effektbibliotek.vercel.app (gammel, beholdes urørt inntil Coolify er fu
 - Forenklet bruksrettighets-system, låst/opplåst UI (CR-020–023): ✓ bekreftet av produkteier 2026-08-04, inkl. skjemaendring (kolonner droppet) uten problemer
 - Formelle Prisma-migreringer (CR-024): delvis — baseline-migreringen ble bekreftet vellykket 2026-08-04, men appen kjører nå midlertidig tilbake på `db push` igjen etter CR-025-nedetiden (se ISSUE-011)
 - Slett case / eksport / eierbytte for eier (CR-025): ✓ live i produksjon 2026-08-04. `onDelete: Cascade` bekreftet anvendt ("database er nå i sync med Prisma-skjema"). Manuell E2E-test av selve slette/eksport/eierbytte-flytene i UI-et gjenstår
-- Bruksrettigheter via ApprovalSection i redigeringsskjemaet (CR-026): `npm run build` ✓ (inkl. TypeScript-sjekk). IKKE testet i faktisk produksjon ennå — ikke pushet
+- Bruksrettigheter via ApprovalSection i redigeringsskjemaet (CR-026): ✓ bekreftet i produksjon av produkteier 2026-08-04, inkl. bugfix (manglende `type="button"`)
+- Filopplasting til Materiale-seksjonen (CR-027): `npm run build` ✓ (inkl. TypeScript-sjekk). IKKE testet mot faktisk S3-lagring — ingen S3_*-env-variabler tilgjengelig lokalt, ikke pushet
 
 ## Next Actions (prioritert)
-1. **Push og deploy CR-025**, deretter manuell E2E-verifisering: opprett en test-case med lenker og godkjenningshistorikk, bekreft eksport laster ned korrekt innhold, bekreft slette-dialogen viser riktig advarsel, bekreft sletting faktisk fjerner casen og alt tilknyttet (lenker + godkjenninger) fra databasen, bekreft eierbytte fungerer for en ikke-admin eier
-2. **(Anbefalt, lav innsats)** Bekreft CR-015, CR-016, CR-018, CR-019 hver for seg hvis full sikkerhet ønskes: (a) sammenlign e-postforhåndsvisning mot faktisk mottatt e-post ord for ord, (b) svar på en godkjenningsforespørsel-e-post og verifiser at svaret går til caseeieren (reply-to), (c) les gjennom kvitteringssiden og personvernteksten på selve godkjenningssiden (ikke bare i e-post)
-3. Opprett admin-bruker i produksjonsdatabasen (første login + manuell `isAdmin`-sett i Coolify sin database-ressurs) — ISSUE-006, fortsatt åpen
-4. Ende-til-ende-test av gjenstående flyter: case-opprettelse, redigering av felt utenom bruksrettigheter (de er nå grundig testet)
-5. Utføre resterende `docs/COOLIFY-DEPLOY.md`-steg (backup, Uptime Kuma) — ISSUE-007, delvis løst
-6. Når Coolify-oppsettet er verifisert stabilt over noen dager: fjern Vercel-prosjektet og slett Neon-databasen (ingen data å ta vare på), marker CR-008 som Done
+1. **Push CR-027**, sett S3_*-env-variabler i Coolify, deretter manuell E2E-verifisering: last opp et bilde og en PDF på en test-case, bekreft nedlasting fungerer, bekreft 100MB-grensen faktisk stopper en for stor opplasting, slett en fil, slett hele casen og bekreft S3-objektene faktisk er borte
+2. Manuell E2E-verifisering av CR-025 (uavhengig av CR-027): opprett en test-case med lenker og godkjenningshistorikk, bekreft eksport laster ned korrekt innhold, bekreft slette-dialogen viser riktig advarsel, bekreft eierbytte fungerer for en ikke-admin eier
+3. **(Anbefalt, lav innsats)** Bekreft CR-015, CR-016, CR-018, CR-019 hver for seg hvis full sikkerhet ønskes: (a) sammenlign e-postforhåndsvisning mot faktisk mottatt e-post ord for ord, (b) svar på en godkjenningsforespørsel-e-post og verifiser at svaret går til caseeieren (reply-to), (c) les gjennom kvitteringssiden og personvernteksten på selve godkjenningssiden (ikke bare i e-post)
+4. Opprett admin-bruker i produksjonsdatabasen (første login + manuell `isAdmin`-sett i Coolify sin database-ressurs) — ISSUE-006, fortsatt åpen
+5. Ende-til-ende-test av gjenstående flyter: case-opprettelse, redigering av felt utenom bruksrettigheter (de er nå grundig testet)
+6. Utføre resterende `docs/COOLIFY-DEPLOY.md`-steg (backup, Uptime Kuma) — ISSUE-007, delvis løst
+7. Når Coolify-oppsettet er verifisert stabilt over noen dager: fjern Vercel-prosjektet og slett Neon-databasen (ingen data å ta vare på), marker CR-008 som Done
 7. Vurder om `docs_extracted.txt` skal gitignores (sensitiv prod-dokumentasjon) — ISSUE-005, fortsatt åpen
 8. Vurder om det skal legges til en enkel automatisert test/smoke-test-suite — hele denne økten er verifisert med `npm run build` + manuell produksjonstesting, ingen automatiserte tester finnes ennå i prosjektet

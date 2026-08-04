@@ -19,6 +19,7 @@ export async function GET(_request: NextRequest, { params }: RouteContext) {
       owner: { select: { name: true, email: true } },
       createdBy: { select: { name: true } },
       links: { orderBy: { createdAt: "asc" } },
+      files: { orderBy: { createdAt: "asc" } },
       usageApprovals: { orderBy: { submittedAt: "asc" } },
     },
   });

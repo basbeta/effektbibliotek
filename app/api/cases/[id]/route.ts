@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { deleteCaseFile } from "@/lib/storage";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -117,6 +118,11 @@ export async function DELETE(_request: NextRequest, { params }: RouteContext) {
   if (existing.ownerEmail !== session.userEmail && !session.isAdmin) {
     return NextResponse.json({ error: "Ikke tilgang" }, { status: 403 });
   }
+
+  // Cascade sletter DB-radene (UsageApproval/CaseLink/CaseFile), men rydder
+  // ikke opp de eksterne S3-objektene til opplastede filer — gjøres eksplisitt her.
+  const caseFiles = await prisma.caseFile.findMany({ where: { caseId: id } });
+  await Promise.allSettled(caseFiles.map((f) => deleteCaseFile(f.storageKey)));
 
   await prisma.case.delete({ where: { id } });
   return NextResponse.json({ ok: true });

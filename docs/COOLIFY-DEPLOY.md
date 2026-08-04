@@ -35,6 +35,10 @@ Sett disse i Coolify sitt env-panel — se `.env.example` i repoet for full list
 | `SENTRY_DSN` | DSN fra Bugsink (`errors.basbeta.no`, prosjekt "effektbibliotek") — bruk den offentlige hosten, ikke `localhost` |
 | `NEXT_PUBLIC_SENTRY_DSN` | Samme DSN som `SENTRY_DSN` (kreves separat siden denne må være tilgjengelig i nettleseren) |
 | `APP_URL` | `https://effektbibliotek.basbeta.no` — brukes til å bygge lenker i utgående e-post (godkjenningslenke, case-lenke). **IKKE** `NEXT_PUBLIC_APP_URL` — den prefiksen får Next.js til å bygge verdien statisk inn i koden ved build time, så en senere runtime-endring har ingen effekt (oppdaget i CR-013 etter at et første forsøk med `NEXT_PUBLIC_APP_URL` ikke slo gjennom). `request.url.origin` er dessuten upålitelig bak Traefik i API-routes og resolver til `localhost:3000` uten denne satt |
+| `S3_ENDPOINT` | `https://fsn1.your-objectstorage.com` (Hetzner Object Storage, S3-kompatibel — CR-027, filopplasting til case-materiale) |
+| `S3_REGION` | `fsn1` |
+| `S3_BUCKET` | `basbeta-backup` — delt bucket med resten av basbeta-prosjektene. Appen skriver kun under prefiksen `effektbibliotek/case-materiale/`, kolliderer ikke med backup-jobben (som har sin egen 7-dagers retention scopet til backup-prefikset, ikke bucket-bredt) |
+| `S3_ACCESS_KEY_ID` / `S3_SECRET_ACCESS_KEY` | Access/secret-nøkkelpar med lese/skrivetilgang til bucketen over — kan være samme delte nøkkelpar som resten av basbeta-prosjektene bruker, eller et eget, avhengig av hva som er satt opp i Hetzner |
 
 Merk: `effektbibliotek@basbeta.no` må finnes som avsenderadresse/alias godkjent i Brevo (domenet `basbeta.no` er allerede SPF/DKIM/DMARC-verifisert der).
 

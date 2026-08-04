@@ -11,7 +11,7 @@ import {
   effectTypeLabels,
   evidenceLevelLabels,
 } from "@/lib/labels";
-import { formatDate } from "@/lib/format";
+import { formatDate, formatBytes } from "@/lib/format";
 
 import LinksSection from "@/components/cases/LinksSection";
 import ApprovalSection from "@/components/cases/ApprovalSection";
@@ -58,6 +58,13 @@ interface LinkItem {
   description: string | null;
 }
 
+interface FileItem {
+  id: string;
+  filename: string;
+  mimeType: string;
+  sizeBytes: number;
+}
+
 interface ApprovalHistoryItem {
   submittedAt: string | Date;
   submittedByName: string;
@@ -77,6 +84,7 @@ export default function EditCaseForm({
   isAdmin,
   isOwner,
   links,
+  files,
   usageApprovalStatus,
   usageApprovals,
   approverName,
@@ -89,6 +97,7 @@ export default function EditCaseForm({
   isAdmin?: boolean;
   isOwner?: boolean;
   links?: LinkItem[];
+  files?: FileItem[];
   usageApprovalStatus?: string;
   usageApprovals?: ApprovalHistoryItem[];
   approverName?: string | null;
@@ -358,7 +367,7 @@ export default function EditCaseForm({
         </Field>
       </FormSection>
 
-      <LinksSection caseId={initial.id} links={links ?? []} canManage={true} />
+      <LinksSection caseId={initial.id} links={links ?? []} files={files ?? []} canManage={true} />
 
       {canManageCase && (
         <FormSection title="Farlig sone">
@@ -383,10 +392,13 @@ export default function EditCaseForm({
                 <p className="text-xs font-medium mb-1" style={{ color: "var(--color-text-secondary)" }}>
                   Tilknyttede lenker/filer som slettes:
                 </p>
-                {links && links.length > 0 ? (
+                {(links && links.length > 0) || (files && files.length > 0) ? (
                   <ul className="text-xs space-y-0.5" style={{ color: "var(--color-text-secondary)" }}>
-                    {links.map((l) => (
+                    {links?.map((l) => (
                       <li key={l.id}>— {l.title}: {l.url}</li>
+                    ))}
+                    {files?.map((f) => (
+                      <li key={f.id}>— {f.filename} ({formatBytes(f.sizeBytes)})</li>
                     ))}
                   </ul>
                 ) : (

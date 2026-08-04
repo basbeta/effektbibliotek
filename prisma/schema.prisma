@@ -80,6 +80,7 @@ model Case {
 
   usageApprovals UsageApproval[]
   links          CaseLink[]
+  files          CaseFile[]
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -121,6 +122,22 @@ model CaseLink {
   url         String
   type        CaseLinkType?
   description String?
+
+  createdAt      DateTime @default(now())
+  createdByEmail String
+
+  @@index([caseId])
+}
+
+model CaseFile {
+  id     String @id @default(cuid())
+  caseId String
+  case   Case   @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  filename   String
+  mimeType   String
+  sizeBytes  Int
+  storageKey String @unique
 
   createdAt      DateTime @default(now())
   createdByEmail String

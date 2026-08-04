@@ -9,7 +9,7 @@ import {
   caseLinkTypeLabels,
 } from "@/lib/labels";
 import { choiceLabels, type ApprovalChoices } from "@/lib/usage-approval";
-import { formatDate } from "@/lib/format";
+import { formatDate, formatBytes } from "@/lib/format";
 import type {
   CaseLifecycleStatus,
   UsageApprovalStatus,
@@ -26,6 +26,11 @@ export interface CaseExportLink {
   url: string;
   type: CaseLinkType | null;
   description: string | null;
+}
+
+export interface CaseExportFile {
+  filename: string;
+  sizeBytes: number;
 }
 
 export interface CaseExportApproval extends ApprovalChoices {
@@ -66,6 +71,7 @@ export interface CaseExportData extends ApprovalChoices {
   createdByName: string;
   createdAt: Date | string;
   links: CaseExportLink[];
+  files: CaseExportFile[];
   usageApprovals: CaseExportApproval[];
 }
 
@@ -116,7 +122,7 @@ export function buildCaseExportText(c: CaseExportData): string {
   if (c.caseTypes.length > 0) lines.push(`Case-type: ${c.caseTypes.map((ct) => caseTypeLabels[ct]).join(", ")}`);
   lines.push("");
 
-  lines.push("--- TILKNYTTEDE LENKER/MATERIALE ---");
+  lines.push("--- TILKNYTTEDE LENKER ---");
   if (c.links.length === 0) {
     lines.push("(ingen)");
   } else {
@@ -124,6 +130,17 @@ export function buildCaseExportText(c: CaseExportData): string {
       const type = link.type ? ` [${caseLinkTypeLabels[link.type]}]` : "";
       lines.push(`- ${link.title}${type}: ${link.url}`);
       if (link.description) lines.push(`  ${link.description}`);
+    }
+  }
+  lines.push("");
+
+  lines.push("--- OPPLASTEDE FILER ---");
+  if (c.files.length === 0) {
+    lines.push("(ingen)");
+  } else {
+    lines.push("Selve filinnholdet er ikke inkludert i denne teksteksporten — last ned filene enkeltvis fra casen før sletting om nødvendig.");
+    for (const file of c.files) {
+      lines.push(`- ${file.filename} (${formatBytes(file.sizeBytes)})`);
     }
   }
   lines.push("");

@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { caseLinkTypeLabels } from "@/lib/labels";
+import { formatBytes } from "@/lib/format";
 
 interface LinkItem {
   id: string;
@@ -12,15 +13,27 @@ interface LinkItem {
   description: string | null;
 }
 
+interface FileItem {
+  id: string;
+  filename: string;
+  mimeType: string;
+  sizeBytes: number;
+}
+
+const MAX_TOTAL_BYTES = 100 * 1024 * 1024;
+const ACCEPTED_EXTENSIONS = ".jpg,.jpeg,.png,.webp,.gif,.pdf,.doc,.docx";
+
 interface Props {
   caseId: string;
   links: LinkItem[];
+  files?: FileItem[];
   canManage: boolean;
 }
 
-export default function LinksSection({ caseId, links: initialLinks, canManage }: Props) {
+export default function LinksSection({ caseId, links: initialLinks, files: initialFiles, canManage }: Props) {
   const router = useRouter();
   const [links, setLinks] = useState(initialLinks);
+  const [files, setFiles] = useState(initialFiles ?? []);
   const [showForm, setShowForm] = useState(false);
   const [title, setTitle] = useState("");
   const [url, setUrl] = useState("");
@@ -28,6 +41,11 @@ export default function LinksSection({ caseId, links: initialLinks, canManage }:
   const [description, setDescription] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const totalBytes = files.reduce((sum, f) => sum + f.sizeBytes, 0);
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
@@ -66,7 +84,42 @@ export default function LinksSection({ caseId, links: initialLinks, canManage }:
     }
   }
 
-  if (links.length === 0 && !canManage) return null;
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    setUploadError("");
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch(`/api/cases/${caseId}/files`, { method: "POST", body: formData });
+      if (!res.ok) {
+        setUploadError((await res.json()).error ?? "Kunne ikke laste opp filen.");
+        return;
+      }
+      const uploaded = await res.json();
+      setFiles((prev) => [...prev, uploaded]);
+      router.refresh();
+    } catch {
+      setUploadError("Noe gikk galt.");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function handleDeleteFile(fileId: string) {
+    try {
+      await fetch(`/api/cases/${caseId}/files/${fileId}`, { method: "DELETE" });
+      setFiles((prev) => prev.filter((f) => f.id !== fileId));
+      router.refresh();
+    } catch {
+      // silent
+    }
+  }
+
+  if (links.length === 0 && files.length === 0 && !canManage) return null;
 
   return (
     <div
@@ -78,13 +131,32 @@ export default function LinksSection({ caseId, links: initialLinks, canManage }:
           Materiale
         </p>
         {canManage && !showForm && (
-          <button
-            onClick={() => setShowForm(true)}
-            className="text-sm"
-            style={{ color: "var(--color-accent)" }}
-          >
-            + Legg til lenke
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              className="text-sm disabled:opacity-60"
+              style={{ color: "var(--color-accent)" }}
+            >
+              {uploading ? "Laster opp..." : "+ Last opp fil"}
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept={ACCEPTED_EXTENSIONS}
+              onChange={handleFileChange}
+              style={{ display: "none" }}
+            />
+            <button
+              type="button"
+              onClick={() => setShowForm(true)}
+              className="text-sm"
+              style={{ color: "var(--color-accent)" }}
+            >
+              + Legg til lenke
+            </button>
+          </div>
         )}
       </div>
 
@@ -120,6 +192,7 @@ export default function LinksSection({ caseId, links: initialLinks, canManage }:
               </div>
               {canManage && (
                 <button
+                  type="button"
                   onClick={() => handleDelete(link.id)}
                   className="text-xs flex-shrink-0"
                   style={{ color: "var(--color-text-muted)" }}
@@ -131,6 +204,44 @@ export default function LinksSection({ caseId, links: initialLinks, canManage }:
             </li>
           ))}
         </ul>
+      )}
+
+      {files.length > 0 && (
+        <ul className="space-y-2 mb-4">
+          {files.map((file) => (
+            <li key={file.id} className="flex items-start justify-between gap-3">
+              <div className="flex-1 min-w-0">
+                <a
+                  href={`/api/cases/${caseId}/files/${file.id}`}
+                  className="text-sm font-medium hover:underline"
+                  style={{ color: "var(--color-accent)" }}
+                >
+                  {file.filename}
+                </a>
+                <span className="text-xs ml-2" style={{ color: "var(--color-text-muted)" }}>
+                  {formatBytes(file.sizeBytes)}
+                </span>
+              </div>
+              {canManage && (
+                <button
+                  type="button"
+                  onClick={() => handleDeleteFile(file.id)}
+                  className="text-xs flex-shrink-0"
+                  style={{ color: "var(--color-text-muted)" }}
+                  title="Slett fil"
+                >
+                  ✕
+                </button>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {canManage && (files.length > 0 || uploadError) && (
+        <p className="text-xs mb-3" style={{ color: uploadError ? "var(--color-error-text)" : "var(--color-text-muted)" }}>
+          {uploadError || `${formatBytes(totalBytes)} av ${formatBytes(MAX_TOTAL_BYTES)} brukt`}
+        </p>
       )}
 
       {showForm && (
@@ -207,9 +318,9 @@ export default function LinksSection({ caseId, links: initialLinks, canManage }:
         </form>
       )}
 
-      {links.length === 0 && !showForm && canManage && (
+      {links.length === 0 && files.length === 0 && !showForm && canManage && (
         <p className="text-sm" style={{ color: "var(--color-text-muted)" }}>
-          Ingen lenker lagt til ennå.
+          Ingen lenker eller filer lagt til ennå.
         </p>
       )}
     </div>

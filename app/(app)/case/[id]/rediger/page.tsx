@@ -15,6 +15,7 @@ export default async function RedigerCasePage({ params }: Props) {
     include: {
       owner: { select: { name: true } },
       links: { orderBy: { createdAt: "asc" } },
+      files: { orderBy: { createdAt: "asc" } },
       usageApprovals: { orderBy: { submittedAt: "desc" } },
     },
   });
@@ -45,6 +46,7 @@ export default async function RedigerCasePage({ params }: Props) {
         isAdmin={session.isAdmin}
         isOwner={isOwner}
         links={c.links}
+        files={c.files}
         usageApprovalStatus={c.usageApprovalStatus}
         usageApprovals={c.usageApprovals}
         approverName={c.approverName}

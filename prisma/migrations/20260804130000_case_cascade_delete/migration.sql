@@ -1,4 +1,4 @@
-﻿-- DropForeignKey
+-- DropForeignKey
 ALTER TABLE "UsageApproval" DROP CONSTRAINT "UsageApproval_caseId_fkey";
 
 -- DropForeignKey

@@ -47,8 +47,7 @@ export default function LinksSection({ caseId, links: initialLinks, files: initi
 
   const totalBytes = files.reduce((sum, f) => sum + f.sizeBytes, 0);
 
-  async function handleAdd(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleAdd() {
     setError("");
     if (!title.trim() || !url.trim()) {
       setError("Tittel og URL er påkrevd.");
@@ -262,7 +261,11 @@ export default function LinksSection({ caseId, links: initialLinks, files: initi
       )}
 
       {showForm && (
-        <form onSubmit={handleAdd} className="space-y-3 pt-3" style={{ borderTop: links.length > 0 ? "1px solid var(--color-border-subtle)" : "none" }}>
+        // Div, ikke <form> — denne widgeten kan bli rendret inni EditCaseForm sitt eget
+        // <form>, og nestede <form>-elementer er ugyldig HTML (browsere dropper den
+        // innerste taggen stille, så en submit-knapp her ville i stedet trigget det
+        // ytre skjemaets onSubmit).
+        <div className="space-y-3 pt-3" style={{ borderTop: links.length > 0 ? "1px solid var(--color-border-subtle)" : "none" }}>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
               <label className="block text-xs font-medium mb-1" style={{ color: "var(--color-text-primary)" }}>
@@ -316,7 +319,8 @@ export default function LinksSection({ caseId, links: initialLinks, files: initi
           {error && <p className="text-xs" style={{ color: "var(--color-error-text)" }}>{error}</p>}
           <div className="flex gap-2">
             <button
-              type="submit"
+              type="button"
+              onClick={handleAdd}
               disabled={saving}
               className="px-4 py-1.5 text-sm font-medium text-white rounded-lg disabled:opacity-60"
               style={{ backgroundColor: "var(--color-accent)" }}
@@ -332,7 +336,7 @@ export default function LinksSection({ caseId, links: initialLinks, files: initi
               Avbryt
             </button>
           </div>
-        </form>
+        </div>
       )}
 
       {links.length === 0 && files.length === 0 && !showForm && canManage && (

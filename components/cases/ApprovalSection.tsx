@@ -114,6 +114,8 @@ export default function ApprovalSection({
   }
 
   const statusLabel = usageApprovalStatusLabels[status as keyof typeof usageApprovalStatusLabels] ?? status;
+  const isLocked = status === "submitted_locked" && !!lastApproval;
+  const showContent = isLocked || expanded;
 
   return (
     <div
@@ -123,30 +125,39 @@ export default function ApprovalSection({
         border: "1px solid var(--color-border-subtle)",
       }}
     >
-      <button
-        onClick={() => setExpanded((v) => !v)}
-        className="flex items-center justify-between w-full mb-0 text-left"
-        style={{ marginBottom: expanded ? "1rem" : 0 }}
-      >
-        <div className="flex items-center gap-2">
-          <span
-            className="text-xs transition-transform"
-            style={{
-              color: "var(--color-text-muted)",
-              display: "inline-block",
-              transform: expanded ? "rotate(90deg)" : "rotate(0deg)",
-            }}
-          >
-            ▸
-          </span>
+      {isLocked ? (
+        <div className="flex items-center justify-between" style={{ marginBottom: "1rem" }}>
           <p className="text-sm font-semibold" style={{ color: "var(--color-text-primary)" }}>
             Bruksgodkjenning
           </p>
+          <StatusPill status={status} label={statusLabel} />
         </div>
-        <StatusPill status={status} label={statusLabel} />
-      </button>
+      ) : (
+        <button
+          onClick={() => setExpanded((v) => !v)}
+          className="flex items-center justify-between w-full mb-0 text-left"
+          style={{ marginBottom: expanded ? "1rem" : 0 }}
+        >
+          <div className="flex items-center gap-2">
+            <span
+              className="text-xs transition-transform"
+              style={{
+                color: "var(--color-text-muted)",
+                display: "inline-block",
+                transform: expanded ? "rotate(90deg)" : "rotate(0deg)",
+              }}
+            >
+              ▸
+            </span>
+            <p className="text-sm font-semibold" style={{ color: "var(--color-text-primary)" }}>
+              Bruksgodkjenning
+            </p>
+          </div>
+          <StatusPill status={status} label={statusLabel} />
+        </button>
+      )}
 
-      {expanded && (status === "submitted_locked" && lastApproval ? (
+      {showContent && (status === "submitted_locked" && lastApproval ? (
         <div className="space-y-3">
           <dl className="text-sm space-y-1">
             <Row label="Sendt inn av" value={`${lastApproval.submittedByName} (${lastApproval.submittedByEmail})`} />
@@ -289,7 +300,7 @@ export default function ApprovalSection({
         </div>
       ))}
 
-      {expanded && error && (
+      {showContent && error && (
         <p className="text-xs mt-2" style={{ color: "var(--color-error-text)" }}>{error}</p>
       )}
     </div>

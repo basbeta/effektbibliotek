@@ -359,7 +359,7 @@ export default function EditCaseForm({
                     opacity: form[key] ? 1 : 0.55,
                   }}
                 >
-                  {form[key] ? "☑" : "☐"} {label}
+                  {form[key] ? "✓" : "—"} {label}
                 </p>
               ))}
             </div>
@@ -574,7 +574,14 @@ function CheckboxField({
         style={{ accentColor: "var(--color-accent)" }}
       />
       <div>
-        <span className="text-sm font-medium" style={{ color: "var(--color-text-primary)" }}>
+        <span
+          className="text-sm"
+          style={{
+            color: checked ? "var(--color-text-primary)" : "var(--color-text-muted)",
+            fontWeight: checked ? 600 : 400,
+            opacity: checked ? 1 : 0.7,
+          }}
+        >
           {label}
         </span>
         {description && (

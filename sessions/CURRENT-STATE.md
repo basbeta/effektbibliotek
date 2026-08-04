@@ -47,7 +47,8 @@ Node.js 22 (matcher Dockerfile) installert på denne maskinen via `winget instal
 - CR-019 (kodet, IKKE testet i prod) — Personvernteksten (PRIVACY_NOTICE → buildPrivacyNotice) nevner nå caseeier ved navn og e-post ("ta kontakt med {navn} på {e-post}"), brukt i både e-post og godkjenningssidens footer
 - CR-020 (kodet, IKKE testet i prod) — Stor forenkling av bruksgodkjenning: fjernet redundant "bruksnivå"-enum og duplisert badge-visning, erstattet med 6 rene valg (NDA, kun anonymisert, hjemmeside, presentasjoner, anbud, konkurranse). NDA og "kun anonymisert" er nå begge gjensidig utelukkende med resten. 16 filer endret. **Skjemaendring med reelt datatap** — Case.usageLevel og UsageApproval.internalUseAllowed droppes ved neste db push
 - CR-021 (kodet, IKKE testet i prod) — Bruksrettigheter i redigeringsskjemaet er nå skrivebeskyttet når casen har status submitted_locked (viser hvem hos kunden som godkjente + dato), håndhevet både i UI og server-side (PATCH /api/cases/:id)
-- CR-022 (kodet, IKKE testet i prod) — Tydeligere låst visning (☑/☐ i stedet for ✓/—, valgte bold+full kontrast, ikke-valgte dempet), godkjenningslinje flyttet over listen, "Lås opp godkjenning" tilgjengelig direkte fra redigeringsskjemaet
+- CR-022 (kodet, IKKE testet i prod) — Tydeligere låst visning i redigeringsskjema (senere finpusset i CR-023: glyfer byttet til ✓/—), godkjenningslinje flyttet over listen, "Lås opp godkjenning" tilgjengelig direkte fra redigeringsskjemaet
+- CR-023 (kodet, IKKE testet i prod) — ApprovalSection permanent utvidet (ikke trekkspill) når status er submitted_locked; redigerbar bruksrettighets-liste viser bold/dempet basert på avkrysning (tydelig "ikke fylt ut ennå"); låst visning i redigeringsskjema bruker nå ✓/— i stedet for ☑/☐ for å matche appens øvrige skrivebeskyttede lister
 
 ## Production URL
 https://effektbibliotek.basbeta.no — live, innlogging bekreftet fungerende

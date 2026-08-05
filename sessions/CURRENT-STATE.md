@@ -7,7 +7,7 @@ MIGRERING NESTEN FERDIG — CR-008: porting fra Vercel/Neon til Hetzner/Coolify/
 
 **2026-08-05 (Session 9):** ISSUE-012 løst via ny CR-028 — `npm audit fix --force` kjørt etter forutgående research av Next.js 16.3 og nodemailer v9 sine breaking changes (begge bekreftet trygge for denne kodebasens faktiske bruk). `next` 16.2.6→16.3.0 (re-pinnet eksakt), `nodemailer` ^8.0.7→^9.0.4, `eslint-config-next`→16.3.0, `@types/nodemailer`→^8.0.1. `npm audit` viser nå 0 sårbarheter. `npm run build`/`npx tsc --noEmit` grønne. CR-028 pushet og bekreftet i produksjon av produkteier. **CR-029 (samme økt, funnet under CR-028-smoke-testen):** feil klokkeslett i bruksgodkjenning-bekreftelsesepost — containeren kjører i UTC (ingen `TZ` satt i Dockerfile), og tre `toLocale*`-kall (`lib/email.ts` x2, `lib/format.ts` sin `formatDate()`) manglet `timeZone`-option. Lagt til `timeZone: "Europe/Oslo"` alle tre steder. Build/tsc grønt. Pushet og **bekreftet i produksjon av produkteier** — korrekt klokkeslett i ny bruksgodkjenning-e-post.
 
-**CR-030 (samme økt):** "+ Legg inn case"-knappen flyttet fra topbaren til toppen av venstre kolonne, omdøpt til "Ny Case". `npm run build`/`npx tsc --noEmit` grønt. **IKKE pushet ennå** — venter på godkjenning.
+**CR-030 (samme økt):** "+ Legg inn case"-knappen flyttet fra topbaren til toppen av venstre kolonne, omdøpt til "Ny Case". `npm run build`/`npx tsc --noEmit` grønt. Pushet — **visuell bekreftelse i produksjon gjenstår** (ikke eksplisitt bekreftet av produkteier ennå).
 
 ## Current Objectives
 1. Manuell E2E-verifisering av CR-025 sine egne flyter (uavhengig av CR-027): opprett en test-case med lenker og godkjenningshistorikk, bekreft eierbytte fungerer for en ikke-admin eier
@@ -27,7 +27,8 @@ Manuelt Coolify/Hetzner-oppsett kan ikke utføres fra Claude Code-økten (ingen 
 - **CR-015, 016, 018, 019 ikke enkeltvis bekreftet** (ISSUE-010) — lav risiko, men reply-to-headeren (CR-018) spesielt er kun kodebekreftet, ikke funksjonelt testet med et faktisk svar.
 - **Ingen tilgang til Coolify-instansen fra Claude Code-økter** — enhver fremtidig feilsøking som krever env-var-endringer, redeploy-trigger, eller database-terminal må gjøres av produkteier manuelt, med skjermbilder/copy-paste av logger tilbake til denne økten. Dette var flaskehalsen i mesteparten av CR-009–011-feilsøkingen.
 - **Vercel/Neon (gammel produksjon) står fortsatt aktiv** som fallback — ingen data av verdi der, men bør ryddes opp når Coolify er verifisert stabilt over noen dager (se Next Actions).
-- **4 gjenstående avhengighetssårbarheter** (ISSUE-012, ny 2026-08-05) — `next`, `postcss`, `sharp` og én `nodemailer`-CVE krever `npm audit fix --force` (Next.js-major utenfor pinnet range). Lav prioritet, bevisst utsatt, men bør vurderes som egen oppgave fremover.
+- ~~4 gjenstående avhengighetssårbarheter (ISSUE-012)~~ — Løst 2026-08-05 via CR-028, pushet og bekreftet i produksjon
+- **CR-030 ikke visuelt bekreftet ennå** — knappen ("+ Ny Case") er pushet, men produkteier har ikke eksplisitt bekreftet plassering/utseende i faktisk nettleser
 
 ## Løst: OTP-innlogging hang (CR-009, CR-010, CR-011) og feilsporing (CR-012)
 Etter CR-008-deploy hang OTP-innlogging. Rotårsak (CR-011, funnet via Coolify runtime-logger): den ferske Coolify-databasen hadde ingen tabeller, siden `prisma/migrations` aldri har eksistert i repoet og `prisma migrate deploy` derfor var en stille no-op. Fikset med `prisma db push --accept-data-loss`. CR-009 (SMTP-timeout) og CR-010 (DB connection-timeout) var reelle forbedringer underveis, men ikke selve rotårsaken. Full historikk (inkl. to feilslåtte deploys som crash-loopet appen) i `sessions/IMPLEMENTATION-LEDGER.md` og `sessions/DECISIONS.md`.
@@ -179,7 +180,8 @@ https://effektbibliotek.vercel.app (gammel, beholdes urørt inntil Coolify er fu
 - npm audit fix (ISSUE-012 åpnet for resten): `npm run build` ✓ (Next.js forblir 16.2.6, ingen major-bump), pushet og autodeployet uten incident
 - docs/extracted.txt gitignore-opprydding (ISSUE-005): ingen kodeendring, ingen build påvirket, pushet uten incident
 - CR-028 (ISSUE-012 løst): `npm audit` 0 sårbarheter (ned fra 4), `npm run build` ✓ (Next.js 16.3.0/Turbopack, alle 27 ruter), `npx tsc --noEmit` ✓. Pushet, bekreftet i produksjon av produkteier (OTP/bruksgodkjenning fungerer)
-- CR-029 (klokkeslett-bugfix): `npx tsc --noEmit` ✓, `npm run build` ✓. IKKE pushet/produksjonsverifisert ennå
+- CR-029 (klokkeslett-bugfix): `npx tsc --noEmit` ✓, `npm run build` ✓. Pushet, bekreftet i produksjon av produkteier — korrekt klokkeslett i ny test-e-post
+- CR-030 ("Ny Case"-knapp flyttet til sidemeny): `npx tsc --noEmit` ✓, `npm run build` ✓. Pushet. Ikke visuelt bekreftet av produkteier ennå
 
 ## Next Actions (prioritert)
 1. Manuell E2E-verifisering av CR-025 sine egne flyter: opprett en test-case med lenker og godkjenningshistorikk, bekreft eierbytte fungerer for en ikke-admin eier

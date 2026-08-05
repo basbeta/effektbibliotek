@@ -21,6 +21,13 @@ export default function SideNav({ isAdmin }: { isAdmin: boolean }) {
         borderRight: "1px solid var(--color-border-subtle)",
       }}
     >
+      <Link
+        href="/case/ny"
+        className="block mb-4 px-3 py-2.5 text-sm font-medium text-white text-center rounded-lg"
+        style={{ backgroundColor: "var(--color-accent)" }}
+      >
+        + Ny Case
+      </Link>
       <ul className="space-y-1">
         {items.map(({ href, label }) => {
           const active = pathname === href || pathname.startsWith(href + "/");

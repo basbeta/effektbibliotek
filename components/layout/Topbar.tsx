@@ -21,16 +21,6 @@ export default function Topbar({ userName }: TopbarProps) {
         Effektbibliotek
       </Link>
       <div className="flex items-center gap-5">
-        <Link
-          href="/case/ny"
-          className="px-4 py-1.5 text-sm font-medium text-white rounded-lg"
-          style={{
-            backgroundColor: "rgba(255,255,255,0.15)",
-            border: "1px solid rgba(255,255,255,0.3)",
-          }}
-        >
-          + Legg inn case
-        </Link>
         <span className="text-sm" style={{ color: "rgba(255,255,255,0.8)" }}>
           {userName}
         </span>

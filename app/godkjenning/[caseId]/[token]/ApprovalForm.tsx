@@ -230,6 +230,7 @@ export default function ApprovalForm({ caseId, token, ownerName, defaultName = "
       >
         {submitting ? "Lagrer..." : "Lagre valg"}
       </button>
+      
     </form>
   );
 }

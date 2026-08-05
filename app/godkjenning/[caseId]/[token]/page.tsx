@@ -99,10 +99,10 @@ function LockedView({ ownerName, ownerEmail }: { ownerName: string; ownerEmail: 
   return (
     <div className="text-center py-4">
       <p className="font-semibold mb-2" style={{ color: "var(--color-text-primary)" }}>
-        Godkjenningen er allerede sendt inn
+        Godkjenningen er allerede lagret
       </p>
       <p className="text-sm" style={{ color: "var(--color-text-secondary)" }}>
-        Vi har registrert din tilbakemelding. Kontakt{" "}
+        Vi har lagret din godkjenning. Kontakt{" "}
         <span style={{ color: "var(--color-accent)" }}>{ownerName}</span>{" "}
         på <span style={{ color: "var(--color-accent)" }}>{ownerEmail}</span>{" "}
         i Bas hvis du ønsker å endre noe.

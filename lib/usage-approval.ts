@@ -43,7 +43,7 @@ export function sanitizeChoices(choices: ApprovalChoices): ApprovalChoices {
 }
 
 export function buildPrivacyNotice(ownerName: string, ownerEmail: string): string {
-  return `Personvern: For å ha kontroll på hvem som gir tillatelse vil vi lagre navn og e-postadresse så lenge vi oppbevarer denne. Ønsker du å trekke tilbake tillatelsen eller av andre grunner fjerne navn og epostadresse fra arkivene, ta kontakt med ${ownerName} på ${ownerEmail}.`;
+  return `Personvern: For å kunne dokumentere brukstillatelsene vil vi lagre navn og e-postadresse så lenge vi oppbevarer casen. Ønsker du å endre eller trekke tilbake tillatelsen, eller av andre grunner fjerne navn og epostadresse fra arkivene, ta kontakt med ${ownerName} på ${ownerEmail}.`;
 }
 
 export const GDPR_NOTICE =

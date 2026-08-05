@@ -23,7 +23,6 @@ Manuelt Coolify/Hetzner-oppsett kan ikke utføres fra Claude Code-økten (ingen 
 - **CR-015, 016, 018, 019 ikke enkeltvis bekreftet** (ISSUE-010) — lav risiko, men reply-to-headeren (CR-018) spesielt er kun kodebekreftet, ikke funksjonelt testet med et faktisk svar.
 - **Ingen tilgang til Coolify-instansen fra Claude Code-økter** — enhver fremtidig feilsøking som krever env-var-endringer, redeploy-trigger, eller database-terminal må gjøres av produkteier manuelt, med skjermbilder/copy-paste av logger tilbake til denne økten. Dette var flaskehalsen i mesteparten av CR-009–011-feilsøkingen.
 - **Vercel/Neon (gammel produksjon) står fortsatt aktiv** som fallback — ingen data av verdi der, men bør ryddes opp når Coolify er verifisert stabilt over noen dager (se Next Actions).
-- **`docs_extracted.txt`** (ISSUE-005) er fortsatt committed med potensielt sensitiv rå-tekst fra produktdokumentasjon — lav prioritet, men uadressert.
 
 ## Løst: OTP-innlogging hang (CR-009, CR-010, CR-011) og feilsporing (CR-012)
 Etter CR-008-deploy hang OTP-innlogging. Rotårsak (CR-011, funnet via Coolify runtime-logger): den ferske Coolify-databasen hadde ingen tabeller, siden `prisma/migrations` aldri har eksistert i repoet og `prisma migrate deploy` derfor var en stille no-op. Fikset med `prisma db push --accept-data-loss`. CR-009 (SMTP-timeout) og CR-010 (DB connection-timeout) var reelle forbedringer underveis, men ikke selve rotårsaken. Full historikk (inkl. to feilslåtte deploys som crash-loopet appen) i `sessions/IMPLEMENTATION-LEDGER.md` og `sessions/DECISIONS.md`.
@@ -165,5 +164,4 @@ https://effektbibliotek.vercel.app (gammel, beholdes urørt inntil Coolify er fu
 4. Ende-til-ende-test av gjenstående flyter: case-opprettelse, redigering av felt utenom bruksrettigheter (de er nå grundig testet)
 5. Utføre resterende `docs/COOLIFY-DEPLOY.md`-steg (backup, Uptime Kuma) — ISSUE-007, delvis løst
 6. Når Coolify-oppsettet er verifisert stabilt over noen dager: fjern Vercel-prosjektet og slett Neon-databasen (ingen data å ta vare på), marker CR-008 som Done
-7. Vurder om `docs_extracted.txt` skal gitignores (sensitiv prod-dokumentasjon) — ISSUE-005, fortsatt åpen
-8. Vurder om det skal legges til en enkel automatisert test/smoke-test-suite — hele denne økten er verifisert med `npm run build` + manuell produksjonstesting, ingen automatiserte tester finnes ennå i prosjektet
+7. Vurder om det skal legges til en enkel automatisert test/smoke-test-suite — hele denne økten er verifisert med `npm run build` + manuell produksjonstesting, ingen automatiserte tester finnes ennå i prosjektet

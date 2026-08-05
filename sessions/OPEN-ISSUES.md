@@ -52,12 +52,13 @@ Opened: 2026-05-22
 Resolved: 2026-07-31 — CR-008: porter til selvhostet PostgreSQL 18 på Hetzner/Coolify, ingen serverless cold start.
 
 ISSUE-005
-Status: Open
+Status: Resolved
 Priority: Low
 Area: git / repo
-Description: `docs_extracted.txt` er committed og inneholder råtekst fra produktdokumentasjonen. Kan inneholde intern forretningsinformasjon. Bør vurderes gitignored og slettet fra historikk.
+Description: `docs/extracted.txt` (feilaktig referert som `docs_extracted.txt` i tidligere versjoner av denne filen) var committed og inneholder råtekst fra de 8 interne produktdokumentasjons-.docx-filene. Kan inneholde intern forretningsinformasjon. Vurdert gitignored og fjernet fra fremtidig tracking.
 Blocker for: Ingenting
 Opened: 2026-05-22
+Resolved: 2026-08-05 — Lagt til `/docs/extracted.txt` i `.gitignore`, fjernet fra tracking med `git rm --cached` (lokal kopi beholdt). Selve historikken (tidligere commits som inneholder filen) er IKKE renskjøvet — det ville krevd en history-rewrite (git filter-repo + force-push), en betydelig mer risikabel operasjon enn det som ble bedt om her. De 8 originale .docx-filene i `docs/` er fortsatt trackede og urørt — kun den utpakkede råteksten ble adressert.
 
 ISSUE-006
 Status: Open

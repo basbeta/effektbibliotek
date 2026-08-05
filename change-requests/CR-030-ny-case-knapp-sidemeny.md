@@ -1,6 +1,6 @@
 # CR-030: Flytt "Legg inn case"-knappen til sidemenyen, omdøpt til "Ny Case"
 
-**Status:** Done (lokalt verifisert, ikke pushet)
+**Status:** Done, bekreftet i produksjon
 **Created:** 2026-08-05
 
 ---
@@ -42,7 +42,7 @@ Ingen.
 - [x] Knappen er fjernet fra topbaren
 - [x] Knappen vises øverst i venstre kolonne, over Bibliotek/Mine caser/Oppfølging, med tekst "+ Ny Case"
 - [x] `npm run build` / `npx tsc --noEmit` grønt
-- [ ] Visuell bekreftelse i produksjon av produkteier — **gjenstår**
+- [x] Visuell bekreftelse i produksjon av produkteier — bekreftet 2026-08-05 ("ser bra ut")
 
 ## Required Tests
 - [ ] Manuell: bekreft plassering og lenke fungerer i produksjon

@@ -62,7 +62,7 @@ export function buildApprovalText(params: {
   const greeting = params.approverName ? `Hei ${params.approverName},` : "Hei,";
   return `${greeting}
 
-${params.ownerName} har registrert casen «${params.caseTitle}» i vårt effektbibliotek. I Bas er vi opptatt av å dele og lære, og for å ha full kontroll på hva vi kan og ikke kan gjøre med alle casene vi gjennomfører, vil vi gjerne at du tar et minutt til å gi oss tilbakemelding på hva vi kan bruke denne casen til.
+${params.ownerName} har registrert casen «${params.caseTitle}» i vårt effektbibliotek. I Bas er vi opptatt av å dele og lære, og for å dokumentere hva vi har tillatelse til å bruke casene vi gjennomfører til, vil vi gjerne at du tar et minutt til å gi oss tilbakemelding på hva vi kan bruke denne casen til.
 
 Du kan se hva vi ønsker å bruke og gi oss tilbakemelding her:
 ${url}

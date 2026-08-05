@@ -5,6 +5,8 @@
 ## Current Phase
 MIGRERING NESTEN FERDIG — CR-008: porting fra Vercel/Neon til Hetzner/Coolify/PostgreSQL 18. Appen kjører stabilt på `effektbibliotek.basbeta.no`. Innlogging (CR-009–011), feilsporing (CR-012), direkte utsending av bruksgodkjenning (CR-013), rediger eget navn (CR-014), det forenklede bruksrettighets-systemet (CR-020–023), CR-025 (case-sletting/eksport/eierbytte) og CR-026 (Bruksgodkjenning-widget i redigeringsskjemaet) er alle bekreftet fungerende i produksjon av produkteier per 2026-08-04. CR-015–019 er deployet og ble funksjonelt utøvd gjennom den samme produksjonstestingen, men er ikke bekreftet feature-for-feature enkeltvis — se Next Recommended Actions punkt 2. ISSUE-011 er nå løst: appen kjører permanent på `prisma migrate deploy` igjen (etter en andre, kortvarig nedetid under selve oppryddingen — se DECISIONS.md 2026-08-04 for lærdommen om `--rolled-back` vs. `--applied`). **CR-027 (filopplasting til Materiale-seksjonen — bilder/PDF/Word, 100MB per case, lagret i Hetzner Object Storage) er fullt implementert, pushet og bekreftet fungerende i produksjon av produkteier 2026-08-04** (opplasting/nedlasting/last-ned-alle/sletting, synlig på selve case-siden i tillegg til redigeringssiden, Eksporter-knappen bundler faktiske filer i et zip-arkiv). S3-env-variabler er satt i Coolify av produkteier. **2026-08-05 (Session 8 fortsatt):** `npm audit fix` (uten `--force`) rettet 9 av 13 avhengighetssårbarheter, inkl. en produksjonsrelevant nodemailer-CVE — 4 gjenstår og krever en bevisst Next.js-major-oppgradering, sporet som ISSUE-012. ISSUE-005 (`docs/extracted.txt` committed) løst — gitignored og fjernet fra tracking, lokal kopi beholdt.
 
+**2026-08-05 (Session 9):** ISSUE-012 løst via ny CR-028 — `npm audit fix --force` kjørt etter forutgående research av Next.js 16.3 og nodemailer v9 sine breaking changes (begge bekreftet trygge for denne kodebasens faktiske bruk). `next` 16.2.6→16.3.0 (re-pinnet eksakt), `nodemailer` ^8.0.7→^9.0.4, `eslint-config-next`→16.3.0, `@types/nodemailer`→^8.0.1. `npm audit` viser nå 0 sårbarheter. `npm run build`/`npx tsc --noEmit` grønne. **IKKE pushet ennå** — venter på eksplisitt godkjenning fra produkteier før commit/push, deretter manuell produksjonsverifisering (OTP-innlogging, bruksgodkjenning-e-post) etter autodeploy.
+
 ## Current Objectives
 1. Manuell E2E-verifisering av CR-025 sine egne flyter (uavhengig av CR-027): opprett en test-case med lenker og godkjenningshistorikk, bekreft eierbytte fungerer for en ikke-admin eier
 2. (Valgfritt, lav prioritet) Bekreft CR-015–019 individuelt hvis det er ønskelig med fullstendig sikkerhet — se Next Recommended Actions
@@ -60,6 +62,7 @@ Node.js 22 (matcher Dockerfile) installert på denne maskinen via `winget instal
 - CR-024 (Done, bekreftet i produksjon 2026-08-04) — Formelle Prisma-migreringer (ISSUE-009), rullet ut i to atskilte deploys pga. autodeploy på master: Deploy A (migreringsfiler, uendret CMD) → manuelt `migrate resolve --applied` mot prod via Coolify Terminal → Deploy B (CMD → `migrate deploy`). Begge deploys bekreftet vellykket, appen kjører normalt
 - CR-025 (Done, live i produksjon 2026-08-04 — med en hendelse underveis) — Slett case (eier eller admin, med advarsel-dialog: lenkeliste, godkjenningshistorikk-varsel, eksporter-knapp), eksport av full case-tekst/lenker/godkjenninger, eierbytte-dropdown nå synlig for eieren selv (ikke bare admin). Skjemaendring: `onDelete: Cascade` på UsageApproval/CaseLink. Migreringsfilen hadde en BOM som crash-loopet produksjon (se ISSUE-011) — nødløsning (revert til `db push`) bekreftet stabil, selve funksjonaliteten fungerer
 - CR-026 (Done, bekreftet i produksjon 2026-08-04) — Redigeringsskjemaets "Bruksrettigheter"-avkrysningsbokser erstattet med samme ApprovalSection/Bruksgodkjenning-widget som case-siden bruker. Fjerner en duplisert UI og duplisert lås/opplås-logikk. Bugfix underveis: ApprovalSection sine 5 knapper manglet `type="button"`, trigget skjema-innsending av EditCaseForm i stedet for å bare toggle trekkspillet — fikset
+- CR-028 (Done lokalt, ikke pushet) — Sikkerhetsoppgradering av gjenstående avhengigheter (ISSUE-012): next 16.2.6→16.3.0, nodemailer ^8.0.7→^9.0.4, postcss/sharp (transitivt via next), eslint-config-next→16.3.0, @types/nodemailer→^8.0.1. `npm audit` 0 sårbarheter, build/tsc grønt. Venter på push-godkjenning
 - CR-027 (Done, bekreftet i produksjon 2026-08-04) — Filopplasting til "Materiale"-seksjonen (bilder jpg/png/webp/gif, PDF, doc/docx), 100MB total-grense per case, lagret i Hetzner Object Storage (S3-kompatibel, delt bucket med backup, egen prefiks `effektbibliotek/case-materiale/`). Nytt `CaseFile`-modell, nye API-routes for opplasting/nedlasting/last-ned-alle/sletting. `Materiale`-widgeten (utvidet `LinksSection.tsx`) viser nå lenker og filer på BÅDE case-siden (kun vis/last ned) og redigeringssiden (full administrasjon). Eksporter-knappen (CR-025) gir nå et zip med tekstsammendrag + alle faktiske filer, ikke bare filnavn. To bugfixer underveis: (1) manglende `type="button"` i `LinksSection.tsx` sine egne knapper (samme klasse som CR-026-fiksen), (2) `LinksSection` sin "legg til lenke"-widget var et nestet `<form>` inni EditCaseForm sitt eget `<form>` (ugyldig HTML), konvertert til en vanlig `<div>` med knapp-triggered handler. S3_*-env-variabler er satt i Coolify av produkteier
 
 ## Production URL
@@ -121,6 +124,10 @@ https://effektbibliotek.vercel.app (gammel, beholdes urørt inntil Coolify er fu
 - .gitignore, docs/extracted.txt — ISSUE-005: lagt til gitignore, fjernet fra tracking med `git rm --cached`, lokal fil beholdt (53cf5ba)
 - sessions/*.md — løpende oppdatert gjennom økten for CR-027-bekreftelse, ISSUE-011 (to hendelser + løsning), ISSUE-012 (ny), ISSUE-005 (løst)
 
+## Nylig endret (Session 9, 2026-08-05)
+- change-requests/CR-028-dependency-oppgradering.md — ny, dokumenterer next/nodemailer/postcss/sharp-oppgraderingen (ISSUE-012)
+- package.json, package-lock.json — `next` 16.2.6→16.3.0 (eksakt pin), `nodemailer` ^8.0.7→^9.0.4, `eslint-config-next`→16.3.0, `@types/nodemailer`→^8.0.1. Ikke pushet ennå
+
 ## Tidligere sesjoners systemer (uendret denne økten)
 - app/api/cases/[id]/unlock-approval/route.ts, components/cases/LinksSection.tsx, app/(app)/admin/*, app/api/admin/*, components/layout/SideNav.tsx, proxy.ts
 
@@ -165,6 +172,7 @@ https://effektbibliotek.vercel.app (gammel, beholdes urørt inntil Coolify er fu
 - Filopplasting til Materiale-seksjonen (CR-027): `npm run build` ✓ (inkl. TypeScript-sjekk) på alle seks commits. Pushet, autodeployet og bekreftet fungerende i produksjon av produkteier 2026-08-04
 - npm audit fix (ISSUE-012 åpnet for resten): `npm run build` ✓ (Next.js forblir 16.2.6, ingen major-bump), pushet og autodeployet uten incident
 - docs/extracted.txt gitignore-opprydding (ISSUE-005): ingen kodeendring, ingen build påvirket, pushet uten incident
+- CR-028 (ISSUE-012 løst): `npm audit` 0 sårbarheter (ned fra 4), `npm run build` ✓ (Next.js 16.3.0/Turbopack, alle 27 ruter), `npx tsc --noEmit` ✓. IKKE pushet/produksjonsverifisert ennå
 
 ## Next Actions (prioritert)
 1. Manuell E2E-verifisering av CR-025 sine egne flyter: opprett en test-case med lenker og godkjenningshistorikk, bekreft eierbytte fungerer for en ikke-admin eier
@@ -173,5 +181,5 @@ https://effektbibliotek.vercel.app (gammel, beholdes urørt inntil Coolify er fu
 4. Ende-til-ende-test av gjenstående flyter: case-opprettelse, redigering av felt utenom bruksrettigheter (de er nå grundig testet)
 5. Utføre resterende `docs/COOLIFY-DEPLOY.md`-steg (backup, Uptime Kuma) — ISSUE-007, delvis løst
 6. Når Coolify-oppsettet er verifisert stabilt over noen dager: fjern Vercel-prosjektet og slett Neon-databasen (ingen data å ta vare på), marker CR-008 som Done
-7. Vurder å ta tak i ISSUE-012 (next/postcss/sharp/siste nodemailer-CVE) som en egen, testet oppgradering — ikke urgent, men bør ikke bli for gammel
+7. ~~Vurder å ta tak i ISSUE-012~~ — Løst denne økten via CR-028 (lokalt verifisert). **Push CR-028 til master når godkjent, deretter bekreft ren autodeploy i Coolify og kjør en manuell smoke-test av OTP-innlogging + bruksgodkjenning-e-post** (verifiserer nodemailer v9 i faktisk produksjon, ikke bare lokalt)
 8. Vurder om det skal legges til en enkel automatisert test/smoke-test-suite — hele denne økten er verifisert med `npm run build` + manuell produksjonstesting, ingen automatiserte tester finnes ennå i prosjektet

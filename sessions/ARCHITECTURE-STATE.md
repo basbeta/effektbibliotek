@@ -78,6 +78,8 @@ Ingen sirkulære avhengigheter. Ingen direkte kryss-modul-tilgang.
 - Gammel Vercel/Neon-produksjon står urørt som fallback inntil Coolify-oppsettet er verifisert (se CR-008)
 
 ## Last Structural Change
+2026-08-05 — CR-028: Avhengighetsoppgradering (ISSUE-012), ingen strukturell endring. `next` 16.2.6→16.3.0, `nodemailer` ^8.0.7→^9.0.4. `npm audit` 0 sårbarheter. Ikke pushet ennå.
+
 2026-08-04 — CR-025: Case-sletting, eksport og eier-initiert eierbytte. `onDelete: Cascade` lagt til på `UsageApproval.case` og `CaseLink.case` (ny migrering `20260804130000_case_cascade_delete`, generert statisk uten live DB). Ny `DELETE /api/cases/[id]` (eier eller admin) og `GET /api/cases/[id]/export`. `/api/admin/users/list` åpnet for alle innloggede brukere. Se append-only-unntaket over.
 
 2026-08-04 — CR-024: Innførte formelle Prisma-migreringer. `prisma/migrations/20260804120000_init` er baseline-migreringen (reflekterer skjema slik det var etter CR-023). Dockerfile CMD byttet fra `prisma db push --accept-data-loss` til `prisma migrate deploy`, rullet ut i to atskilte deploys pga. autodeploy på master (se sessions/DECISIONS.md for full rekkefølge). Bekreftet vellykket i produksjon 2026-08-04 — se sessions/OPEN-ISSUES.md ISSUE-009 (Resolved).

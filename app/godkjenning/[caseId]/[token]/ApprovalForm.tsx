@@ -106,11 +106,11 @@ export default function ApprovalForm({ caseId, token, ownerName, defaultName = "
         }}
       >
         <p className="text-lg font-semibold mb-2" style={{ color: "var(--color-accent)" }}>
-          Takk for din tilbakemelding!
+          Takk!
         </p>
         <p className="text-sm" style={{ color: "var(--color-text-secondary)" }}>
-          Vi har registrert ditt valg. Du og din kontaktperson ({ownerName}) vil motta en bekreftelse på e-post.
-          Ta gjerne kontakt med {ownerName} i Bas hvis du har spørsmål.
+          Vi har lagret ditt valg. Du og din kontaktperson ({ownerName}) vil motta en bekreftelse på e-post.
+          Ta gjerne kontakt med {ownerName} hvis du har spørsmål.
         </p>
       </div>
     );
@@ -228,7 +228,7 @@ export default function ApprovalForm({ caseId, token, ownerName, defaultName = "
         className="w-full py-3 text-sm font-semibold text-white rounded-xl disabled:opacity-60"
         style={{ backgroundColor: "var(--color-accent)" }}
       >
-        {submitting ? "Sender inn..." : "Send inn godkjenning"}
+        {submitting ? "Lagrer..." : "Lagre valg"}
       </button>
     </form>
   );

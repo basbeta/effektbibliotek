@@ -117,10 +117,19 @@ Update: 2026-08-04 — Første oppryddingsforsøk delvis lyktes, delvis forårsa
 Resolved: 2026-08-04 — Produkteier kjørte `npx prisma migrate resolve --applied 20260804140000_case_file` via Coolify Terminal (vellykket). Dockerfile CMD byttet til `migrate deploy` på nytt (commit a25de77), pushet, autodeployet, bekreftet av produkteier å kjøre normalt — ingen crash-loop denne gangen. Alle tre migreringer (`20260804120000_init`, `20260804130000_case_cascade_delete`, `20260804140000_case_file`) er nå korrekt bokført som `applied` i `_prisma_migrations`, og appen kjører permanent på `prisma migrate deploy` fra og med denne deployen.
 
 ISSUE-012
-Status: Open
+Status: Resolved
 Priority: Low
 Area: package.json / package-lock.json (avhengigheter)
 Description: `npm audit` viste 13 sårbarheter (8 high, 4 moderate, 1 low). `npm audit fix` (uten `--force`) løste 9 av disse, inkl. nodemailer sin CRLF header-injection og en OAuth2 TLS-cert-valideringsbypass (produksjonsrelevant — lib/email.ts sender all OTP/godkjenning-e-post via nodemailer), samt flere dev-tooling-transitiver (@babel/core, brace-expansion, js-yaml, fast-uri, hono/@hono/node-server/valibot-kjeden fra @prisma/dev). De resterende 4 (høy alvorlighetsgrad) krever `npm audit fix --force`, som ville byttet `next` til 16.3.0 — utenfor den versjonen som er stated/pinnet i package.json (16.2.6) — og dratt med seg `postcss`/`sharp`-fiksene. Next.js sine CVE-er inkluderer SSRF i Server Actions/rewrites, cache-forvirring og en Image Optimization DoS via SVG; det gjenstår også én nodemailer-CVE (raw-option kan omgå disableFileAccess/disableUrlAccess).
 Blocker for: Ingenting akkurat nå — bevisst utsatt fordi en Next.js major-oppgradering er en større endring som bør testes/verifiseres separat, ikke gjøres som en bivirkning av en rutinemessig audit-fiks
 Opened: 2026-08-05
-Resolved: 2026-08-05 — CR-028: research bekreftet at Next.js 16.3 og nodemailer 9 sine offisielle breaking changes ikke berører denne kodebasen (se DECISIONS.md). `npm audit fix --force` kjørt, `next`/`eslint-config-next` re-pinnet eksakt til 16.3.0, `nodemailer` til ^9.0.4, `@types/nodemailer` til ^8.0.1. `npm audit` viser 0 sårbarheter, `npm run build`/`npx tsc --noEmit` grønne. IKKE pushet/deployet ennå — venter på godkjenning og påfølgende produksjonsverifisering.
+Resolved: 2026-08-05 — CR-028: research bekreftet at Next.js 16.3 og nodemailer 9 sine offisielle breaking changes ikke berører denne kodebasen (se DECISIONS.md). `npm audit fix --force` kjørt, `next`/`eslint-config-next` re-pinnet eksakt til 16.3.0, `nodemailer` til ^9.0.4, `@types/nodemailer` til ^8.0.1. `npm audit` viser 0 sårbarheter, `npm run build`/`npx tsc --noEmit` grønne. Pushet, autodeployet, og bekreftet i produksjon av produkteier via en manuell OTP/bruksgodkjenning-smoke-test (avdekket samtidig ISSUE-013/CR-029, se under).
+
+ISSUE-013
+Status: Resolved
+Priority: Low
+Area: lib/email.ts, lib/format.ts
+Description: Under produksjonssmoke-testen av CR-028 rapporterte produkteier at klokkeslettet i bruksgodkjenning-bekreftelsesposten var feil (viste UTC-tid, ikke norsk lokaltid). Rotårsak: Dockerfile setter ingen `TZ`, containeren kjører i UTC, og tre `toLocale*`-kall manglet en eksplisitt `timeZone`-option.
+Blocker for: Ingenting — display-only bug, lagrede tidsstempler var alltid korrekte
+Opened: 2026-08-05
+Resolved: 2026-08-05 — CR-029: lagt til `timeZone: "Europe/Oslo"` i alle tre stedene (`lib/email.ts` x2, `lib/format.ts` sin `formatDate()`). Pushet og bekreftet av produkteier med en ny test-e-post — korrekt klokkeslett.

@@ -1,6 +1,6 @@
 # CR-028: Sikkerhetsoppgradering av gjenstående avhengigheter (ISSUE-012)
 
-**Status:** Done (lokalt verifisert, ikke pushet)
+**Status:** Done, bekreftet i produksjon
 **Created:** 2026-08-05
 
 ---
@@ -54,7 +54,7 @@ Ingen forventet endring.
 - [x] `npm run build` (inkl. `prisma generate` + TypeScript-sjekk) grønt
 - [x] `npx tsc --noEmit` grønt
 - [x] Manuell kodegjennomgang av `lib/email.ts` bekrefter ingen bruk av nodemailer sine berørte funksjoner (attachments via URL, OAuth2, `raw`)
-- [ ] Push til master og bekreftet ren autodeploy i Coolify (av produkteier, etter godkjenning i denne økten) — **gjenstår**
+- [x] Push til master og bekreftet ren autodeploy i Coolify — bekreftet av produkteier 2026-08-05 (OTP-innlogging og bruksgodkjenning-e-post fungerer)
 
 ## Required Tests
 - [ ] Unit: —（ingen automatiserte tester i prosjektet, jf. Risks i CURRENT-STATE.md)
@@ -78,4 +78,4 @@ Ingen.
 ## Validation Notes
 `npm audit fix --force` kjørt: `next` 16.2.6→16.3.0 (re-pinnet eksakt, ikke `^16.3.0`, i tråd med prosjektets eksisterende konvensjon), `nodemailer` ^8.0.7→^9.0.4. `eslint-config-next` manuelt oppdatert til `16.3.0` for å matche (samme konvensjon som før), `@types/nodemailer` bumpet til nyeste tilgjengelige `^8.0.1` (ingen v9-typer publisert på DefinitelyTyped ennå — API-et er uendret, ingen typefeil observert). `npm audit` viser 0 sårbarheter etter oppgradering. `npm run build` (Next.js 16.3.0, Turbopack) og `npx tsc --noEmit` begge grønne, alle 27 ruter (inkl. Proxy/middleware) kompilerte uten advarsler. Se `sessions/IMPLEMENTATION-LEDGER.md` for full build-output og `sessions/DECISIONS.md` for beslutningsgrunnlaget.
 
-Status oppdatert til Done — koden er verifisert lokalt, men IKKE pushet ennå. Push og faktisk produksjonsbekreftelse (autodeploy i Coolify, manuell OTP/bruksgodkjenning-test) gjenstår og krever produkteiers "push"-godkjenning + påfølgende manuell sjekk, jf. commit/push-arbeidsflyten i dette prosjektet.
+Pushet, autodeployet og bekreftet i produksjon av produkteier 2026-08-05 via manuell OTP/bruksgodkjenning-smoke-test. Denne testen avdekket en separat, pre-eksisterende feil (feil klokkeslett i bekreftelsesepost pga. manglende `timeZone`-option, ikke forårsaket av denne oppgraderingen) — dokumentert og løst som CR-029/ISSUE-013.

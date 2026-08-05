@@ -19,7 +19,7 @@ MIGRERING NESTEN FERDIG — CR-008: porting fra Vercel/Neon til Hetzner/Coolify/
 5. Deretter fjerne Vercel/Neon, marker CR-008 som Done
 
 ## Current Branch
-master (alle endringer CR-009–027 + emergency-fix er pushet direkte til master, ingen feature-branch brukt, arbeidskatalogen er clean ved sesjonsslutt)
+master (alle endringer CR-009–030 + emergency-fix er pushet direkte til master, ingen feature-branch brukt, arbeidskatalogen er clean ved sesjonsslutt)
 
 ## Blockers
 Manuelt Coolify/Hetzner-oppsett kan ikke utføres fra Claude Code-økten (ingen tilgang til Coolify-instansen). Krever produkteier/admin på `coolify.basbeta.no`.
@@ -69,7 +69,7 @@ Node.js 22 (matcher Dockerfile) installert på denne maskinen via `winget instal
 - CR-026 (Done, bekreftet i produksjon 2026-08-04) — Redigeringsskjemaets "Bruksrettigheter"-avkrysningsbokser erstattet med samme ApprovalSection/Bruksgodkjenning-widget som case-siden bruker. Fjerner en duplisert UI og duplisert lås/opplås-logikk. Bugfix underveis: ApprovalSection sine 5 knapper manglet `type="button"`, trigget skjema-innsending av EditCaseForm i stedet for å bare toggle trekkspillet — fikset
 - CR-028 (Done, bekreftet i produksjon 2026-08-05) — Sikkerhetsoppgradering av gjenstående avhengigheter (ISSUE-012): next 16.2.6→16.3.0, nodemailer ^8.0.7→^9.0.4, postcss/sharp (transitivt via next), eslint-config-next→16.3.0, @types/nodemailer→^8.0.1. `npm audit` 0 sårbarheter. Produkteiers smoke-test bekreftet at kjernefunksjonaliteten (OTP, bruksgodkjenning-e-post) fungerer — avdekket samtidig CR-029 (klokkeslett-bug, ikke forårsaket av denne oppgraderingen)
 - CR-029 (Done, bekreftet i produksjon 2026-08-05) — Feil klokkeslett i bruksgodkjenning-bekreftelsesepost og datovisninger: containeren kjører i UTC, tre `toLocale*`-kall manglet `timeZone`. Lagt til `timeZone: "Europe/Oslo"` i `lib/email.ts` (x2) og `lib/format.ts`
-- CR-030 (Done lokalt, ikke pushet) — "+ Legg inn case"-knappen flyttet fra topbaren til toppen av venstre kolonne (SideNav), omdøpt til "+ Ny Case". Build/tsc grønt. Venter på push-godkjenning
+- CR-030 (Done, bekreftet i produksjon 2026-08-05) — "+ Legg inn case"-knappen flyttet fra topbaren til toppen av venstre kolonne (SideNav), omdøpt til "+ Ny Case"
 - CR-027 (Done, bekreftet i produksjon 2026-08-04) — Filopplasting til "Materiale"-seksjonen (bilder jpg/png/webp/gif, PDF, doc/docx), 100MB total-grense per case, lagret i Hetzner Object Storage (S3-kompatibel, delt bucket med backup, egen prefiks `effektbibliotek/case-materiale/`). Nytt `CaseFile`-modell, nye API-routes for opplasting/nedlasting/last-ned-alle/sletting. `Materiale`-widgeten (utvidet `LinksSection.tsx`) viser nå lenker og filer på BÅDE case-siden (kun vis/last ned) og redigeringssiden (full administrasjon). Eksporter-knappen (CR-025) gir nå et zip med tekstsammendrag + alle faktiske filer, ikke bare filnavn. To bugfixer underveis: (1) manglende `type="button"` i `LinksSection.tsx` sine egne knapper (samme klasse som CR-026-fiksen), (2) `LinksSection` sin "legg til lenke"-widget var et nestet `<form>` inni EditCaseForm sitt eget `<form>` (ugyldig HTML), konvertert til en vanlig `<div>` med knapp-triggered handler. S3_*-env-variabler er satt i Coolify av produkteier
 
 ## Production URL
@@ -135,7 +135,10 @@ https://effektbibliotek.vercel.app (gammel, beholdes urørt inntil Coolify er fu
 - change-requests/CR-028-dependency-oppgradering.md — ny, dokumenterer next/nodemailer/postcss/sharp-oppgraderingen (ISSUE-012)
 - package.json, package-lock.json — `next` 16.2.6→16.3.0 (eksakt pin), `nodemailer` ^8.0.7→^9.0.4, `eslint-config-next`→16.3.0, `@types/nodemailer`→^8.0.1. Pushet og bekreftet i produksjon
 - change-requests/CR-029-tidssone-klokkeslett-bugfix.md — ny, dokumenterer klokkeslett-bugen funnet under CR-028-smoke-testen
-- lib/email.ts, lib/format.ts — lagt til `timeZone: "Europe/Oslo"` i alle tre `toLocale*`-kall (CR-029). Ikke pushet ennå
+- lib/email.ts, lib/format.ts — lagt til `timeZone: "Europe/Oslo"` i alle tre `toLocale*`-kall (CR-029). Pushet og bekreftet i produksjon
+- change-requests/CR-030-ny-case-knapp-sidemeny.md — ny, dokumenterer knappeflyttingen
+- components/layout/Topbar.tsx, components/layout/SideNav.tsx — "+ Legg inn case"-knapp flyttet fra topbar til toppen av sidemenyen, omdøpt til "+ Ny Case" (CR-030). Pushet og bekreftet visuelt i produksjon
+- app/godkjenning/[caseId]/[token]/ApprovalForm.tsx, page.tsx, lib/usage-approval.ts — produkteier sine egne manuelle ordlyd-justeringer på godkjenningssidens kvitteringsskjerm og personvernavsnitt (to commits: "copy: soften confirmation wording...", "General text updates" + én ekstra "Tekstendring"-commit produkteier pushet selv). Ingen funksjonell endring, `npx tsc --noEmit` ✓ verifisert av Claude for den delen som ble committet gjennom denne økten
 
 ## Tidligere sesjoners systemer (uendret denne økten)
 - app/api/cases/[id]/unlock-approval/route.ts, components/cases/LinksSection.tsx, app/(app)/admin/*, app/api/admin/*, components/layout/SideNav.tsx, proxy.ts
@@ -186,11 +189,10 @@ https://effektbibliotek.vercel.app (gammel, beholdes urørt inntil Coolify er fu
 - CR-030 ("Ny Case"-knapp flyttet til sidemeny): `npx tsc --noEmit` ✓, `npm run build` ✓. Pushet, bekreftet visuelt i produksjon av produkteier
 
 ## Next Actions (prioritert)
-1. Manuell E2E-verifisering av CR-025 sine egne flyter: opprett en test-case med lenker og godkjenningshistorikk, bekreft eierbytte fungerer for en ikke-admin eier
+1. **Eierbytte-testen (siste del av CR-025)** — opprett/bruk en andre brukerkonto (ikke-admin) og bekreft at eierbytte-dropdownen fungerer for en faktisk ikke-admin-eier. Blokkert inntil produkteier har en slik konto tilgjengelig
 2. **(Anbefalt, lav innsats)** Bekreft CR-015, CR-016, CR-018, CR-019 hver for seg hvis full sikkerhet ønskes: (a) sammenlign e-postforhåndsvisning mot faktisk mottatt e-post ord for ord, (b) svar på en godkjenningsforespørsel-e-post og verifiser at svaret går til caseeieren (reply-to), (c) les gjennom kvitteringssiden og personvernteksten på selve godkjenningssiden (ikke bare i e-post)
 3. Opprett admin-bruker i produksjonsdatabasen (første login + manuell `isAdmin`-sett i Coolify sin database-ressurs) — ISSUE-006, fortsatt åpen
 4. Ende-til-ende-test av gjenstående flyter: case-opprettelse, redigering av felt utenom bruksrettigheter (de er nå grundig testet)
 5. Utføre resterende `docs/COOLIFY-DEPLOY.md`-steg (backup, Uptime Kuma) — ISSUE-007, delvis løst
 6. Når Coolify-oppsettet er verifisert stabilt over noen dager: fjern Vercel-prosjektet og slett Neon-databasen (ingen data å ta vare på), marker CR-008 som Done
-7. ~~Vurder å ta tak i ISSUE-012~~ — Løst via CR-028, pushet og bekreftet i produksjon (OTP/bruksgodkjenning fungerer). Avdekket CR-029 (klokkeslett-bug) under smoke-testen — **push CR-029 når godkjent, deretter be produkteier bekrefte at klokkeslettet i en ny bruksgodkjenning-e-post er korrekt**
-8. Vurder om det skal legges til en enkel automatisert test/smoke-test-suite — hele denne økten er verifisert med `npm run build` + manuell produksjonstesting, ingen automatiserte tester finnes ennå i prosjektet
+7. Vurder om det skal legges til en enkel automatisert test/smoke-test-suite — hele denne økten (og alle tidligere) er verifisert med `npm run build` + manuell produksjonstesting, ingen automatiserte tester finnes ennå i prosjektet

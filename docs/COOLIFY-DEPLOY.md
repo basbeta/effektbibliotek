@@ -79,8 +79,8 @@ Alle migreringer lagt til etter Deploy B anvendes automatisk av `migrate deploy`
 
 - Legg `effektbibliotek.basbeta.no` til som monitor i Uptime Kuma (`status.basbeta.no`)
 
-## 7. Vercel/Neon (gammel produksjon)
+## 7. Vercel/Neon (gammel produksjon) — klarert for fjerning 2026-08-05
 
-Ikke tøm eller slett før Coolify-oppsettet er verifisert i minst noen dager. Når `effektbibliotek.basbeta.no` er bekreftet stabilt:
-- Fjern Vercel-prosjektet
-- Slett Neon-databasen (ingen data å ta vare på, jf. CR-008)
+Coolify-oppsettet er verifisert stabilt over flere uker og et bredt sett med CR-er. Produkteier ga 2026-08-05 klarsignal til full fjerning (ingen data av verdi der, jf. CR-008). Utføres manuelt av produkteier i respektive dashboards (utenfor det en Claude Code-økt har tilgang til):
+- [ ] Fjern Vercel-prosjektet
+- [ ] Slett Neon-databasen

@@ -69,13 +69,14 @@ Blocker for: Admin-funksjonalitet i prod
 Opened: 2026-05-22
 
 ISSUE-007
-Status: Partially Resolved
+Status: Resolved
 Priority: High
 Area: Coolify / Hetzner
 Description: CR-008 (port til Hetzner/Coolify/PostgreSQL 18) er ferdig på repo-siden, men det faktiske Coolify-oppsettet (database-ressurs, app-ressurs, domene, env-vars, backup, Uptime Kuma) må utføres manuelt av produkteier — kan ikke gjøres fra en Claude Code-økt uten tilgang til Coolify-instansen. Se docs/COOLIFY-DEPLOY.md.
 Blocker for: Faktisk publisering på effektbibliotek.basbeta.no
 Opened: 2026-07-31
 Update: 2026-08-03 — effektbibliotek.basbeta.no er live, men OTP-innlogging hang uten å sende e-post. Se ISSUE-008.
+Resolved: 2026-08-05 — Produkteier bekreftet at daglig backup og Uptime Kuma-overvåking begge er satt opp. Alle CR-008 acceptance criteria oppfylt, CR-008 markert Done.
 
 ISSUE-008
 Status: Resolved

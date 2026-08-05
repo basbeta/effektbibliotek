@@ -4,7 +4,7 @@
 > Read by Claude at session startup.
 
 ## Current Phase
-CR-008 IN PROGRESS — Repo portet til Docker/Coolify-oppsett. Manuelt Coolify-oppsett (database, app-ressurs, domene, env-vars) gjenstår, se `docs/COOLIFY-DEPLOY.md`.
+CR-008 DONE (2026-08-05) — Repo portet til Docker/Coolify-oppsett, alle acceptance criteria oppfylt (backup + Uptime Kuma bekreftet av produkteier). Vercel/Neon klarert for full fjerning, gjenstår kun selve utførelsen i deres respektive dashboards av produkteier.
 
 ## Stack
 | Lag | Valg |
@@ -41,7 +41,7 @@ app/                        # Next.js App Router
 
 lib/
   auth.ts                   # OTP-logikk, session
-  email.ts                  # Resend-adapter (isolert)
+  email.ts                  # Nodemailer/Brevo-adapter (isolert)
   prisma.ts                 # Prisma-klient singleton
   case-validation.ts        # Status/missing-info-logikk
   usage-approval.ts         # Bruksgodkjenning-logikk
@@ -75,10 +75,12 @@ Ingen sirkulære avhengigheter. Ingen direkte kryss-modul-tilgang.
 - PostgreSQL 18 (Coolify/Hetzner) — connection string i `DATABASE_URL`
 - Brevo SMTP — `BREVO_SMTP_LOGIN` / `BREVO_SMTP_KEY`
 - Coolify (Hetzner CX23) — deployment, Dockerfile build pack
-- Gammel Vercel/Neon-produksjon står urørt som fallback inntil Coolify-oppsettet er verifisert (se CR-008)
+- ~~Gammel Vercel/Neon-produksjon står urørt som fallback~~ — Klarert for full fjerning av produkteier 2026-08-05 (se CR-008)
 
 ## Last Structural Change
-2026-08-05 — CR-028: Avhengighetsoppgradering (ISSUE-012), ingen strukturell endring. `next` 16.2.6→16.3.0, `nodemailer` ^8.0.7→^9.0.4. `npm audit` 0 sårbarheter. Ikke pushet ennå.
+2026-08-05 — CR-008 avsluttet: alle acceptance criteria oppfylt, Vercel/Neon klarert for fjerning. Ubrukt `resend`-avhengighet fjernet fra `package.json`. Ingen strukturell kodeendring utover dette.
+
+2026-08-05 — CR-028: Avhengighetsoppgradering (ISSUE-012), ingen strukturell endring. `next` 16.2.6→16.3.0, `nodemailer` ^8.0.7→^9.0.4. `npm audit` 0 sårbarheter. Pushet og bekreftet i produksjon.
 
 2026-08-04 — CR-025: Case-sletting, eksport og eier-initiert eierbytte. `onDelete: Cascade` lagt til på `UsageApproval.case` og `CaseLink.case` (ny migrering `20260804130000_case_cascade_delete`, generert statisk uten live DB). Ny `DELETE /api/cases/[id]` (eier eller admin) og `GET /api/cases/[id]/export`. `/api/admin/users/list` åpnet for alle innloggede brukere. Se append-only-unntaket over.
 

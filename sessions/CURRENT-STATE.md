@@ -3,7 +3,7 @@
 > Updated at the end of every session. Read by Claude at startup.
 
 ## Current Phase
-MIGRERING NESTEN FERDIG — CR-008: porting fra Vercel/Neon til Hetzner/Coolify/PostgreSQL 18. Appen kjører stabilt på `effektbibliotek.basbeta.no`. Innlogging (CR-009–011), feilsporing (CR-012), direkte utsending av bruksgodkjenning (CR-013), rediger eget navn (CR-014), det forenklede bruksrettighets-systemet (CR-020–023), CR-025 (case-sletting/eksport/eierbytte) og CR-026 (Bruksgodkjenning-widget i redigeringsskjemaet) er alle bekreftet fungerende i produksjon av produkteier per 2026-08-04. CR-015–019 er deployet og ble funksjonelt utøvd gjennom den samme produksjonstestingen, men er ikke bekreftet feature-for-feature enkeltvis — se Next Recommended Actions punkt 2. ISSUE-011 er nå løst: appen kjører permanent på `prisma migrate deploy` igjen (etter en andre, kortvarig nedetid under selve oppryddingen — se DECISIONS.md 2026-08-04 for lærdommen om `--rolled-back` vs. `--applied`). **CR-027 (filopplasting til Materiale-seksjonen — bilder/PDF/Word, 100MB per case, lagret i Hetzner Object Storage) er fullt implementert, pushet og bekreftet fungerende i produksjon av produkteier 2026-08-04** (opplasting/nedlasting/last-ned-alle/sletting, synlig på selve case-siden i tillegg til redigeringssiden, Eksporter-knappen bundler faktiske filer i et zip-arkiv). S3-env-variabler er satt i Coolify av produkteier.
+MIGRERING NESTEN FERDIG — CR-008: porting fra Vercel/Neon til Hetzner/Coolify/PostgreSQL 18. Appen kjører stabilt på `effektbibliotek.basbeta.no`. Innlogging (CR-009–011), feilsporing (CR-012), direkte utsending av bruksgodkjenning (CR-013), rediger eget navn (CR-014), det forenklede bruksrettighets-systemet (CR-020–023), CR-025 (case-sletting/eksport/eierbytte) og CR-026 (Bruksgodkjenning-widget i redigeringsskjemaet) er alle bekreftet fungerende i produksjon av produkteier per 2026-08-04. CR-015–019 er deployet og ble funksjonelt utøvd gjennom den samme produksjonstestingen, men er ikke bekreftet feature-for-feature enkeltvis — se Next Recommended Actions punkt 2. ISSUE-011 er nå løst: appen kjører permanent på `prisma migrate deploy` igjen (etter en andre, kortvarig nedetid under selve oppryddingen — se DECISIONS.md 2026-08-04 for lærdommen om `--rolled-back` vs. `--applied`). **CR-027 (filopplasting til Materiale-seksjonen — bilder/PDF/Word, 100MB per case, lagret i Hetzner Object Storage) er fullt implementert, pushet og bekreftet fungerende i produksjon av produkteier 2026-08-04** (opplasting/nedlasting/last-ned-alle/sletting, synlig på selve case-siden i tillegg til redigeringssiden, Eksporter-knappen bundler faktiske filer i et zip-arkiv). S3-env-variabler er satt i Coolify av produkteier. **2026-08-05 (Session 8 fortsatt):** `npm audit fix` (uten `--force`) rettet 9 av 13 avhengighetssårbarheter, inkl. en produksjonsrelevant nodemailer-CVE — 4 gjenstår og krever en bevisst Next.js-major-oppgradering, sporet som ISSUE-012. ISSUE-005 (`docs/extracted.txt` committed) løst — gitignored og fjernet fra tracking, lokal kopi beholdt.
 
 ## Current Objectives
 1. Manuell E2E-verifisering av CR-025 sine egne flyter (uavhengig av CR-027): opprett en test-case med lenker og godkjenningshistorikk, bekreft eierbytte fungerer for en ikke-admin eier
@@ -23,6 +23,7 @@ Manuelt Coolify/Hetzner-oppsett kan ikke utføres fra Claude Code-økten (ingen 
 - **CR-015, 016, 018, 019 ikke enkeltvis bekreftet** (ISSUE-010) — lav risiko, men reply-to-headeren (CR-018) spesielt er kun kodebekreftet, ikke funksjonelt testet med et faktisk svar.
 - **Ingen tilgang til Coolify-instansen fra Claude Code-økter** — enhver fremtidig feilsøking som krever env-var-endringer, redeploy-trigger, eller database-terminal må gjøres av produkteier manuelt, med skjermbilder/copy-paste av logger tilbake til denne økten. Dette var flaskehalsen i mesteparten av CR-009–011-feilsøkingen.
 - **Vercel/Neon (gammel produksjon) står fortsatt aktiv** som fallback — ingen data av verdi der, men bør ryddes opp når Coolify er verifisert stabilt over noen dager (se Next Actions).
+- **4 gjenstående avhengighetssårbarheter** (ISSUE-012, ny 2026-08-05) — `next`, `postcss`, `sharp` og én `nodemailer`-CVE krever `npm audit fix --force` (Next.js-major utenfor pinnet range). Lav prioritet, bevisst utsatt, men bør vurderes som egen oppgave fremover.
 
 ## Løst: OTP-innlogging hang (CR-009, CR-010, CR-011) og feilsporing (CR-012)
 Etter CR-008-deploy hang OTP-innlogging. Rotårsak (CR-011, funnet via Coolify runtime-logger): den ferske Coolify-databasen hadde ingen tabeller, siden `prisma/migrations` aldri har eksistert i repoet og `prisma migrate deploy` derfor var en stille no-op. Fikset med `prisma db push --accept-data-loss`. CR-009 (SMTP-timeout) og CR-010 (DB connection-timeout) var reelle forbedringer underveis, men ikke selve rotårsaken. Full historikk (inkl. to feilslåtte deploys som crash-loopet appen) i `sessions/IMPLEMENTATION-LEDGER.md` og `sessions/DECISIONS.md`.
@@ -97,7 +98,7 @@ https://effektbibliotek.vercel.app (gammel, beholdes urørt inntil Coolify er fu
 - Dockerfile — `prisma migrate deploy` (CR-024), revertert til `db push --accept-data-loss` to ganger under ISSUE-011-hendelsene (CR-025-nedetiden, deretter en andre nedetid under selve oppryddingen), endelig tilbake på `prisma migrate deploy` (commit a25de77) — dette er GJELDENDE tilstand akkurat nå, ISSUE-011 er løst
 - prisma/schema.prisma — `onDelete: Cascade` på UsageApproval/CaseLink (CR-025), nytt `CaseFile`-modell med `onDelete: Cascade` fra start (CR-027)
 - prisma/migrations/20260804120000_init — baseline-migrering (CR-024), BOM fjernet i emergency-fix
-- prisma/migrations/20260804130000_case_cascade_delete — cascade-migrering (CR-025), BOM fjernet i emergency-fix, ikke ennå faktisk anvendt av `migrate deploy` (se ISSUE-011)
+- prisma/migrations/20260804130000_case_cascade_delete — cascade-migrering (CR-025), BOM fjernet i emergency-fix, nå korrekt anvendt av `migrate deploy` (ISSUE-011 løst 2026-08-05)
 - prisma/migrations/20260804140000_case_file — ny, `CaseFile`-tabell (CR-027), generert BOM-fritt fra start denne gangen
 - lib/case-export.ts — ny, bygger tekst-eksport av case/lenker/godkjenninger (CR-025)
 - lib/storage.ts — ny, S3-klient-wrapper for Hetzner Object Storage (CR-027). Fikk delte `buildCaseZip()`/`slugifyForFilename()`-hjelpefunksjoner, gjenbrukt av export- og download-all-routene
@@ -113,6 +114,12 @@ https://effektbibliotek.vercel.app (gammel, beholdes urørt inntil Coolify er fu
 - app/(app)/case/[id]/rediger/page.tsx — henter full usageApprovals-historikk, isOwner-prop (CR-025); henter owner.name, sender approverName/approverEmail/ownerName/token/appUrl til EditCaseForm (CR-026); henter og sender `files` (CR-027)
 - .env.example, docs/COOLIFY-DEPLOY.md — nye S3_*-env-variabler (CR-027)
 - package.json/package-lock.json — `@aws-sdk/client-s3`, `@aws-sdk/s3-request-presigner`, `jszip` lagt til (CR-027)
+
+## Nylig endret (Session 8, 2026-08-04–05)
+- Dockerfile — ISSUE-011 endelig løst: `db push` → `migrate deploy` (78c8dfc) → crash-loop nr. 2 (P3009 på `case_file`) → `db push` emergency-fix (a4490c7) → `migrate deploy` på nytt etter korrekt `migrate resolve --applied 20260804140000_case_file` (a25de77). GJELDENDE tilstand: `migrate deploy`, bekreftet stabil.
+- package-lock.json — `npm audit fix` (uten `--force`), 9 av 13 sårbarheter rettet, `package.json` uendret (78bf6c0)
+- .gitignore, docs/extracted.txt — ISSUE-005: lagt til gitignore, fjernet fra tracking med `git rm --cached`, lokal fil beholdt (53cf5ba)
+- sessions/*.md — løpende oppdatert gjennom økten for CR-027-bekreftelse, ISSUE-011 (to hendelser + løsning), ISSUE-012 (ny), ISSUE-005 (løst)
 
 ## Tidligere sesjoners systemer (uendret denne økten)
 - app/api/cases/[id]/unlock-approval/route.ts, components/cases/LinksSection.tsx, app/(app)/admin/*, app/api/admin/*, components/layout/SideNav.tsx, proxy.ts
@@ -156,6 +163,8 @@ https://effektbibliotek.vercel.app (gammel, beholdes urørt inntil Coolify er fu
 - Slett case / eksport / eierbytte for eier (CR-025): ✓ live i produksjon 2026-08-04. `onDelete: Cascade` bekreftet anvendt ("database er nå i sync med Prisma-skjema"). Manuell E2E-test av selve slette/eksport/eierbytte-flytene i UI-et gjenstår
 - Bruksrettigheter via ApprovalSection i redigeringsskjemaet (CR-026): ✓ bekreftet i produksjon av produkteier 2026-08-04, inkl. bugfix (manglende `type="button"`)
 - Filopplasting til Materiale-seksjonen (CR-027): `npm run build` ✓ (inkl. TypeScript-sjekk) på alle seks commits. Pushet, autodeployet og bekreftet fungerende i produksjon av produkteier 2026-08-04
+- npm audit fix (ISSUE-012 åpnet for resten): `npm run build` ✓ (Next.js forblir 16.2.6, ingen major-bump), pushet og autodeployet uten incident
+- docs/extracted.txt gitignore-opprydding (ISSUE-005): ingen kodeendring, ingen build påvirket, pushet uten incident
 
 ## Next Actions (prioritert)
 1. Manuell E2E-verifisering av CR-025 sine egne flyter: opprett en test-case med lenker og godkjenningshistorikk, bekreft eierbytte fungerer for en ikke-admin eier
@@ -164,4 +173,5 @@ https://effektbibliotek.vercel.app (gammel, beholdes urørt inntil Coolify er fu
 4. Ende-til-ende-test av gjenstående flyter: case-opprettelse, redigering av felt utenom bruksrettigheter (de er nå grundig testet)
 5. Utføre resterende `docs/COOLIFY-DEPLOY.md`-steg (backup, Uptime Kuma) — ISSUE-007, delvis løst
 6. Når Coolify-oppsettet er verifisert stabilt over noen dager: fjern Vercel-prosjektet og slett Neon-databasen (ingen data å ta vare på), marker CR-008 som Done
-7. Vurder om det skal legges til en enkel automatisert test/smoke-test-suite — hele denne økten er verifisert med `npm run build` + manuell produksjonstesting, ingen automatiserte tester finnes ennå i prosjektet
+7. Vurder å ta tak i ISSUE-012 (next/postcss/sharp/siste nodemailer-CVE) som en egen, testet oppgradering — ikke urgent, men bør ikke bli for gammel
+8. Vurder om det skal legges til en enkel automatisert test/smoke-test-suite — hele denne økten er verifisert med `npm run build` + manuell produksjonstesting, ingen automatiserte tester finnes ennå i prosjektet

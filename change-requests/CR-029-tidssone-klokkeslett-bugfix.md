@@ -1,6 +1,6 @@
 # CR-029: Feil klokkeslett i e-post og datovisning (tidssone-bug)
 
-**Status:** Done (lokalt verifisert, ikke pushet)
+**Status:** Done, bekreftet i produksjon
 **Created:** 2026-08-05
 
 ---
@@ -46,7 +46,7 @@ Ingen.
 ## Acceptance Criteria
 - [x] Alle tre stedene bruker `timeZone: "Europe/Oslo"`
 - [x] `npm run build` / `npx tsc --noEmit` grønt
-- [ ] Manuell verifisering i produksjon: ny bruksgodkjenning-e-post viser korrekt klokkeslett — **gjenstår, krever push + ny test**
+- [x] Manuell verifisering i produksjon: ny bruksgodkjenning-e-post viser korrekt klokkeslett — bekreftet av produkteier 2026-08-05
 
 ## Required Tests
 - [ ] Manuell: send en ny bruksgodkjenning-testinnsending etter deploy, bekreft klokkeslett i e-post matcher faktisk klokketid i Norge

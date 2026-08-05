@@ -73,6 +73,7 @@ export async function sendUsageApprovalConfirmation(params: {
   const timestamp = params.submittedAt.toLocaleString("nb-NO", {
     dateStyle: "long",
     timeStyle: "short",
+    timeZone: "Europe/Oslo",
   });
 
   await transporter.sendMail({
@@ -120,6 +121,7 @@ export async function sendUsageApprovalCopyToBas(params: {
   const timestamp = params.submittedAt.toLocaleString("nb-NO", {
     dateStyle: "long",
     timeStyle: "short",
+    timeZone: "Europe/Oslo",
   });
 
   await transporter.sendMail({

@@ -4,6 +4,7 @@ export function formatDate(date: Date | string): string {
     day: "numeric",
     month: "short",
     year: "numeric",
+    timeZone: "Europe/Oslo",
   });
 }
 

@@ -134,3 +134,11 @@ Description: Under produksjonssmoke-testen av CR-028 rapporterte produkteier at 
 Blocker for: Ingenting — display-only bug, lagrede tidsstempler var alltid korrekte
 Opened: 2026-08-05
 Resolved: 2026-08-05 — CR-029: lagt til `timeZone: "Europe/Oslo"` i alle tre stedene (`lib/email.ts` x2, `lib/format.ts` sin `formatDate()`). Pushet og bekreftet av produkteier med en ny test-e-post — korrekt klokkeslett.
+
+ISSUE-014
+Status: Open
+Priority: Low
+Area: package.json / package-lock.json (avhengigheter) — prisma, @prisma/config
+Description: `npm audit` viser 3 gjenværende høy-alvorlighetssårbarheter, alle fra samme kjede: `deepmerge-ts@7.1.5` (stack exhaustion ved merging av rekursive objektgrafer, GHSA-ggr8-5vv4-36mx), som `@prisma/config@7.9.1` avhenger av. `npm audit fix --force` foreslår å "fikse" dette ved å installere `prisma@6.12.0` — men dette er faktisk en NEDGRADERING fra installert `7.9.1`, ikke en oppgradering (npm velger laveste versjon uten sårbarheten). Verifisert mot npm-registeret 2026-08-18: `7.9.1` er nyeste stabile 7.x, ingen patch fikser dette ennå; neste utgivelse er `8.0.0-rc.4` (ikke stabil). Prosjektet bruker Prisma 7-spesifikke mønstre som mest sannsynlig IKKE fungerer på 6.12.0: `generator client { provider = "prisma-client" }` uten `previewFeatures`-flagg (kun preview fra 6.12, stabil uten flagg først i 7.x), `prisma.config.ts` som setter `datasource.url` og laster `.env` manuelt (7.x-mønster — 6.x auto-laster `.env` og forventer normalt `url` i selve `schema.prisma`), obligatorisk driver-adapter (`@prisma/adapter-pg` i `lib/prisma.ts`), og `datasource db` uten `url`-felt i `schema.prisma`. En nedgradering risikerer å knekke `prisma generate`, migrations og selve DB-tilkoblingen. Vurdert og bevisst IKKE kjørt.
+Blocker for: Ingenting akkurat nå — sårbarheten er CLI/config-tidspunkt (dev-tooling), ikke eksponert via kjørende produksjonskode
+Opened: 2026-08-18

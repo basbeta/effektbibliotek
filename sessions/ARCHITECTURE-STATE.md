@@ -78,6 +78,8 @@ Ingen sirkulære avhengigheter. Ingen direkte kryss-modul-tilgang.
 - ~~Gammel Vercel/Neon-produksjon står urørt som fallback~~ — Klarert for full fjerning av produkteier 2026-08-05 (se CR-008)
 
 ## Last Structural Change
+2026-10-20 — CR-031: Avhengighetsoppgradering, ingen strukturell endring. `next` 16.4.2 (eksakt), `nodemailer` ^10.1.7 (egne typer, `@types/nodemailer` fjernet), `prisma`/`@prisma/client`/`@prisma/adapter-pg` ^7.10.1. Audit 18→5, 0 critical. Pushet og bekreftet i produksjon. NB: Module Map-seksjonen over («Ingen moduler implementert ennå») er utdatert og beskriver planlagt, ikke faktisk struktur — bør oppdateres i egen, dokumentert endring.
+
 2026-08-05 — CR-008 avsluttet: alle acceptance criteria oppfylt, Vercel/Neon klarert for fjerning. Ubrukt `resend`-avhengighet fjernet fra `package.json`. Ingen strukturell kodeendring utover dette.
 
 2026-08-05 — CR-028: Avhengighetsoppgradering (ISSUE-012), ingen strukturell endring. `next` 16.2.6→16.3.0, `nodemailer` ^8.0.7→^9.0.4. `npm audit` 0 sårbarheter. Pushet og bekreftet i produksjon.

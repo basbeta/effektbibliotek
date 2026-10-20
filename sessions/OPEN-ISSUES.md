@@ -104,6 +104,7 @@ Area: components/cases/ApprovalSection.tsx, app/godkjenning/[caseId]/[token]/*
 Description: CR-015 (e-postforhåndsvisning), CR-016 (kvitteringstekst/footer), CR-018 (reply-to), CR-019 (personvernteksten på selve godkjenningssiden, ikke bare i e-post) er alle deployet og ble funksjonelt utøvd gjennom senere testing (ekte godkjenningsdata synlig i skjermbilder), men er ikke bekreftet feature-for-feature enkeltvis. Spesielt reply-to-headeren (CR-018) er umulig å verifisere uten faktisk å sende et svar på en godkjenningsforespørsel-e-post.
 Blocker for: Ingenting — lav risiko, kun ønskelig for full sikkerhet
 Opened: 2026-08-04
+Update: 2026-10-20 — CR-018 (Reply-To) og cc verifisert i faktisk mottatt e-post (Gmail «show details»): `reply-to` = caseeierens e-post, `cc` = caseeierens e-post, `from` = effektbibliotek@basbeta.no. Gjenstår for CR-015/016/019: ord-for-ord-sammenligning av forhåndsvisning vs. mottatt e-post, og lesing av kvitteringssiden/personvernteksten på godkjenningssiden (ikke utført).
 
 ISSUE-011
 Status: Resolved
@@ -136,9 +137,18 @@ Opened: 2026-08-05
 Resolved: 2026-08-05 — CR-029: lagt til `timeZone: "Europe/Oslo"` i alle tre stedene (`lib/email.ts` x2, `lib/format.ts` sin `formatDate()`). Pushet og bekreftet av produkteier med en ny test-e-post — korrekt klokkeslett.
 
 ISSUE-014
-Status: Open
+Status: Resolved
 Priority: Low
 Area: package.json / package-lock.json (avhengigheter) — prisma, @prisma/config
 Description: `npm audit` viser 3 gjenværende høy-alvorlighetssårbarheter, alle fra samme kjede: `deepmerge-ts@7.1.5` (stack exhaustion ved merging av rekursive objektgrafer, GHSA-ggr8-5vv4-36mx), som `@prisma/config@7.9.1` avhenger av. `npm audit fix --force` foreslår å "fikse" dette ved å installere `prisma@6.12.0` — men dette er faktisk en NEDGRADERING fra installert `7.9.1`, ikke en oppgradering (npm velger laveste versjon uten sårbarheten). Verifisert mot npm-registeret 2026-08-18: `7.9.1` er nyeste stabile 7.x, ingen patch fikser dette ennå; neste utgivelse er `8.0.0-rc.4` (ikke stabil). Prosjektet bruker Prisma 7-spesifikke mønstre som mest sannsynlig IKKE fungerer på 6.12.0: `generator client { provider = "prisma-client" }` uten `previewFeatures`-flagg (kun preview fra 6.12, stabil uten flagg først i 7.x), `prisma.config.ts` som setter `datasource.url` og laster `.env` manuelt (7.x-mønster — 6.x auto-laster `.env` og forventer normalt `url` i selve `schema.prisma`), obligatorisk driver-adapter (`@prisma/adapter-pg` i `lib/prisma.ts`), og `datasource db` uten `url`-felt i `schema.prisma`. En nedgradering risikerer å knekke `prisma generate`, migrations og selve DB-tilkoblingen. Vurdert og bevisst IKKE kjørt.
 Blocker for: Ingenting akkurat nå — sårbarheten er CLI/config-tidspunkt (dev-tooling), ikke eksponert via kjørende produksjonskode
 Opened: 2026-08-18
+Resolved: 2026-10-20 — CR-031: `@prisma/config@7.10.1` bruker `deepmerge-ts@8.0.2` (fikset i 8.0.0). `prisma`/`@prisma/client`/`@prisma/adapter-pg` oppgradert til ^7.10.1 (patch innen Prisma 7, IKKE 8.0.0-rc.*). Pushet (265a044), `migrate deploy` ren i produksjon.
+
+ISSUE-015
+Status: Open
+Priority: Low
+Area: package.json / package-lock.json (dev-avhengigheter) — eslint-config-next, braces
+Description: `npm audit` viser 5 high-sårbarheter etter CR-031, alle i samme lint-kjede: `eslint-config-next` → `@next/eslint-plugin-next` → `fast-glob` → `micromatch` → `braces` (DoS via stack-exhaustion ved dypt nøstede glob-mønstre, GHSA-vfj7-8cjw-p6xm). `npm audit fix --force` foreslår `eslint-config-next@14.2.35` — en NEDGRADERING fra 16.4.2 (samme feilmønster som ISSUE-014), bevisst IKKE kjørt. Kjører kun ved lint/build-tid, ikke i produksjonskoden.
+Blocker for: Ingenting — dev-only. Følg opp: sjekk om `eslint-config-next` får en patch som drar inn fikset `braces`/`micromatch`, eller bruk `overrides` i package.json for `braces` hvis en trygg versjon finnes (krever egen vurdering/CR).
+Opened: 2026-10-20

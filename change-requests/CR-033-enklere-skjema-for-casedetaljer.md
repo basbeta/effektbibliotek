@@ -71,17 +71,17 @@ Ny rute `/api/customers` krever innlogging og returnerer kun kundenavn (samme ti
 ---
 
 ## Acceptance Criteria
-- [ ] Pitchtekst er borte fra UI, API-tillatt-liste, søk, eksport, Oppfølging og `schema.prisma` (deploy A), og kolonnen er droppet (deploy B)
-- [ ] Nytt skjema: kjernefelt alltid synlige; valgfrie blokker kun synlige når de har innhold eller er lagt til; «+ Legg til»-knapper for de som mangler
-- [ ] Hver seksjon viser fremdrift; første ufullstendige er åpen; lukkede kort viser sammendrag
-- [ ] Kanal og Case-type er søkbare flervalg (tastatur: skriv for å filtrere, Enter velger, chips kan fjernes); alle eksisterende enum-verdier kan fortsatt velges
-- [ ] Effektmåling: tre felt som standard + «Flere måledetaljer»; Effekttype ligger inne i blokken; alle eksisterende data vises og lagres uendret
-- [ ] «⋯»-meny med Eksporter og Slett case (slette-bekreftelsen og fil/lenke-listen som før); sticky Lagre/Avbryt
-- [ ] Autofullføring av kundenavn på «Ny case»
-- [ ] Ingen eksisterende data går tapt bortsett fra `pitchText`: en case med alle felt utfylt kan åpnes, lagres uendret og gir identisk data
-- [ ] `npm test` grønt (inkl. nye tester), `npx tsc --noEmit` og `npm run build` grønt; lockfile uendret (ingen nye avhengigheter)
-- [ ] Verifisert i faktisk nettleser (Claude in Chrome) på en test-case som slettes etterpå: opprett, åpne alle blokker, flervalg, lagre, gjenåpne, ⋯-meny, slett
-- [ ] `specs/ui-spec.md` og `specs/requirements.md` oppdatert
+- [ ] Pitchtekst er borte fra UI, API-tillatt-liste, søk, eksport, Oppfølging og `schema.prisma` (deploy A ✓, verifisert i produksjon 2026-10-21), og kolonnen er droppet (deploy B — migrering forberedt, ikke pushet)
+- [x] Nytt skjema: kjernefelt alltid synlige; valgfrie blokker kun synlige når de har innhold eller er lagt til; «+ Legg til»-knapper for de som mangler
+- [x] Hver seksjon viser fremdrift; første ufullstendige er åpen; lukkede kort viser sammendrag
+- [x] Kanal og Case-type er søkbare flervalg (tastatur: skriv for å filtrere, Enter velger, chips kan fjernes); alle eksisterende enum-verdier kan fortsatt velges (alle valg kommer fra de samme label-tabellene som før)
+- [x] Effektmåling: tre felt som standard + «Flere måledetaljer»; Effekttype ligger inne i blokken; alle data vises og lagres uendret
+- [x] «⋯»-meny med Eksporter og Slett case (slette-bekreftelsen og fil/lenke-listen som før); sticky Lagre/Avbryt
+- [x] Autofullføring av kundenavn på «Ny case» (verifisert i produksjon: 7 unike, ikke-tomme forslag)
+- [x] Ingen eksisterende data går tapt bortsett fra `pitchText`: en case med alle felt utfylt kan åpnes, lagres uendret og gir identisk data (lokalt: utgående PATCH-payload identisk med utgangsdata; produksjon: case-siden identisk før/etter «lagre uten endring», 753 tegn)
+- [x] `npm test` grønt (187 tester), `npx tsc --noEmit` og `npm run build` grønt; lockfile uendret (ingen nye avhengigheter)
+- [x] Verifisert i faktisk nettleser (Claude in Chrome) på en test-case som ble slettet etterpå: opprett, åpne blokker, flervalg (inkl. æøå i filter), lagre, gjenåpne, lagre uendret, ⋯-meny, eksport, slett
+- [x] `specs/ui-spec.md` og `specs/requirements.md` oppdatert
 
 ## Required Tests
 - [ ] Unit: `lib/case-form.ts` (fremdrift, synlige blokker, første ufullstendige), kantverdier (tomme strenger, tomme lister)
@@ -106,4 +106,15 @@ Se «Utrulling i to deploys». Migreringen for B genereres med `prisma migrate d
 - Deploy B krever at deploy A er live og bekreftet.
 
 ## Validation Notes
-(Fylles ut ved implementasjon.)
+
+**Deploy A** (commit `3ab0f1d`, pushet 2026-10-21): 22 filer, ingen nye avhengigheter, lockfile uendret. `npm test` 187/187, `tsc`, `next build`, lint på endrede filer grønt. 5 mutasjoner av ny kode fanget av tester. Ruten `/api/customers` ga 404 til bygget var live og 200 etterpå.
+
+**Lokal visuell verifisering** (midlertidig forhåndsvisningsside med fiktive data, slettet før commit): flervalg med tastatur (Enter sender ikke skjemaet), chips legges til/fjernes, fremdrift oppdateres live, blokker, ⋯-meny, slette-panel. «Åpne fullt utfylt case og lagre» sendte payload identisk med utgangsdata og uten `pitchText`.
+
+**Produksjonsverifisering** (Claude in Chrome, egen test-case «TEST CR-033 skjema (slettes)», slettet etterpå): «Ny case» med autofullføring (7 unike forslag); redigeringsskjemaet; bransje, kanal (SMS, E-post), case-type, effekttype («økt salg» med æøå i filteret), innhold, effektmåling inkl. «Flere måledetaljer» (Periode, Datakilde), Kundevennlig tekst-blokk; lagring → alle felt vises på case-siden; gjenåpning viser tre ✓, to blokker med sammendrag og kun Relevans/Interne notater under «Legg til»; «lagre uten endring» ga identisk case-side; Oppfølging uten pitchtekst-gruppe; søk (`?q=`) fungerer; `GET /api/cases` har ingen `pitchText`-nøkkel; redigeringssiden for en eksisterende case åpnes (status 200); eksport gir `application/zip`; ⋯-meny → «Slett case …» → bekreftelse → 404 på case og eksport, borte fra biblioteket.
+
+**Funn underveis:** (1) `2>&1` blandet Prismas stderr inn i migrerings-SQL-en første gang (filen begynte med «nod…») — fanget av byte-sjekk, regenerert med kun stdout. (2) Første `git commit` feilet fordi doble anførselstegn i commit-meldingen ble delt opp av PowerShell 5.1; løst med `git commit -F` (ingenting ble committet av feil). (3) `next dev` genererte en `AGENTS.md`, slettet og ikke committet. (4) Eldre lint-feil i `oppfolging/page.tsx` → ISSUE-018 (ikke fra CR-033). (5) Kort ventetid etter push før ny versjon var live (~4–5 min).
+
+**Deploy B** (forberedt, IKKE pushet): `prisma/migrations/20261021120000_drop_case_pitchtext/migration.sql` = `ALTER TABLE "Case" DROP COLUMN "pitchText";` (én setning, kontrollert BOM-fri). Gjenstår: push → bekreft at `migrate deploy` melder at migreringen er anvendt og at appen fortsatt fungerer (åpne et bibliotek, åpne en case, lagre en test-case) → sette CR-033 til Done.
+
+**Ikke gjort (bevisst utsatt):** statusstyrt sjekkliste øverst, klikk-for-å-fylle-ut direkte på case-siden, caseformat/maler, bransjeforslag fra tidligere caser, autolagrede utkast (se «Proposed Solution»).

@@ -152,3 +152,19 @@ Area: package.json / package-lock.json (dev-avhengigheter) — eslint-config-nex
 Description: `npm audit` viser 5 high-sårbarheter etter CR-031, alle i samme lint-kjede: `eslint-config-next` → `@next/eslint-plugin-next` → `fast-glob` → `micromatch` → `braces` (DoS via stack-exhaustion ved dypt nøstede glob-mønstre, GHSA-vfj7-8cjw-p6xm). `npm audit fix --force` foreslår `eslint-config-next@14.2.35` — en NEDGRADERING fra 16.4.2 (samme feilmønster som ISSUE-014), bevisst IKKE kjørt. Kjører kun ved lint/build-tid, ikke i produksjonskoden.
 Blocker for: Ingenting — dev-only. Følg opp: sjekk om `eslint-config-next` får en patch som drar inn fikset `braces`/`micromatch`, eller bruk `overrides` i package.json for `braces` hvis en trygg versjon finnes (krever egen vurdering/CR).
 Opened: 2026-10-20
+
+ISSUE-016
+Status: Open
+Priority: Low
+Area: app/api/cases/[id]/route.ts (DELETE), app/api/cases/[id]/files/[fileId]/route.ts (DELETE)
+Description: Funnet under CR-032-testskriving, dokumentert i tester, IKKE endret. (1) Case-sletting rydder S3-objekter med `Promise.allSettled`: feiler S3-sletting, slettes casen likevel og objektene blir liggende i bucketen uten at noen får vite det (orphan-objekter, lagrer filer fra slettede caser — også personvernrelevant). Det er også grunnen til at S3-opprydding ved sletting ikke kan bekreftes fra appen alene. (2) Fil-sletting (`DELETE .../files/[fileId]`) har ingen try/catch: feiler S3, kastes en uhåndtert feil (500 uten garantert JSON, jf. CR-011-mønsteret) og DB-raden beholdes — trygg rekkefølge, men uten feilmelding til brukeren.
+Blocker for: Ingenting. Beslutning trengs: akseptere dagens atferd, eller logge/Sentry-rapportere avvist S3-sletting og/eller returnere JSON-feil (egen CR).
+Opened: 2026-10-21
+
+ISSUE-017
+Status: Open
+Priority: Low
+Area: lib/auth.ts, lib/format.ts
+Description: Mindre funn fra CR-032, ikke endret: (a) `isBasEmail("a@evil.com@bas.no")` er `true` (kun `endsWith("@bas.no")`); i praksis dekket fordi `request-code`-ruten avviser to `@` med regex før `isBasEmail` kalles, og det er testet på rutenivå — men funksjonen alene er ikke selvforsvarende. (b) `generateOtp()` bruker `crypto.randomInt(100000, 999999)` der øvre grense er eksklusiv, så `999999` kan aldri genereres (marginalt redusert entropi). (c) `formatBytes(1048575)` gir «1024 KB» fordi KB-grenen avrunder før MB-terskelen (kosmetisk).
+Blocker for: Ingenting.
+Opened: 2026-10-21

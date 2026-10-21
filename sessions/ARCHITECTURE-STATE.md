@@ -89,3 +89,5 @@ Ingen sirkulære avhengigheter. Ingen direkte kryss-modul-tilgang.
 2026-08-04 — CR-024: Innførte formelle Prisma-migreringer. `prisma/migrations/20260804120000_init` er baseline-migreringen (reflekterer skjema slik det var etter CR-023). Dockerfile CMD byttet fra `prisma db push --accept-data-loss` til `prisma migrate deploy`, rullet ut i to atskilte deploys pga. autodeploy på master (se sessions/DECISIONS.md for full rekkefølge). Bekreftet vellykket i produksjon 2026-08-04 — se sessions/OPEN-ISSUES.md ISSUE-009 (Resolved).
 
 2026-07-31 — CR-008: Dockerfile lagt til, e-post byttet fra Gmail SMTP til Brevo SMTP, `specs/nfr.md` oppdatert for Hetzner/Coolify/PostgreSQL 18. Faktisk deploy og domeneoppsett gjenstår manuelt.
+
+2026-10-21 — CR-032: Test-infrastruktur lagt til (Vitest 5.0.5, `vitest.config.mts`, 10 testfiler ved siden av koden, `docs/SMOKE-TEST.md`). Ingen endring i produksjonskode, Dockerfile eller build-script. `@types/node` ^20→^22. Se `specs/architecture.md` → «Testing (CR-032)».

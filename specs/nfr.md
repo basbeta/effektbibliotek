@@ -52,6 +52,7 @@
 - Coolify GitHub App auto-deployer fra valgt branch ved push
 - `prisma migrate deploy` kjører automatisk ved container-oppstart (idempotent)
 - Ingen separat CI-pipeline i fase 1
+- Automatiserte tester (Vitest, CR-032): `npm test` kjøres lokalt før push — kjøres ikke i Coolify-bygget og blokkerer ikke deploy. Manuell smoke-test: `docs/SMOKE-TEST.md`
 
 ## Constraints
 - Hetzner CX23: delt ressurs med andre basbeta-prosjekter på samme server

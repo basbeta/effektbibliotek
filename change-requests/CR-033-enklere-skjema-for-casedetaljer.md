@@ -1,6 +1,6 @@
 # CR-033: Enklere utfylling av casedetaljer (redigeringsskjema) og fjerning av Pitchtekst
 
-**Status:** In Progress (godkjent av produkteier 2026-10-21: «Begynn med din anbefaling først», Pitchtekst droppes helt, tap av data er greit — alle caser er testcaser)
+**Status:** Done (2026-10-21). Deploy A (`3ab0f1d`) verifisert i produksjon; deploy B (`9cb65b2`, drop av `pitchText`) pushet og funksjonstestet i produksjon. Migreringen er bekreftet anvendt i Coolify-loggen (skjermbilde fra produkteier 2026-10-21: «4 migrations found», «Applying migration `20261021120000_drop_case_pitchtext`», «All migrations have been successfully applied», Next.js 16.4.2 Ready). (Godkjent av produkteier 2026-10-21: «Begynn med din anbefaling først», Pitchtekst droppes helt, tap av data er greit — alle caser er testcaser)
 **Created:** 2026-10-21
 
 ---
@@ -71,7 +71,7 @@ Ny rute `/api/customers` krever innlogging og returnerer kun kundenavn (samme ti
 ---
 
 ## Acceptance Criteria
-- [ ] Pitchtekst er borte fra UI, API-tillatt-liste, søk, eksport, Oppfølging og `schema.prisma` (deploy A ✓, verifisert i produksjon 2026-10-21), og kolonnen er droppet (deploy B — migrering forberedt, ikke pushet)
+- [x] Pitchtekst er borte fra UI, API-tillatt-liste, søk, eksport, Oppfølging og `schema.prisma` (deploy A ✓, verifisert i produksjon 2026-10-21), og migreringen som dropper kolonnen er pushet (deploy B, `9cb65b2`). Anvendelsen er bekreftet i Coolify-loggen (se Validation Notes)
 - [x] Nytt skjema: kjernefelt alltid synlige; valgfrie blokker kun synlige når de har innhold eller er lagt til; «+ Legg til»-knapper for de som mangler
 - [x] Hver seksjon viser fremdrift; første ufullstendige er åpen; lukkede kort viser sammendrag
 - [x] Kanal og Case-type er søkbare flervalg (tastatur: skriv for å filtrere, Enter velger, chips kan fjernes); alle eksisterende enum-verdier kan fortsatt velges (alle valg kommer fra de samme label-tabellene som før)
@@ -115,6 +115,6 @@ Se «Utrulling i to deploys». Migreringen for B genereres med `prisma migrate d
 
 **Funn underveis:** (1) `2>&1` blandet Prismas stderr inn i migrerings-SQL-en første gang (filen begynte med «nod…») — fanget av byte-sjekk, regenerert med kun stdout. (2) Første `git commit` feilet fordi doble anførselstegn i commit-meldingen ble delt opp av PowerShell 5.1; løst med `git commit -F` (ingenting ble committet av feil). (3) `next dev` genererte en `AGENTS.md`, slettet og ikke committet. (4) Eldre lint-feil i `oppfolging/page.tsx` → ISSUE-018 (ikke fra CR-033). (5) Kort ventetid etter push før ny versjon var live (~4–5 min).
 
-**Deploy B** (forberedt, IKKE pushet): `prisma/migrations/20261021120000_drop_case_pitchtext/migration.sql` = `ALTER TABLE "Case" DROP COLUMN "pitchText";` (én setning, kontrollert BOM-fri). Gjenstår: push → bekreft at `migrate deploy` melder at migreringen er anvendt og at appen fortsatt fungerer (åpne et bibliotek, åpne en case, lagre en test-case) → sette CR-033 til Done.
+**Deploy B** (commit `9cb65b2`, pushet 2026-10-21): `prisma/migrations/20261021120000_drop_case_pitchtext/migration.sql` = `ALTER TABLE "Case" DROP COLUMN "pitchText";` (én setning, kontrollert BOM-fri og byte-identisk med den verifiserte SQL-en). Funksjonstest i produksjon etterpå (Claude in Chrome, test-case «TEST CR-033B migrering (slettes)» slettet etterpå): biblioteket (7 caser), åpne og redigere eksisterende case, Oppfølging; opprette (201), PATCH med mange felt (200, verdier lagret, `pitchText` ignorert og ikke i svaret), case-side og redigeringsside (200), søk, eksport (200), sletting (200 → 404); biblioteket tilbake på 7. **Migrasjonslogg (bekreftet av produkteier via skjermbilde fra Coolify):** `4 migrations found in prisma/migrations` → `Applying migration '20261021120000_drop_case_pitchtext'` → `All migrations have been successfully applied.` → Next.js 16.4.2 Ready (480 ms). Ingen feil. Funksjonstesten alene kunne ikke bevise dette (koden fra deploy A refererer ikke kolonnen), men loggen gjør det.
 
 **Ikke gjort (bevisst utsatt):** statusstyrt sjekkliste øverst, klikk-for-å-fylle-ut direkte på case-siden, caseformat/maler, bransjeforslag fra tidligere caser, autolagrede utkast (se «Proposed Solution»).

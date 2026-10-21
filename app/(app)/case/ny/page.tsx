@@ -1,12 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 export default function NyCasePage() {
   const router = useRouter();
   const [customerName, setCustomerName] = useState("");
+  const [customerSuggestions, setCustomerSuggestions] = useState<string[]>([]);
+
+  // Autocomplete from existing customers; the field works fine without it.
+  useEffect(() => {
+    fetch("/api/customers")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((names) => Array.isArray(names) && setCustomerSuggestions(names))
+      .catch(() => {});
+  }, []);
   const [title, setTitle] = useState("");
   const [summary, setSummary] = useState("");
   const [error, setError] = useState("");
@@ -70,6 +79,8 @@ export default function NyCasePage() {
           </label>
           <input
             type="text"
+            list="customer-suggestions"
+            autoComplete="off"
             value={customerName}
             onChange={(e) => setCustomerName(e.target.value)}
             placeholder="F.eks. Posten Norge"
@@ -81,6 +92,11 @@ export default function NyCasePage() {
             }}
             autoFocus
           />
+          <datalist id="customer-suggestions">
+            {customerSuggestions.map((name) => (
+              <option key={name} value={name} />
+            ))}
+          </datalist>
         </div>
 
         <div>

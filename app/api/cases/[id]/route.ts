@@ -74,7 +74,6 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
     "resultSummary",
     "learning",
     "relevance",
-    "pitchText",
     "internalNotes",
     "effectMetric",
     "beforeValue",

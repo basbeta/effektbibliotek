@@ -64,7 +64,7 @@ ISSUE-006
 Status: Open
 Priority: Low
 Area: Vercel / admin
-Description: Ingen admin-bruker er satt opp i produksjonsdatabasen ennå. Første bruker som logger inn via /login på prod får ikke isAdmin=true automatisk. Må settes manuelt i Neon.
+Description: Ingen admin-bruker er satt opp i produksjonsdatabasen ennå. Første bruker som logger inn via /login på prod får ikke isAdmin=true automatisk. Må settes manuelt i databasen (opprinnelig skrevet om Neon; prod ligger nå på Coolify/PostgreSQL, så det gjøres via Coolify sin database-ressurs). Uklart om saken fortsatt er reell — Admin-/eierbytte-funksjonalitet er brukt i produksjon; verifiser mot faktisk `isAdmin`-status før den lukkes.
 Blocker for: Admin-funksjonalitet i prod
 Opened: 2026-05-22
 
@@ -167,4 +167,12 @@ Priority: Low
 Area: lib/auth.ts, lib/format.ts
 Description: Mindre funn fra CR-032, ikke endret: (a) `isBasEmail("a@evil.com@bas.no")` er `true` (kun `endsWith("@bas.no")`); i praksis dekket fordi `request-code`-ruten avviser to `@` med regex før `isBasEmail` kalles, og det er testet på rutenivå — men funksjonen alene er ikke selvforsvarende. (b) `generateOtp()` bruker `crypto.randomInt(100000, 999999)` der øvre grense er eksklusiv, så `999999` kan aldri genereres (marginalt redusert entropi). (c) `formatBytes(1048575)` gir «1024 KB» fordi KB-grenen avrunder før MB-terskelen (kosmetisk).
 Blocker for: Ingenting.
+Opened: 2026-10-21
+
+ISSUE-018
+Status: Open
+Priority: Low
+Area: app/(app)/oppfolging/page.tsx
+Description: `npm run lint` feiler (1 error + 2 warnings) allerede i HEAD, uavhengig av CR-033: `react-hooks/purity` flagger `Date.now()` i `OppfolgingPage` (linje 57, `const cutoff = new Date(Date.now() - …)`). Siden dette er en server component som rendres per request er det trolig et falskt positivt i praksis, men lint-kommandoen kan ikke brukes som grønn port før det er håndtert. Warnings: ubrukte importer `lifecycleStatusLabels` og `usageApprovalStatusLabels` i `app/(app)/case/[id]/page.tsx`.
+Blocker for: Ingenting (lint kjøres ikke i build eller Docker). Kandidat for en liten opprydding-CR.
 Opened: 2026-10-21

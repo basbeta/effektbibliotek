@@ -30,7 +30,7 @@
 - Bruksgodkjenning = Ikke sendt
 - Ansvarlig = innlogget bruker
 
-**FR-CASE-003**: Case kan redigeres i seksjoner: grunninfo, klassifisering, innhold, effekt/læring, kundevennlig beskrivelse, bruksgodkjenning, materiale, interne notater.
+**FR-CASE-003**: Case kan redigeres i seksjoner: grunninfo, klassifisering, innhold, effekt/læring, kundevennlig beskrivelse, bruksgodkjenning, materiale, interne notater. Kjernen (grunninfo, klassifisering, innhold, bruksgodkjenning, materiale) er alltid synlig; valgfrie blokker (effektmåling, relevans, kundevennlig tekst, interne notater) vises når de har innhold eller brukeren legger dem til (CR-033). Skjermens oppførsel er beskrevet i `specs/ui-spec.md`.
 
 **FR-CASE-004**: Sette status til **Pågår** krever: kundenavn, tittel, beskrivelse, bransje, case-type, kanal, problem eller løsning.
 
@@ -48,7 +48,7 @@
 
 **FR-LIB-001**: Biblioteket er startsiden etter innlogging.
 
-**FR-LIB-002**: Fritekstsøk skal dekke: kundenavn, tittel, kort beskrivelse, problem, løsning, effekt, læring, pitchtekst, bransje, case-type, kanal, ansvarlig, tags.
+**FR-LIB-002**: Fritekstsøk skal dekke: kundenavn, tittel, kort beskrivelse, problem, løsning, effekt, læring, bransje, case-type, kanal, ansvarlig, tags. (Pitchtekst er fjernet som felt, CR-033.)
 
 **FR-LIB-003**: Filtrering skal støtte: status, bruksnivå, bransje, case-type, kanal, effekt-type, begrensninger (NDA/anonymisert/konkurranse), ansvarlig.
 
@@ -100,7 +100,7 @@
 
 **FR-PUB-001**: Kundevendt godkjenningsside er public (krever ikke innlogging). Route: `/godkjenning/:caseId/:token`.
 
-**FR-PUB-002**: Siden viser kun: kundenavn, casetittel, kundevennlig beskrivelse, kontaktperson i Bas, skjema og beta-notat. Ingen intern navigasjon, interne notater, pitchtekst eller andre caser vises.
+**FR-PUB-002**: Siden viser kun: kundenavn, casetittel, kundevennlig beskrivelse, kontaktperson i Bas, skjema og beta-notat. Ingen intern navigasjon, interne notater eller andre caser vises.
 
 **FR-PUB-003**: Kunden fyller ut navn (påkrevd), e-post (påkrevd) og rolle/tittel (valgfritt).
 
@@ -153,7 +153,7 @@ Minst ett valg (eller NDA) er påkrevd.
 
 ### Oppfølging
 
-**FR-OPPS-001**: Oppfølgingssiden viser caser gruppert etter hva som mangler: effekt eller læring, bruksgodkjenning, kundevennlig beskrivelse, pitchtekst, kanal/case-type, ikke oppdatert på lenge.
+**FR-OPPS-001**: Oppfølgingssiden viser caser gruppert etter hva som mangler: effekt eller læring, bruksgodkjenning, kundevennlig beskrivelse, kanal/case-type, ikke oppdatert på lenge. (Gruppen «pitchtekst» er fjernet sammen med feltet, CR-033.)
 
 **FR-OPPS-002**: Fra oppfølging kan bruker åpne, redigere og kopiere godkjenningstekst direkte.
 
@@ -191,7 +191,7 @@ Minst ett valg (eller NDA) er påkrevd.
 
 **NFR-001 — Sikkerhet (auth)**: Kun e-postadresser med domene `@bas.no` kan autentisere seg. Engangskode/token er kortlivet (≤ 5 minutter).
 
-**NFR-002 — Sikkerhet (public endpoint)**: Public godkjenningsendepunkt returnerer kun kundenavn, casetittel, kundevennlig beskrivelse, caseeier-navn/e-post og bruksgodkjenningsstatus. Interne data, notater, pitchtekst, andre caser og brukerlister eksponeres ikke.
+**NFR-002 — Sikkerhet (public endpoint)**: Public godkjenningsendepunkt returnerer kun kundenavn, casetittel, kundevennlig beskrivelse, caseeier-navn/e-post og bruksgodkjenningsstatus. Interne data, notater, andre caser og brukerlister eksponeres ikke.
 
 **NFR-003 — Sporbarhet**: Alle innsendte bruksgodkjenninger beholdes i historikk og kan ikke overskrives eller slettes automatisk.
 

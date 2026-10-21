@@ -31,7 +31,6 @@ export async function GET(request: NextRequest) {
       { solution: { contains: q, mode: "insensitive" } },
       { resultSummary: { contains: q, mode: "insensitive" } },
       { learning: { contains: q, mode: "insensitive" } },
-      { pitchText: { contains: q, mode: "insensitive" } },
     ];
   }
 

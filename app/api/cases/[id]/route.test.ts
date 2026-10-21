@@ -103,6 +103,7 @@ describe("PATCH /api/cases/[id]", () => {
         usageApprovalStatus: "not_requested",
         usageApprovalToken: "stjålet",
         createdByEmail: "falsk@example.com",
+        pitchText: "feltet er fjernet (CR-033) og skal ignoreres",
       }),
       ctx
     );

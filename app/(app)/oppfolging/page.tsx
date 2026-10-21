@@ -24,7 +24,6 @@ interface RawCase {
   resultSummary: string | null;
   learning: string | null;
   customerFacingSummary: string | null;
-  pitchText: string | null;
   usageApprovalStatus: string;
   owner: { name: string; email: string };
 }
@@ -61,7 +60,6 @@ export default async function OppfolgingPage() {
     missingEffect: [] as CaseRowData[],
     missingApproval: [] as CaseRowData[],
     missingCustomerSummary: [] as CaseRowData[],
-    missingPitch: [] as CaseRowData[],
     missingClassification: [] as CaseRowData[],
     stale: [] as CaseRowData[],
   };
@@ -78,9 +76,6 @@ export default async function OppfolgingPage() {
     }
     if (!c.customerFacingSummary) {
       groups.missingCustomerSummary.push(toRow(c, ["Kundevennlig beskrivelse"]));
-    }
-    if (!c.pitchText) {
-      groups.missingPitch.push(toRow(c, ["Pitchtekst"]));
     }
     if (!c.channels.length || !c.caseTypes.length) {
       const m: string[] = [];
@@ -133,10 +128,6 @@ export default async function OppfolgingPage() {
       <FollowUpGroup
         title="Mangler kundevennlig beskrivelse"
         cases={groups.missingCustomerSummary}
-      />
-      <FollowUpGroup
-        title="Mangler pitchtekst"
-        cases={groups.missingPitch}
       />
       <FollowUpGroup
         title="Mangler kanal eller case-type"

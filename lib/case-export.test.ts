@@ -28,7 +28,6 @@ const minimal: CaseExportData = {
   resultSummary: null,
   learning: null,
   relevance: null,
-  pitchText: null,
   internalNotes: null,
   effectMetric: null,
   beforeValue: null,
@@ -76,6 +75,7 @@ describe("buildCaseExportText", () => {
     ]) {
       expect(text).toContain(heading);
     }
+    expect(text).not.toContain("Pitchtekst");
     expect(text).not.toContain("Problem / kontekst:");
     expect(text).not.toContain("Bransje:");
     expect(text).not.toContain("Hva ble målt:");

@@ -56,7 +56,6 @@ export interface CaseExportData extends ApprovalChoices {
   resultSummary: string | null;
   learning: string | null;
   relevance: string | null;
-  pitchText: string | null;
   internalNotes: string | null;
   effectMetric: string | null;
   beforeValue: string | null;
@@ -98,7 +97,6 @@ export function buildCaseExportText(c: CaseExportData): string {
   if (c.resultSummary) lines.push(`\nEffekt:\n${c.resultSummary}`);
   if (c.learning) lines.push(`\nLæring:\n${c.learning}`);
   if (c.relevance) lines.push(`\nRelevans:\n${c.relevance}`);
-  if (c.pitchText) lines.push(`\nPitchtekst:\n${c.pitchText}`);
   if (c.customerFacingSummary) lines.push(`\nKundevennlig beskrivelse:\n${c.customerFacingSummary}`);
   if (c.internalNotes) lines.push(`\nInterne notater:\n${c.internalNotes}`);
   lines.push("");

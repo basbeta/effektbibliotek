@@ -50,7 +50,6 @@ model Case {
   resultSummary String?
   learning    String?
   relevance   String?
-  pitchText   String?
   internalNotes String?
 
   effectMetric      String?

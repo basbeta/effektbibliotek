@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/session";
-import { getMissingInfo } from "@/lib/cases";
+import { getMissingItems } from "@/lib/cases";
 import { formatDate } from "@/lib/format";
 import {
   lifecycleStatusLabels,
@@ -18,6 +18,7 @@ import UsageBadge from "@/components/cases/UsageBadge";
 import ApprovalSection from "@/components/cases/ApprovalSection";
 import OwnerNameEditor from "@/components/cases/OwnerNameEditor";
 import LinksSection from "@/components/cases/LinksSection";
+import MissingInfoPanel from "@/components/cases/MissingInfoPanel";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -38,7 +39,7 @@ export default async function CaseDetailPage({ params }: Props) {
 
   if (!c) notFound();
 
-  const missing = getMissingInfo(c);
+  const missing = getMissingItems(c);
   const canEdit = c.ownerEmail === session.userEmail || session.isAdmin;
 
   return (
@@ -116,57 +117,12 @@ export default async function CaseDetailPage({ params }: Props) {
         />
       </div>
 
-      {(missing.forOngoing.length > 0 || missing.forCompleted.length > 0 || missing.forPresentation.length > 0) && (
-        <div
-          className="rounded-xl p-4 mb-6"
-          style={{
-            backgroundColor: "var(--color-surface-muted)",
-            border: "1px solid var(--color-border-subtle)",
-          }}
-        >
-          <p className="text-sm font-medium mb-3" style={{ color: "var(--color-text-secondary)" }}>
-            Dette kan kompletteres
-          </p>
-          <div className="space-y-3">
-            {missing.forCompleted.length > 0 && (
-              <div>
-                <p className="text-xs font-medium mb-1" style={{ color: "var(--color-text-muted)" }}>
-                  For å sette Ferdigstilt:
-                </p>
-                <div className="flex flex-wrap gap-1.5">
-                  {missing.forCompleted.map((m) => (
-                    <span
-                      key={m}
-                      className="px-2 py-0.5 text-xs rounded"
-                      style={{ backgroundColor: "var(--color-warning-bg)", color: "var(--color-warning-text)" }}
-                    >
-                      {m}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-            {missing.forPresentation.length > 0 && (
-              <div>
-                <p className="text-xs font-medium mb-1" style={{ color: "var(--color-text-muted)" }}>
-                  For bruk i presentasjoner:
-                </p>
-                <div className="flex flex-wrap gap-1.5">
-                  {missing.forPresentation.map((m) => (
-                    <span
-                      key={m}
-                      className="px-2 py-0.5 text-xs rounded"
-                      style={{ backgroundColor: "var(--color-warning-bg)", color: "var(--color-warning-text)" }}
-                    >
-                      {m}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      <MissingInfoPanel
+        caseId={c.id}
+        canEdit={canEdit}
+        forCompleted={missing.forCompleted}
+        forPresentation={missing.forPresentation}
+      />
 
       <div
         className="rounded-xl p-5 mb-4"

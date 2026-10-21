@@ -167,6 +167,8 @@ Minst ett valg (eller NDA) er påkrevd.
 
 **FR-MISS-003**: Blokkerende feilmelding brukes kun når brukeren faktisk prøver en handling som ikke er tillatt (f.eks. sette Ferdigstilt uten nødvendig info).
 
+**FR-MISS-004** (CR-034): Eier og admin kan fylle ut et manglende felt direkte fra mangler-panelet på case-siden, uten å åpne redigeringsskjemaet. Lagringen skriver kun det aktuelle feltet. Andre brukere ser panelet som ren informasjon.
+
 ---
 
 ### Materiale og lenker

@@ -62,7 +62,12 @@ export default function MultiSelect({ label, options, selected, onChange, placeh
       e.preventDefault();
       setActive((i) => Math.max(i - 1, 0));
     } else if (e.key === "Escape") {
-      setOpen(false);
+      // While the list is open, Escape only closes the list. Once it is closed,
+      // Escape bubbles up so an enclosing editor can be dismissed.
+      if (open) {
+        e.stopPropagation();
+        setOpen(false);
+      }
     } else if (e.key === "Backspace" && query === "" && selected.length > 0) {
       remove(selected[selected.length - 1]);
     }

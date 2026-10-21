@@ -52,6 +52,23 @@ Oppførsel:
 Route: `/case/ny`
 Purpose: Registrere en case raskt med tre felt (FR-CASE-001). Kundenavn har autofullføring fra eksisterende kunder (`GET /api/customers`); feltet fungerer også uten forslag.
 
+### Case-side: «Dette kan kompletteres» (CR-034)
+
+Route: `/case/[id]`
+Purpose: Vise hva som mangler og la eier/admin fylle det ut med ett klikk (FR-MISS-001–004).
+Components: `MissingInfoPanel`, `MultiSelect`; ren logikk i `lib/cases.ts` (`getMissingItems`) og `lib/missing-fields.ts`.
+States: ikke-eier (ren tekst), eier/admin (klikkbare chips), editor åpen, saving, error.
+
+Oppførsel:
+- Panelet vises bare når noe mangler. Chips er gruppert: «For å sette Ferdigstilt» og «For bruk i presentasjoner».
+- For eier og admin er redigerbare chips knapper med «+» foran. Andre brukere ser vanlige tekst-chips uten knapper.
+- Et klikk åpner en liten editor i panelet for akkurat det feltet; kun én editor er åpen om gangen, og fokus flyttes til feltet.
+- Felttyper: Bransje (nedtrekk), Kanal og Case-type (søkbart flervalg), Problem / kontekst, Løsning og Kundevennlig beskrivelse (tekstboks), Effekt eller læring (to tekstbokser; det holder å fylle ut én).
+- «NDA er satt …» er informasjon og er ikke klikkbar.
+- «Lagre» er deaktivert til noe er fylt ut. Lagring sender kun de aktuelle feltene (trimmet) og for «Effekt eller læring» kun delen som er fylt ut. Etter lagring lukkes editoren og siden oppdateres.
+- Feil (403, serverfeil, nettverk) vises i editoren; det brukeren skrev beholdes.
+- Escape: i et flervalg med åpen forslagsliste lukker første Escape bare listen; Escape ellers (eller «Avbryt») forkaster editoren.
+
 ### [Screen Name]
 
 Route: [path]

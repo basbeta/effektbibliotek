@@ -1,6 +1,6 @@
 # CR-032: Minimal automatisert test-suite (Vitest) og skriftlig smoke-test-sjekkliste
 
-**Status:** In Progress (godkjent av produkteier 2026-10-21)
+**Status:** Done (2026-10-21, satt av produkteier etter push av 391baf6 og d49b70f; Coolify-bygget er ikke eksplisitt verifisert av Claude, og kriteriet om ekstern validering av `docs/SMOKE-TEST.md` er bevisst stående åpent)
 **Created:** 2026-10-20
 
 ---

@@ -1,6 +1,6 @@
 # CR-036: Eier går rett til «Rediger» når de åpner en case
 
-**Status:** In Progress (godkjent av produkteier 2026-10-22: «Når du klikker inn på en case du eier så skal du rett på "rediger" bildet. det er et unødvendig ekstra steg»)
+**Status:** Done (2026-10-22). Pushet som `3a225b2` og verifisert i produksjon av Claude via Claude in Chrome (test-caser slettet etterpå). Åpent forbehold: ikke-eier/admin-visning er ikke prøvd med en reell annen konto. (Godkjent av produkteier 2026-10-22: «Når du klikker inn på en case du eier så skal du rett på "rediger" bildet. det er et unødvendig ekstra steg»)
 **Created:** 2026-10-22
 
 ---
@@ -96,4 +96,6 @@ Ingen. Bygger på eksisterende redigeringsside.
 
 **Valg tatt av Claude (til gjennomgang):** bare eier omdirigeres (ikke admin på andres caser); etter «Lagre»/«Avbryt»/«Tilbake» havner eieren på visningen som før; eieren kommer til visningen via `?visning=1`. Alternativet «bli i redigering etter lagring» er IKKE gjort og kan være et naturlig neste steg.
 
-**Gjenstår:** push → Chrome-test mot produksjon (test-case slettes etterpå): åpne via bibliotek/direkte lenke → `/rediger`; `?visning=1` → visning; Tilbake/Avbryt/Lagre → visning uten løkke; ny case → redigering → Done. Ikke-eier/admin kan ikke testes med en reell annen konto (enhetstest).
+**Produksjonsverifisering (2026-10-22, Claude in Chrome; test-caser «TEST CR-036 rett til rediger (slettes)» og «TEST CR-036 ny case (slettes)», kunde «TESTKUNDE CR-036», begge slettet; biblioteket 6 → 6, ingen «TESTKUNDE» igjen):** ny versjon bekreftet live ved at `GET /case/[id]` ga et manuelt redirect-svar (tidligere 200; ca. 4–5 minutter etter push). (1) Ekte klikk på casekortet i biblioteket → `/case/[id]/rediger`. (2) «← Tilbake til case» → `/case/[id]?visning=1` (skrivebeskyttet side med «Rediger»-knapp og mangler-panel; ingen løkke). (3) Mangler-panelet (CR-034) på visningssiden: «+ Bransje» → Retail → lagret `industry: retail`, brukeren blir stående på `?visning=1` etter oppdatering. (4) «Rediger» på visningssiden → `/rediger`. (5) «Avbryt» i skjemaet → `/case/[id]?visning=1` (lenken har `?visning=1`). (6) «Lagre» i skjemaet → `/case/[id]?visning=1`. (7) Opprettelse via «Ny case»-skjemaet → landet direkte på `/case/[id]/rediger` med «Rediger case». (8) Sletting 200 for begge.
+
+**Ikke verifisert i produksjon:** at en admin som ikke eier casen ser visningen uten omdirigering, og at en ikke-eier som åpner `/rediger` sendes til visningen — kun enhetstest/kodegjennomgang (kun én brukerkonto tilgjengelig).

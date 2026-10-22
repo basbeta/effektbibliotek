@@ -30,7 +30,7 @@
 - Bruksgodkjenning = Ikke sendt
 - Ansvarlig = innlogget bruker
 
-**FR-CASE-003**: Case kan redigeres i seksjoner: grunninfo, klassifisering, innhold (løsning og effekt), bruksgodkjenning, materiale, interne notater. Kjernen (grunninfo, klassifisering, innhold, bruksgodkjenning, materiale) er alltid synlig; valgfrie blokker (effektmåling, relevans, interne notater) vises når de har innhold eller brukeren legger dem til (CR-033). Skjermens oppførsel er beskrevet i `specs/ui-spec.md`.
+**FR-CASE-003**: Case kan redigeres i seksjoner: grunninfo, klassifisering, innhold (løsning og effekt), bruksgodkjenning, materiale. Kjernen (grunninfo, klassifisering, innhold, bruksgodkjenning, materiale) er alltid synlig; den valgfrie blokken effektmåling vises når den har innhold eller brukeren legger den til (CR-033). Feltene relevans og interne notater er fjernet (CR-038). Skjermens oppførsel er beskrevet i `specs/ui-spec.md`.
 
 **FR-CASE-004**: Sette status til **Pågår** krever: kundenavn, tittel, beskrivelse, bransje, case-type, kanal, løsning.
 
@@ -38,11 +38,11 @@
 
 **FR-CASE-006**: (Fjernet i CR-035.) Feltet «kundevennlig beskrivelse» finnes ikke lenger; den kundevendte godkjenningssiden viser kun kundenavn, casetittel og godkjenningsskjemaet (se FR-PUB-002).
 
-**FR-CASE-007**: Interne notater skal aldri vises på kundevendte sider.
+**FR-CASE-007**: (Fjernet i CR-038.) Feltet «interne notater» finnes ikke lenger, så kravet om å skjule det på kundevendte sider er overflødig.
 
 **FR-CASE-008**: Brukeren skal til enhver tid kunne lagre og avslutte redigering, uavhengig av utfyllingsgrad.
 
-**FR-CASE-009** (CR-036): Når caseeieren åpner en case, går de rett til redigeringsvisningen (/case/[id]/rediger). Den skrivebeskyttede visningen er fortsatt tilgjengelig for eieren via /case/[id]?visning=1, og «Tilbake», «Avbryt» og «Lagre» i redigering fører dit. Andre brukere, inkludert admin på andres caser, ser den skrivebeskyttede visningen som før.
+**FR-CASE-009** (CR-036): Når caseeieren åpner en case, går de rett til redigeringsvisningen (/case/[id]/rediger). Den skrivebeskyttede visningen er fortsatt tilgjengelig for eieren via /case/[id]?visning=1, og «Tilbake» og «Avbryt»/«Lukk» i redigering fører dit. «Lagre» beholder brukeren i redigering og bekrefter med «✓ Lagret» (CR-037). Andre brukere, inkludert admin på andres caser, ser den skrivebeskyttede visningen som før.
 
 ---
 
@@ -102,7 +102,7 @@
 
 **FR-PUB-001**: Kundevendt godkjenningsside er public (krever ikke innlogging). Route: `/godkjenning/:caseId/:token`.
 
-**FR-PUB-002**: Siden viser kun: kundenavn, casetittel, kontaktperson i Bas, skjema og beta-notat. Ingen intern navigasjon, interne notater eller andre caser vises.
+**FR-PUB-002**: Siden viser kun: kundenavn, casetittel, kontaktperson i Bas, skjema og beta-notat. Ingen intern navigasjon eller andre caser vises.
 
 **FR-PUB-003**: Kunden fyller ut navn (påkrevd), e-post (påkrevd) og rolle/tittel (valgfritt).
 

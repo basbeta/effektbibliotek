@@ -26,8 +26,8 @@
 2. Åpne Klassifisering. I **Kanal**: skriv `sm`, trykk Enter. **Forventet:** «SMS» legges til som chip, og skjemaet sendes **ikke** inn. Trykk Escape (bare listen lukkes) og ta bort chipen med ×.
 3. Velg minst bransje, én kanal og én case-type (f.eks. «auto» → Automatisering).
 4. Trykk «+ Effektmåling» under «Legg til». **Forventet:** blokken åpnes med Effekttype, Hva ble målt, Resultat, Evidensnivå og «Flere måledetaljer» (Før, Etter, Periode, Datakilde).
-5. Fyll ut noe og trykk «Lagre». **Forventet:** du sendes til case-siden, og alt du fylte ut vises.
-6. Åpne «Rediger» igjen og trykk «Lagre» uten å endre noe. **Forventet:** case-siden er identisk (ingenting går tapt).
+5. Fyll ut noe og trykk «Lagre». **Forventet:** du blir **stående** i redigering (ingen navigasjon, åpne kort og scrollposisjon beholdes), «✓ Lagret» vises ved siden av knappene, og «Avbryt» heter nå «Lukk». Endre noe til: «Lagret» forsvinner. Trykk «Lukk» (eller «← Tilbake til case») for å se den skrivebeskyttede siden med alt du fylte ut.
+6. Åpne «Rediger» igjen og trykk «Lagre» uten å endre noe. **Forventet:** «✓ Lagret», og case-siden (via «Lukk») er identisk (ingenting går tapt).
 7. Nederst: «⋯» → «Eksporter …» og «Slett case …» (slettingen testes i steg 7 nedenfor).
 8. På «Ny case»: skriv de første bokstavene av en kunde som finnes fra før. **Forventet:** nettleseren foreslår eksisterende kundenavn.
 

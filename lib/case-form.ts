@@ -20,7 +20,6 @@ export interface CaseFormValues {
   caseTypes: string[];
   solution: string;
   resultSummary: string;
-  relevance: string;
   effectTypes: string[];
   effectMetric: string;
   beforeValue: string;
@@ -29,19 +28,16 @@ export interface CaseFormValues {
   measurementPeriod: string;
   dataSource: string;
   evidenceLevel: string;
-  internalNotes: string;
 }
 
 export type SectionKey = "basics" | "classification" | "content";
 export const SECTION_ORDER: SectionKey[] = ["basics", "classification", "content"];
 
-export type BlockKey = "effect" | "relevance" | "internalNotes";
+export type BlockKey = "effect";
 
 /** Optional blocks, in the order they appear in the form. */
 export const OPTIONAL_BLOCKS: { key: BlockKey; label: string }[] = [
   { key: "effect", label: "Effektmåling" },
-  { key: "relevance", label: "Relevans" },
-  { key: "internalNotes", label: "Interne notater" },
 ];
 
 export interface Progress {
@@ -95,19 +91,12 @@ export function getBlocksWithContent(v: CaseFormValues): BlockKey[] {
 
   const present: Record<BlockKey, boolean> = {
     effect: hasEffect,
-    relevance: filled(v.relevance),
-    internalNotes: filled(v.internalNotes),
   };
   return OPTIONAL_BLOCKS.map((b) => b.key).filter((key) => present[key]);
 }
 
 function join(parts: string[]): string {
   return parts.filter(Boolean).join(" · ");
-}
-
-function excerpt(text: string, max = 80): string {
-  const t = text.trim().replace(/\s+/g, " ");
-  return t.length > max ? `${t.slice(0, max - 1)}…` : t;
 }
 
 /** A short summary shown on a collapsed section card. Empty string when there is nothing to show. */
@@ -133,10 +122,6 @@ export function getBlockSummary(key: BlockKey, v: CaseFormValues): string {
       if (measured) return measured;
       return join(v.effectTypes.map((t) => effectTypeLabels[t as keyof typeof effectTypeLabels] ?? t));
     }
-    case "relevance":
-      return excerpt(v.relevance);
-    case "internalNotes":
-      return excerpt(v.internalNotes);
   }
 }
 

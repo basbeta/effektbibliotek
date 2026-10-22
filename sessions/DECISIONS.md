@@ -334,3 +334,14 @@ ALTERNATIVES CONSIDERED: Også omdirigere admin — avvist: admin må kunne se a
 RATIONALE: Minst mulig endring som oppfyller ønsket uten omdirigeringsløkke, og som bevarer all eksisterende funksjonalitet (visning, eksport, navnebytte, mangler-panel) for dem som trenger den.
 CONSEQUENCES: Noen få ting som bare finnes på visningssiden (blyanten for å endre eget navn, «Eksporter»-knappen, mangler-panelet fra CR-034) er mindre synlige for eieren; eksport finnes i ⋯-menyen i redigering. Lenken i varslings-e-posten til eieren åpner nå redigering. Valgene i (3) og etter-lagring-oppførselen ble gjort av Claude og står for produkteiers gjennomgang.
 DECIDED BY: both
+
+---
+
+DATE: 2026-10-22
+DECISION: Bli stående i redigering etter «Lagre», med «✓ Lagret»-bekreftelse (CR-037)
+CONTEXT: Etter CR-036 er redigering hovedskjermen for eieren. Produkteier: «Man bør bli stående på siden når man lagrer.» Tidligere sendte «Lagre» brukeren til den skrivebeskyttede siden.
+DECISION: (1) Etter vellykket lagring ingen navigasjon; `router.refresh()` oppdaterer serverdata, skjemaet beholder verdiene, åpne kort og scrollposisjon. (2) «✓ Lagret» (`role="status"`) vises til neste endring; vises ikke ved feil, og ikke hvis noe ble endret mens lagringen pågikk (endringsteller). (3) «Avbryt» heter «Lukk» når alt er lagret og fører fortsatt til `?visning=1`.
+ALTERNATIVES CONSIDERED: Autolagring — utenfor scope (egen, større endring). Advarsel om ulagrede endringer ved navigering — utenfor scope. Å bare vise en forbigående toast — avvist til fordel for en vedvarende indikator som også forteller om det finnes ulagrede endringer.
+RATIONALE: Minste endring som gir ønsket oppførsel og samtidig gjør lagringsstatus tydelig, siden brukeren ikke lenger får en sideendring som bevis på at lagringen gikk bra.
+CONSEQUENCES: Hvis eieren overfører eierskap og lagrer, mister de redigeringsrett og `router.refresh()` sender dem til visningen. Ingen komponenttester finnes; oppførselen verifiseres i nettleser. Valget om endringsteller og «Lukk»-navnet ble gjort av Claude.
+DECIDED BY: both

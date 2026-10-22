@@ -39,12 +39,12 @@ States: populated (eksisterende case), saving, error (påkrevde felt mangler / A
 
 Oppførsel:
 - **Kjerneseksjoner** (alltid synlige som sammenleggbare kort): Grunninfo (kundenavn*, tittel*, beskrivelse*, status, ansvarlig), Klassifisering (bransje, kanal, case-type), Innhold (løsning, effekt). Deretter Bruksgodkjenning og Materiale.
-- **Valgfrie blokker** — Effektmåling, Relevans, Interne notater: vises bare når de har innhold, eller når brukeren legger dem til via «+ Legg til»-knappene. Blokker med data vises alltid.
+- **Valgfri blokk** — Effektmåling: vises bare når den har innhold, eller når brukeren legger den til via «+ Legg til»-knappen. En blokk med data vises alltid. (Relevans og Interne notater er fjernet, CR-038.)
 - **Fremdrift:** hvert kjernekort viser «✓», «N av 3» (Innhold: «N av 2») eller «tom», basert på kravene i FR-CASE-004/005 (grunninfo: kundenavn, tittel, beskrivelse; klassifisering: bransje, kanal, case-type; innhold: løsning og effekt). Lukkede kort viser et kort sammendrag.
 - **Åpne kort:** bare første ufullstendige kjernekort er åpent ved innlasting; nye blokker åpnes når de legges til.
 - **Kanal, Case-type og Effekttype** er søkbare flervalg (skriv for å filtrere, piltaster, Enter velger, valgte vises som fjernbare chips). Enter sender aldri inn skjemaet fra et flervalg.
 - **Effektmåling** viser Effekttype, Hva ble målt, Resultat og Evidensnivå som standard; Før, Etter, Periode og Datakilde ligger under «Flere måledetaljer» (åpen hvis noe er utfylt).
-- **Sticky handlingslinje** nederst: Lagre, Avbryt, feilmelding, og «⋯»-meny (kun eier/admin) med Eksporter og «Slett case …». Sletting krever bekreftelse med oversikt over filer/lenker og godkjenninger (CR-025).
+- **Sticky handlingslinje** nederst: Lagre, Avbryt (heter «Lukk» når alt er lagret), «✓ Lagret» (vises etter vellykket lagring til neste endring, `role="status"`), feilmelding, og «⋯»-meny (kun eier/admin) med Eksporter og «Slett case …». Sletting krever bekreftelse med oversikt over filer/lenker og godkjenninger (CR-025).
 - Pitchtekst finnes ikke lenger (fjernet i CR-033).
 
 ### Åpne en case (CR-036)
@@ -54,7 +54,7 @@ Purpose: Eieren åpner en case oftest for å fylle den ut, så de går rett til 
 
 Oppførsel:
 - Eier som åpner en case (fra bibliotek, Mine caser, Oppfølging, lenke, eller rett etter opprettelse) sendes til `/case/[id]/rediger`.
-- `/case/[id]?visning=1` viser den skrivebeskyttede siden for eieren. «← Tilbake til case», «Avbryt» og lagring i redigeringsskjemaet sender eieren dit.
+- `/case/[id]?visning=1` viser den skrivebeskyttede siden for eieren. «← Tilbake til case» og «Avbryt»/«Lukk» i redigeringsskjemaet sender eieren dit. «Lagre» beholder brukeren i redigering (CR-037).
 - Andre brukere, inkludert admin på andres caser, ser den skrivebeskyttede siden uten omdirigering og kan trykke «Rediger». En ikke-eier som åpner `/rediger` sendes til visningen.
 
 ### Ny case (CR-033)

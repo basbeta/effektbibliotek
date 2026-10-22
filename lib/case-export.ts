@@ -52,8 +52,6 @@ export interface CaseExportData extends ApprovalChoices {
   effectTypes: EffectType[];
   solution: string | null;
   resultSummary: string | null;
-  relevance: string | null;
-  internalNotes: string | null;
   effectMetric: string | null;
   beforeValue: string | null;
   afterValue: string | null;
@@ -91,8 +89,6 @@ export function buildCaseExportText(c: CaseExportData): string {
   lines.push(c.summary);
   if (c.solution) lines.push(`\nLøsning:\n${c.solution}`);
   if (c.resultSummary) lines.push(`\nEffekt:\n${c.resultSummary}`);
-  if (c.relevance) lines.push(`\nRelevans:\n${c.relevance}`);
-  if (c.internalNotes) lines.push(`\nInterne notater:\n${c.internalNotes}`);
   lines.push("");
 
   lines.push("--- EFFEKTMÅLING ---");

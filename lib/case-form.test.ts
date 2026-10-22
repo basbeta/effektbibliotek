@@ -21,7 +21,6 @@ const empty: CaseFormValues = {
   caseTypes: [],
   solution: "",
   resultSummary: "",
-  relevance: "",
   effectTypes: [],
   effectMetric: "",
   beforeValue: "",
@@ -30,7 +29,6 @@ const empty: CaseFormValues = {
   measurementPeriod: "",
   dataSource: "",
   evidenceLevel: "",
-  internalNotes: "",
 };
 
 const complete: CaseFormValues = {
@@ -112,8 +110,6 @@ describe("getBlocksWithContent", () => {
   });
 
   it.each([
-    ["relevance", { relevance: "Relevant" }],
-    ["internalNotes", { internalNotes: "Notat" }],
     ["effect", { effectMetric: "Konvertering" }],
     ["effect", { resultValue: "+12 %" }],
     ["effect", { evidenceLevel: "documented" }],
@@ -126,18 +122,13 @@ describe("getBlocksWithContent", () => {
     expect(getBlocksWithContent({ ...complete, ...patch })).toEqual([key]);
   });
 
-  it("should not show a block for whitespace-only text", () => {
-    expect(getBlocksWithContent({ ...complete, relevance: "   ", internalNotes: "\n" })).toEqual([]);
+  it("should not show the effect block for whitespace-only text", () => {
+    expect(getBlocksWithContent({ ...complete, effectMetric: "   ", resultValue: "\n" })).toEqual([]);
   });
 
-  it("should return blocks in the fixed form order", () => {
-    const all = getBlocksWithContent({
-      ...complete,
-      internalNotes: "n",
-      relevance: "r",
-      effectMetric: "m",
-    });
-    expect(all).toEqual(OPTIONAL_BLOCKS.map((b) => b.key));
+  it("should have effect as the only optional block (CR-038)", () => {
+    expect(OPTIONAL_BLOCKS.map((b) => b.key)).toEqual(["effect"]);
+    expect(getBlocksWithContent({ ...complete, effectMetric: "m" })).toEqual(["effect"]);
   });
 });
 
@@ -194,19 +185,6 @@ describe("getBlockSummary", () => {
   it("should fall back to effect type labels when nothing was measured", () => {
     expect(getBlockSummary("effect", { ...empty, effectTypes: ["increased_sales", "time_saved"] })).toBe(
       "Økt salg · Tidsbesparelse"
-    );
-  });
-
-  it("should shorten long texts to an excerpt with an ellipsis", () => {
-    const long = "a".repeat(200);
-    const summary = getBlockSummary("relevance", { ...empty, relevance: long });
-    expect(summary).toHaveLength(80);
-    expect(summary.endsWith("…")).toBe(true);
-  });
-
-  it("should collapse whitespace and newlines in excerpts", () => {
-    expect(getBlockSummary("internalNotes", { ...empty, internalNotes: "linje 1\n\n  linje 2" })).toBe(
-      "linje 1 linje 2"
     );
   });
 });

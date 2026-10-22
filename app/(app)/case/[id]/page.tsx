@@ -145,7 +145,6 @@ export default async function CaseDetailPage({ params, searchParams }: Props) {
         <Section title="Beskrivelse">{c.summary}</Section>
         {c.solution && <Section title="Løsning">{c.solution}</Section>}
         {c.resultSummary && <Section title="Effekt">{c.resultSummary}</Section>}
-        {c.relevance && <Section title="Relevans">{c.relevance}</Section>}
       </div>
 
       {(c.effectMetric || c.beforeValue || c.afterValue || c.resultValue) && (
@@ -225,23 +224,6 @@ export default async function CaseDetailPage({ params, searchParams }: Props) {
           </div>
         )}
       </div>
-
-      {c.internalNotes && (
-        <div
-          className="rounded-xl p-5 mb-4"
-          style={{
-            backgroundColor: "#F5D5CE",
-            border: "1px solid #E8B5AB",
-          }}
-        >
-          <p className="text-xs font-semibold mb-2" style={{ color: "var(--color-error-text)" }}>
-            Interne notater
-          </p>
-          <p className="text-sm" style={{ color: "var(--color-text-secondary)" }}>
-            {c.internalNotes}
-          </p>
-        </div>
-      )}
 
       <div className="mb-4">
         <ApprovalSection

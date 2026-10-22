@@ -46,8 +46,6 @@ model Case {
 
   solution    String?
   resultSummary String?
-  relevance   String?
-  internalNotes String?
 
   effectMetric      String?
   beforeValue       String?

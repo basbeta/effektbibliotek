@@ -70,8 +70,6 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
     "tags",
     "solution",
     "resultSummary",
-    "relevance",
-    "internalNotes",
     "effectMetric",
     "beforeValue",
     "afterValue",

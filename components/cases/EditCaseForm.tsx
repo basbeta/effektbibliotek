@@ -41,8 +41,6 @@ interface CaseData {
   effectTypes: string[];
   solution: string | null;
   resultSummary: string | null;
-  relevance: string | null;
-  internalNotes: string | null;
   effectMetric: string | null;
   beforeValue: string | null;
   afterValue: string | null;
@@ -126,8 +124,6 @@ export default function EditCaseForm({
     effectTypes: initial.effectTypes ?? [],
     solution: n(initial.solution),
     resultSummary: n(initial.resultSummary),
-    relevance: n(initial.relevance),
-    internalNotes: n(initial.internalNotes),
     effectMetric: n(initial.effectMetric),
     beforeValue: n(initial.beforeValue),
     afterValue: n(initial.afterValue),
@@ -148,6 +144,10 @@ export default function EditCaseForm({
   const [showExtraEffect, setShowExtraEffect] = useState(() => hasExtraEffectDetails(form));
 
   const [saving, setSaving] = useState(false);
+  // True from a successful save until the next edit (CR-037); drives "✓ Lagret".
+  const [saved, setSaved] = useState(false);
+  // Counts edits so a save only counts as "Lagret" if nothing changed while it was in flight.
+  const editCountRef = useRef(0);
   const [error, setError] = useState("");
   const [allUsers, setAllUsers] = useState<{ email: string; name: string }[]>([]);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -188,6 +188,8 @@ export default function EditCaseForm({
 
   function set(field: string, value: unknown) {
     setForm((prev) => ({ ...prev, [field]: value }));
+    editCountRef.current += 1;
+    setSaved(false);
   }
 
   function toggleCard(key: string) {
@@ -226,6 +228,7 @@ export default function EditCaseForm({
     }
 
     setSaving(true);
+    const editsAtSaveStart = editCountRef.current;
     try {
       const res = await fetch(`/api/cases/${initial.id}`, {
         method: "PATCH",
@@ -236,8 +239,6 @@ export default function EditCaseForm({
           evidenceLevel: form.evidenceLevel || null,
           solution: form.solution || null,
           resultSummary: form.resultSummary || null,
-          relevance: form.relevance || null,
-          internalNotes: form.internalNotes || null,
           effectMetric: form.effectMetric || null,
           beforeValue: form.beforeValue || null,
           afterValue: form.afterValue || null,
@@ -253,7 +254,10 @@ export default function EditCaseForm({
         return;
       }
 
-      router.push(viewHref(initial.id));
+      // Stay on the page (CR-037): refresh server data in the background and
+      // confirm. The form already holds the saved values.
+      if (editCountRef.current === editsAtSaveStart) setSaved(true);
+      router.refresh();
     } catch {
       setError("Noe gikk galt. Prøv igjen.");
     } finally {
@@ -390,16 +394,6 @@ export default function EditCaseForm({
                   </div>
                 )}
               </>
-            )}
-            {b.key === "relevance" && (
-              <Field label="Relevans" htmlFor="field-relevance">
-                <textarea id="field-relevance" value={form.relevance} onChange={(e) => set("relevance", e.target.value)} rows={3} className={inputCls + " resize-y"} style={inputStyle} placeholder="Hvorfor er denne casen relevant for andre?" />
-              </Field>
-            )}
-            {b.key === "internalNotes" && (
-              <Field label="Interne notater" htmlFor="field-internalNotes">
-                <textarea id="field-internalNotes" value={form.internalNotes} onChange={(e) => set("internalNotes", e.target.value)} rows={3} className={inputCls + " resize-y"} style={inputStyle} placeholder="Vises aldri til kunder" />
-              </Field>
             )}
           </CollapsibleCard>
         ))}
@@ -545,8 +539,14 @@ export default function EditCaseForm({
             color: "var(--color-text-secondary)",
           }}
         >
-          Avbryt
+          {saved ? "Lukk" : "Avbryt"}
         </Link>
+
+        {saved && !error && (
+          <span role="status" className="text-sm font-medium" style={{ color: "var(--color-accent)" }}>
+            ✓ Lagret
+          </span>
+        )}
 
         {error && (
           <p role="alert" className="text-sm flex-1" style={{ color: "var(--color-error-text)" }}>

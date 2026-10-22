@@ -24,8 +24,6 @@ const minimal: CaseExportData = {
   effectTypes: [],
   solution: null,
   resultSummary: null,
-  relevance: null,
-  internalNotes: null,
   effectMetric: null,
   beforeValue: null,
   afterValue: null,
@@ -76,6 +74,8 @@ describe("buildCaseExportText", () => {
     expect(text).not.toContain("Problem / kontekst");
     expect(text).not.toContain("Læring");
     expect(text).not.toContain("Kundevennlig beskrivelse");
+    expect(text).not.toContain("Relevans");
+    expect(text).not.toContain("Interne notater");
     expect(text).not.toContain("Bransje:");
     expect(text).not.toContain("Hva ble målt:");
   });

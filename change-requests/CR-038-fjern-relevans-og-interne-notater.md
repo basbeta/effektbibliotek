@@ -93,4 +93,8 @@ Bygger på CR-035 (samme mønster) og CR-033 (valgfrie blokker).
 
 **Verifisering lokalt:** `prisma generate`, `tsc --noEmit`, `npm run build` grønt; 207 tester ✓ (4 færre enn før: excerpt- og relevans/notat-tester fjernet, 2 nye for «effect er eneste blokk» og eksport uten feltene); lockfile uendret. Mutasjonssjekk ikke gjort ennå.
 
-**Gjenstår:** push A → Chrome-test mot produksjon → deploy B (migrering, SQL uten `2>&1`) → bekrefte Coolify-logg → Done.
+**Deploy A pushet som `6af9f93` (sammen med CR-037) og verifisert i produksjon (Claude in Chrome, test-case «TEST CR-038 fjern relevans (slettes)» slettet etterpå):** bare «+ Effektmåling» under «Legg til»; visningssiden uten Relevans/Interne notater; API returnerer ikke feltene; `PATCH` med `relevance` ga 200 men lagret ingenting; lagring/«Lagret»/«Lukk» (CR-037) fungerte.
+
+**Deploy B laget lokalt (ikke pushet):** `prisma/migrations/20261022130000_drop_case_relevance_internalnotes/migration.sql` (`ALTER TABLE "Case" DROP COLUMN "internalNotes", DROP COLUMN "relevance";`), generert med `prisma migrate diff` fra forrige schema (kun stdout, første byte `2d 2d 20`, ingen BOM).
+
+**Gjenstår:** push B → bekrefte anvendt migrering i Coolify-logg (Claude ser ikke loggen) → rask funksjonssjekk i produksjon → Done.

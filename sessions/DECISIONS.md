@@ -345,3 +345,14 @@ ALTERNATIVES CONSIDERED: Autolagring — utenfor scope (egen, større endring). 
 RATIONALE: Minste endring som gir ønsket oppførsel og samtidig gjør lagringsstatus tydelig, siden brukeren ikke lenger får en sideendring som bevis på at lagringen gikk bra.
 CONSEQUENCES: Hvis eieren overfører eierskap og lagrer, mister de redigeringsrett og `router.refresh()` sender dem til visningen. Ingen komponenttester finnes; oppførselen verifiseres i nettleser. Valget om endringsteller og «Lukk»-navnet ble gjort av Claude.
 DECIDED BY: both
+
+---
+
+DATE: 2026-10-22
+DECISION: Fjern feltene Relevans og Interne notater helt (CR-038)
+CONTEXT: Produkteier: «Disse bør fjernes også» (om de to valgfrie kortene). Samme linje som CR-035; alle caser er testcaser, så tap av data er akseptert.
+DECISION: (1) Feltene fjernes fra skjema, visning, eksport, API-tillatt-liste og database. (2) Utrulling i to deploys (expand/contract): A = kode og schema uten migrering (`6af9f93`), B = migrasjon som dropper kolonnene (`27ade1b`). (3) FR-CASE-007 («Interne notater aldri på kundevendte sider») utgår. (4) Effektmåling blir eneste valgfrie blokk; `OPTIONAL_BLOCKS` beholdes som mekanisme.
+ALTERNATIVES CONSIDERED: Droppe kolonnene i samme deploy — avvist (kjørende gammel kode ville feilet under utrulling). Beholde dataene — avvist av produkteier.
+RATIONALE: Enklere skjema; to deploys unngår nedetid.
+CONSEQUENCES: Data i de to feltene er borte for godt. Ingen intern-notat-funksjon finnes lenger; skulle behovet komme tilbake må det lages som ny CR.
+DECIDED BY: both

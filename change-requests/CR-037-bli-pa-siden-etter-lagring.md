@@ -1,6 +1,6 @@
 # CR-037: Bli stående på redigeringssiden etter «Lagre»
 
-**Status:** In Progress (godkjent av produkteier 2026-10-22: «Man bør bli stående på siden når man lagrer»)
+**Status:** Done (2026-10-22; pushet `6af9f93`, verifisert i produksjon av Claude via Chrome: «Lagre» blir på siden, «✓ Lagret», «Lukk», «Lagret» forsvinner ved endring, verdier i DB; feilsituasjoner verifisert senere samme dag, se under) (godkjent av produkteier 2026-10-22: «Man bør bli stående på siden når man lagrer»)
 **Created:** 2026-10-22
 
 ---
@@ -93,4 +93,6 @@ Bygger på CR-036.
 
 **Ikke verifisert ennå:** selve oppførselen i nettleser — ingen komponenttester finnes (bevisst, jf. CR-033), så dette må sees i Chrome mot produksjon etter deploy.
 
-**Gjenstår:** push → Chrome-test mot produksjon (test-case slettes etterpå): fyll ut → «Lagre» → blir på `/rediger`, «✓ Lagret», «Lukk»; endre noe → «Lagret» forsvinner, «Avbryt»; feil → ingen «Lagret»; verdier i DB; åpne kort/scroll beholdt; «Lukk» → `?visning=1` → Done.
+**Feilsituasjoner verifisert i produksjon (2026-10-22, Chrome, test-case «TEST CR-037 lagrefeil (slettes)», slettet etterpå):** etter en vellykket lagring («✓ Lagret», «Lukk») ga (1) simulert serverfeil (`PATCH` → 500 med `{error}`, injisert via `window.fetch` i nettleseren, ikke mot serveren) feilmeldingen «Simulert serverfeil», ingen «Lagret», og «Lukk» ble «Avbryt»; (2) simulert nettverksfeil «Noe gikk galt. Prøv igjen.», ingen «Lagret»; (3) tom tittel (ekte klientvalidering) «Kundenavn, tittel og beskrivelse er påkrevd.», ingen forespørsel sendt, ingen «Lagret». Ingen av de mislykkede lagringene endret databasen (tittel uendret, bransje fortsatt tom). Merk: feilene 1–2 er simulert på klientsiden; en ekte serverfeil er ikke fremprovosert.
+
+**(Opprinnelig plan) Gjenstår:** push → Chrome-test mot produksjon (test-case slettes etterpå): fyll ut → «Lagre» → blir på `/rediger`, «✓ Lagret», «Lukk»; endre noe → «Lagret» forsvinner, «Avbryt»; feil → ingen «Lagret»; verdier i DB; åpne kort/scroll beholdt; «Lukk» → `?visning=1` → Done.

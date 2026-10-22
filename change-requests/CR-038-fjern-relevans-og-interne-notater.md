@@ -1,6 +1,6 @@
 # CR-038: Fjern Relevans og Interne notater
 
-**Status:** In Progress (godkjent av produkteier 2026-10-22: «Disse bør fjernes også», om kortene Relevans og Interne notater)
+**Status:** Done (2026-10-22; deploy A `6af9f93`, deploy B `27ade1b`; migrasjon bekreftet anvendt i Coolify-logg av produkteier; funksjonstestet i produksjon) (godkjent av produkteier 2026-10-22: «Disse bør fjernes også», om kortene Relevans og Interne notater)
 **Created:** 2026-10-22
 
 ---
@@ -97,4 +97,4 @@ Bygger på CR-035 (samme mønster) og CR-033 (valgfrie blokker).
 
 **Deploy B laget lokalt (ikke pushet):** `prisma/migrations/20261022130000_drop_case_relevance_internalnotes/migration.sql` (`ALTER TABLE "Case" DROP COLUMN "internalNotes", DROP COLUMN "relevance";`), generert med `prisma migrate diff` fra forrige schema (kun stdout, første byte `2d 2d 20`, ingen BOM).
 
-**Gjenstår:** push B → bekrefte anvendt migrering i Coolify-logg (Claude ser ikke loggen) → rask funksjonssjekk i produksjon → Done.
+**Deploy B pushet `27ade1b`; migrasjonen bekreftet anvendt i Coolify-logg av produkteier.** Funksjonssjekk i produksjon (test-case «TEST CR-038 etter migrering (slettes)», slettet etterpå, ingen «TESTKUNDE» igjen): opprett → landet i `/rediger` med bare «+ Effektmåling»; PATCH 200 (bransje, løsning, effektmål lagret); GET 200; visning 200 uten gamle felt; bibliotek 200; slett 200 → 404. Alle akseptkriterier oppfylt, bortsett fra mutasjonssjekk (ikke gjort; endringen er i hovedsak sletting av kode).

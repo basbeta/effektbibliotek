@@ -1,8 +1,9 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/session";
 import { getMissingItems } from "@/lib/cases";
+import { shouldOpenInEditMode } from "@/lib/case-routing";
 import { formatDate } from "@/lib/format";
 import {
   lifecycleStatusLabels,
@@ -20,10 +21,14 @@ import OwnerNameEditor from "@/components/cases/OwnerNameEditor";
 import LinksSection from "@/components/cases/LinksSection";
 import MissingInfoPanel from "@/components/cases/MissingInfoPanel";
 
-type Props = { params: Promise<{ id: string }> };
+type Props = {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ visning?: string | string[] }>;
+};
 
-export default async function CaseDetailPage({ params }: Props) {
+export default async function CaseDetailPage({ params, searchParams }: Props) {
   const { id } = await params;
+  const { visning } = await searchParams;
   const session = await requireSession();
 
   const c = await prisma.case.findUnique({
@@ -38,6 +43,12 @@ export default async function CaseDetailPage({ params }: Props) {
   });
 
   if (!c) notFound();
+
+  // The owner usually opens a case to fill it in, so go straight to the edit
+  // page (CR-036). `?visning=1` keeps the read-only page reachable.
+  if (shouldOpenInEditMode({ ownerEmail: c.ownerEmail, userEmail: session.userEmail, viewParam: visning })) {
+    redirect(`/case/${id}/rediger`);
+  }
 
   const missing = getMissingItems(c);
   const canEdit = c.ownerEmail === session.userEmail || session.isAdmin;

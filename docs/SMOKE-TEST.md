@@ -22,7 +22,7 @@
 2. **Forventet:** du lander på case-siden, status «Påbegynt», «Ikke avklart».
 
 ### 1b. Redigeringsskjemaet (CR-033)
-1. På case-siden: «Rediger». **Forventet:** kortene Grunninfo, Klassifisering og Innhold vises lukket/åpen etter hvor mye som er utfylt; bare det første ufullstendige kortet er åpent; hvert kort viser «✓», «N av 3» (Innhold: «N av 2») eller «tom».
+1. Åpne casen. **Forventet:** som eier havner du direkte i redigering (`/rediger`, CR-036); ellers trykker du «Rediger» på case-siden. Kortene Grunninfo, Klassifisering og Innhold vises lukket/åpen etter hvor mye som er utfylt; bare det første ufullstendige kortet er åpent; hvert kort viser «✓», «N av 3» (Innhold: «N av 2») eller «tom».
 2. Åpne Klassifisering. I **Kanal**: skriv `sm`, trykk Enter. **Forventet:** «SMS» legges til som chip, og skjemaet sendes **ikke** inn. Trykk Escape (bare listen lukkes) og ta bort chipen med ×.
 3. Velg minst bransje, én kanal og én case-type (f.eks. «auto» → Automatisering).
 4. Trykk «+ Effektmåling» under «Legg til». **Forventet:** blokken åpnes med Effekttype, Hva ble målt, Resultat, Evidensnivå og «Flere måledetaljer» (Før, Etter, Periode, Datakilde).

@@ -42,6 +42,8 @@
 
 **FR-CASE-008**: Brukeren skal til enhver tid kunne lagre og avslutte redigering, uavhengig av utfyllingsgrad.
 
+**FR-CASE-009** (CR-036): Når caseeieren åpner en case, går de rett til redigeringsvisningen (/case/[id]/rediger). Den skrivebeskyttede visningen er fortsatt tilgjengelig for eieren via /case/[id]?visning=1, og «Tilbake», «Avbryt» og «Lagre» i redigering fører dit. Andre brukere, inkludert admin på andres caser, ser den skrivebeskyttede visningen som før.
+
 ---
 
 ### Bibliotek — søk og filter

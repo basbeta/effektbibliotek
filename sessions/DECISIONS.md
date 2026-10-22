@@ -323,3 +323,14 @@ ALTERNATIVES CONSIDERED: Droppe kolonnene i samme deploy — avvist: Prisma-klie
 RATIONALE: Færre felt og færre krav gir et enklere skjema (mål fra CR-033/034). Reglene for Pågår/Ferdigstilt følger direkte av hvilke felt som finnes igjen; «løsning» og «effekt» er de to gjenværende innholdsfeltene.
 CONSEQUENCES: Data i de tre feltene går permanent tapt når deploy B kjøres (akseptert). `vision.md` jobb nr. 1 justert («løsning eller effekt»); visjonens bredere tema «læring» er uendret. Valgene om statuskrav og godkjenningssiden ble gjort av Claude ut fra instruksen og står for produkteiers gjennomgang. Tilsvarende regel som før: ikke commit forhåndsvisningsfiler; migrerings-SQL genereres uten `2>&1`.
 DECIDED BY: both
+
+---
+
+DATE: 2026-10-22
+DECISION: Eieren åpner redigeringsvisningen direkte; skrivebeskyttet visning via `?visning=1` (CR-036)
+CONTEXT: Produkteier: «Når du klikker inn på en case du eier så skal du rett på rediger-bildet. Det er et unødvendig ekstra steg.» En ren omdirigering fra `/case/[id]` til `/rediger` ville laget en løkke for «Tilbake»/«Avbryt»/lagring, som alle pekte på `/case/[id]`, og ville gjort at eieren aldri kom til visningssiden.
+DECISION: (1) `/case/[id]` omdirigerer server-side til `/rediger` kun når innlogget bruker er caseeier. (2) Skrivebeskyttet visning forblir tilgjengelig via `/case/[id]?visning=1`; «← Tilbake til case», «Avbryt» og lagring i redigeringsskjemaet peker dit (som tidligere gikk til visningen). (3) Admin på andres caser og andre brukere omdirigeres ikke. (4) Ren beslutningslogikk i `lib/case-routing.ts`, enhetstestet.
+ALTERNATIVES CONSIDERED: Også omdirigere admin — avvist: admin må kunne se andres caser uten å havne i redigering. Bli i redigering etter «Lagre» — ikke gjort nå (større endring i flyten enn bestilt); notert som mulig neste steg. Fjerne den skrivebeskyttede visningen helt — avvist: den brukes av ikke-eiere og for «forhåndsvisning».
+RATIONALE: Minst mulig endring som oppfyller ønsket uten omdirigeringsløkke, og som bevarer all eksisterende funksjonalitet (visning, eksport, navnebytte, mangler-panel) for dem som trenger den.
+CONSEQUENCES: Noen få ting som bare finnes på visningssiden (blyanten for å endre eget navn, «Eksporter»-knappen, mangler-panelet fra CR-034) er mindre synlige for eieren; eksport finnes i ⋯-menyen i redigering. Lenken i varslings-e-posten til eieren åpner nå redigering. Valgene i (3) og etter-lagring-oppførselen ble gjort av Claude og står for produkteiers gjennomgang.
+DECIDED BY: both

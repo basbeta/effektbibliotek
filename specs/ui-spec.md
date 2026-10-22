@@ -47,6 +47,16 @@ Oppførsel:
 - **Sticky handlingslinje** nederst: Lagre, Avbryt, feilmelding, og «⋯»-meny (kun eier/admin) med Eksporter og «Slett case …». Sletting krever bekreftelse med oversikt over filer/lenker og godkjenninger (CR-025).
 - Pitchtekst finnes ikke lenger (fjernet i CR-033).
 
+### Åpne en case (CR-036)
+
+Route: `/case/[id]`
+Purpose: Eieren åpner en case oftest for å fylle den ut, så de går rett til redigering uten et ekstra steg (FR-CASE-009).
+
+Oppførsel:
+- Eier som åpner en case (fra bibliotek, Mine caser, Oppfølging, lenke, eller rett etter opprettelse) sendes til `/case/[id]/rediger`.
+- `/case/[id]?visning=1` viser den skrivebeskyttede siden for eieren. «← Tilbake til case», «Avbryt» og lagring i redigeringsskjemaet sender eieren dit.
+- Andre brukere, inkludert admin på andres caser, ser den skrivebeskyttede siden uten omdirigering og kan trykke «Rediger». En ikke-eier som åpner `/rediger` sendes til visningen.
+
 ### Ny case (CR-033)
 
 Route: `/case/ny`

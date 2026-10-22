@@ -3,6 +3,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/session";
 import EditCaseForm from "@/components/cases/EditCaseForm";
+import { viewHref } from "@/lib/case-routing";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -29,7 +30,7 @@ export default async function RedigerCasePage({ params }: Props) {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <Link href={`/case/${id}`} className="text-sm" style={{ color: "var(--color-text-muted)" }}>
+        <Link href={viewHref(id)} className="text-sm" style={{ color: "var(--color-text-muted)" }}>
           ← Tilbake til case
         </Link>
       </div>

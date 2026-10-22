@@ -12,6 +12,7 @@ import {
   evidenceLevelLabels,
 } from "@/lib/labels";
 import { formatDate, formatBytes } from "@/lib/format";
+import { viewHref } from "@/lib/case-routing";
 import {
   OPTIONAL_BLOCKS,
   firstIncompleteSection,
@@ -252,7 +253,7 @@ export default function EditCaseForm({
         return;
       }
 
-      router.push(`/case/${initial.id}`);
+      router.push(viewHref(initial.id));
     } catch {
       setError("Noe gikk galt. Prøv igjen.");
     } finally {
@@ -536,7 +537,7 @@ export default function EditCaseForm({
           {saving ? "Lagrer..." : "Lagre"}
         </button>
         <Link
-          href={`/case/${initial.id}`}
+          href={viewHref(initial.id)}
           className="px-6 py-2.5 text-sm font-medium rounded-lg"
           style={{
             backgroundColor: "var(--color-surface)",

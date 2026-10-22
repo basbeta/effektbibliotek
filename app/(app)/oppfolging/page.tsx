@@ -19,11 +19,8 @@ interface RawCase {
   industry: string | null;
   caseTypes: string[];
   channels: string[];
-  problem: string | null;
   solution: string | null;
   resultSummary: string | null;
-  learning: string | null;
-  customerFacingSummary: string | null;
   usageApprovalStatus: string;
   owner: { name: string; email: string };
 }
@@ -59,23 +56,19 @@ export default async function OppfolgingPage() {
   const groups = {
     missingEffect: [] as CaseRowData[],
     missingApproval: [] as CaseRowData[],
-    missingCustomerSummary: [] as CaseRowData[],
     missingClassification: [] as CaseRowData[],
     stale: [] as CaseRowData[],
   };
 
   for (const c of cases) {
-    if (!c.resultSummary && !c.learning) {
-      groups.missingEffect.push(toRow(c, ["Effekt eller læring"]));
+    if (!c.resultSummary) {
+      groups.missingEffect.push(toRow(c, ["Effekt"]));
     }
     if (
       c.usageApprovalStatus === "not_requested" &&
       (c.lifecycleStatus === "ongoing" || c.lifecycleStatus === "completed")
     ) {
       groups.missingApproval.push(toRow(c, ["Bruksgodkjenning ikke sendt"]));
-    }
-    if (!c.customerFacingSummary) {
-      groups.missingCustomerSummary.push(toRow(c, ["Kundevennlig beskrivelse"]));
     }
     if (!c.channels.length || !c.caseTypes.length) {
       const m: string[] = [];
@@ -117,17 +110,13 @@ export default async function OppfolgingPage() {
       )}
 
       <FollowUpGroup
-        title="Mangler effekt eller læring"
+        title="Mangler effekt"
         cases={groups.missingEffect}
       />
       <FollowUpGroup
         title="Bruksgodkjenning ikke sendt"
         description="Caser med status Pågår eller Ferdigstilt uten bruksgodkjenning."
         cases={groups.missingApproval}
-      />
-      <FollowUpGroup
-        title="Mangler kundevennlig beskrivelse"
-        cases={groups.missingCustomerSummary}
       />
       <FollowUpGroup
         title="Mangler kanal eller case-type"

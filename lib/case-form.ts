@@ -18,10 +18,8 @@ export interface CaseFormValues {
   industry: string;
   channels: string[];
   caseTypes: string[];
-  problem: string;
   solution: string;
   resultSummary: string;
-  learning: string;
   relevance: string;
   effectTypes: string[];
   effectMetric: string;
@@ -31,20 +29,18 @@ export interface CaseFormValues {
   measurementPeriod: string;
   dataSource: string;
   evidenceLevel: string;
-  customerFacingSummary: string;
   internalNotes: string;
 }
 
 export type SectionKey = "basics" | "classification" | "content";
 export const SECTION_ORDER: SectionKey[] = ["basics", "classification", "content"];
 
-export type BlockKey = "effect" | "relevance" | "customerFacing" | "internalNotes";
+export type BlockKey = "effect" | "relevance" | "internalNotes";
 
 /** Optional blocks, in the order they appear in the form. */
 export const OPTIONAL_BLOCKS: { key: BlockKey; label: string }[] = [
   { key: "effect", label: "Effektmåling" },
   { key: "relevance", label: "Relevans" },
-  { key: "customerFacing", label: "Kundevennlig tekst" },
   { key: "internalNotes", label: "Interne notater" },
 ];
 
@@ -71,15 +67,12 @@ export function getSectionProgress(v: CaseFormValues): Record<SectionKey, Progre
   const basics = [v.customerName, v.title, v.summary].filter(filled).length;
   const classification =
     (filled(v.industry) ? 1 : 0) + (v.channels.length > 0 ? 1 : 0) + (v.caseTypes.length > 0 ? 1 : 0);
-  const content =
-    (filled(v.problem) ? 1 : 0) +
-    (filled(v.solution) ? 1 : 0) +
-    (filled(v.resultSummary) || filled(v.learning) ? 1 : 0);
+  const content = (filled(v.solution) ? 1 : 0) + (filled(v.resultSummary) ? 1 : 0);
 
   return {
     basics: progress(basics, 3),
     classification: progress(classification, 3),
-    content: progress(content, 3),
+    content: progress(content, 2),
   };
 }
 
@@ -103,7 +96,6 @@ export function getBlocksWithContent(v: CaseFormValues): BlockKey[] {
   const present: Record<BlockKey, boolean> = {
     effect: hasEffect,
     relevance: filled(v.relevance),
-    customerFacing: filled(v.customerFacingSummary),
     internalNotes: filled(v.internalNotes),
   };
   return OPTIONAL_BLOCKS.map((b) => b.key).filter((key) => present[key]);
@@ -130,12 +122,7 @@ export function getSectionSummary(key: SectionKey, v: CaseFormValues): string {
       ...v.caseTypes.map((t) => caseTypeLabels[t as keyof typeof caseTypeLabels] ?? t),
     ]);
   }
-  return join([
-    filled(v.problem) ? "Problem" : "",
-    filled(v.solution) ? "Løsning" : "",
-    filled(v.resultSummary) ? "Effekt" : "",
-    filled(v.learning) ? "Læring" : "",
-  ]);
+  return join([filled(v.solution) ? "Løsning" : "", filled(v.resultSummary) ? "Effekt" : ""]);
 }
 
 /** A short summary for a collapsed optional block. */
@@ -148,8 +135,6 @@ export function getBlockSummary(key: BlockKey, v: CaseFormValues): string {
     }
     case "relevance":
       return excerpt(v.relevance);
-    case "customerFacing":
-      return excerpt(v.customerFacingSummary);
     case "internalNotes":
       return excerpt(v.internalNotes);
   }

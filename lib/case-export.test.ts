@@ -17,16 +17,13 @@ const minimal: CaseExportData = {
   customerName: "Testkunde AS",
   title: "Testcase",
   summary: "Kort beskrivelse",
-  customerFacingSummary: null,
   lifecycleStatus: "started",
   industry: null,
   caseTypes: [],
   channels: [],
   effectTypes: [],
-  problem: null,
   solution: null,
   resultSummary: null,
-  learning: null,
   relevance: null,
   internalNotes: null,
   effectMetric: null,
@@ -76,7 +73,9 @@ describe("buildCaseExportText", () => {
       expect(text).toContain(heading);
     }
     expect(text).not.toContain("Pitchtekst");
-    expect(text).not.toContain("Problem / kontekst:");
+    expect(text).not.toContain("Problem / kontekst");
+    expect(text).not.toContain("Læring");
+    expect(text).not.toContain("Kundevennlig beskrivelse");
     expect(text).not.toContain("Bransje:");
     expect(text).not.toContain("Hva ble målt:");
   });
@@ -93,7 +92,7 @@ describe("buildCaseExportText", () => {
   it("should include filled optional fields and translate enum values to labels", () => {
     const text = buildCaseExportText({
       ...minimal,
-      problem: "Problemtekst",
+
       solution: "Løsningstekst",
       effectMetric: "Konvertering",
       evidenceLevel: "documented",
@@ -102,7 +101,7 @@ describe("buildCaseExportText", () => {
       channels: ["sms", "email"],
       caseTypes: ["automation"],
     });
-    expect(text).toContain("Problem / kontekst:\nProblemtekst");
+    
     expect(text).toContain("Løsning:\nLøsningstekst");
     expect(text).toContain("Hva ble målt: Konvertering");
     expect(text).toContain(`Evidensnivå: ${evidenceLevelLabels.documented}`);

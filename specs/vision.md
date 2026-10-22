@@ -20,7 +20,7 @@ Effektbiblioteket senker terskelen for å registrere caser tidlig — også før
 Kjerneprinsipp: **Ikke ferdig er bedre enn ikke registrert.**
 
 ## The Three Core Jobs
-1. **Finne relevant case** — raskt søke, filtrere og finne caser basert på kunde, bransje, kanal, problemstilling, løsning, effekt eller læring.
+1. **Finne relevant case** — raskt søke, filtrere og finne caser basert på kunde, bransje, kanal, løsning eller effekt.
 2. **Legge inn ny case** — registrere en ny case raskt med få påkrevde felter.
 3. **Komplettere eller forbedre en case** — se hva som mangler, redigere casen, legge til informasjon og håndtere bruksgodkjenning.
 

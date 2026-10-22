@@ -27,10 +27,8 @@ export async function GET(request: NextRequest) {
       { customerName: { contains: q, mode: "insensitive" } },
       { title: { contains: q, mode: "insensitive" } },
       { summary: { contains: q, mode: "insensitive" } },
-      { problem: { contains: q, mode: "insensitive" } },
       { solution: { contains: q, mode: "insensitive" } },
       { resultSummary: { contains: q, mode: "insensitive" } },
-      { learning: { contains: q, mode: "insensitive" } },
     ];
   }
 

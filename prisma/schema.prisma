@@ -35,7 +35,6 @@ model Case {
   customerName          String
   title                 String
   summary               String
-  customerFacingSummary String?
 
   lifecycleStatus  CaseLifecycleStatus @default(started)
 
@@ -45,10 +44,8 @@ model Case {
   effectTypes EffectType[]
   tags        String[]
 
-  problem     String?
   solution    String?
   resultSummary String?
-  learning    String?
   relevance   String?
   internalNotes String?
 

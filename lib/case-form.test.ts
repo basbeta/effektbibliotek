@@ -19,10 +19,8 @@ const empty: CaseFormValues = {
   industry: "",
   channels: [],
   caseTypes: [],
-  problem: "",
   solution: "",
   resultSummary: "",
-  learning: "",
   relevance: "",
   effectTypes: [],
   effectMetric: "",
@@ -32,7 +30,6 @@ const empty: CaseFormValues = {
   measurementPeriod: "",
   dataSource: "",
   evidenceLevel: "",
-  customerFacingSummary: "",
   internalNotes: "",
 };
 
@@ -44,7 +41,6 @@ const complete: CaseFormValues = {
   industry: "retail",
   channels: ["sms"],
   caseTypes: ["automation"],
-  problem: "P",
   solution: "L",
   resultSummary: "E",
 };
@@ -54,7 +50,7 @@ describe("getSectionProgress", () => {
     const p = getSectionProgress(empty);
     expect(p.basics).toEqual({ done: 0, total: 3, complete: false });
     expect(p.classification).toEqual({ done: 0, total: 3, complete: false });
-    expect(p.content).toEqual({ done: 0, total: 3, complete: false });
+    expect(p.content).toEqual({ done: 0, total: 2, complete: false });
   });
 
   it("should report every section complete for a complete case", () => {
@@ -63,9 +59,9 @@ describe("getSectionProgress", () => {
   });
 
   it("should count whitespace-only text as empty", () => {
-    const p = getSectionProgress({ ...complete, title: "   ", problem: "\n\t" });
+    const p = getSectionProgress({ ...complete, title: "   ", solution: "\n\t" });
     expect(p.basics.done).toBe(2);
-    expect(p.content.done).toBe(2);
+    expect(p.content.done).toBe(1);
   });
 
   it("should count each classification part separately", () => {
@@ -74,11 +70,23 @@ describe("getSectionProgress", () => {
     expect(getSectionProgress({ ...empty, caseTypes: ["winback"] }).classification.done).toBe(1);
   });
 
-  it("should accept either effect or learning as the third content item", () => {
-    const base = { ...complete, resultSummary: "", learning: "" };
-    expect(getSectionProgress(base).content.done).toBe(2);
-    expect(getSectionProgress({ ...base, resultSummary: "E" }).content.complete).toBe(true);
-    expect(getSectionProgress({ ...base, learning: "L" }).content.complete).toBe(true);
+  it("should need both a solution and an effect for the content section to be complete", () => {
+    expect(getSectionProgress({ ...complete, solution: "", resultSummary: "" }).content).toEqual({
+      done: 0,
+      total: 2,
+      complete: false,
+    });
+    expect(getSectionProgress({ ...complete, resultSummary: "" }).content).toEqual({
+      done: 1,
+      total: 2,
+      complete: false,
+    });
+    expect(getSectionProgress({ ...complete, solution: "" }).content).toEqual({
+      done: 1,
+      total: 2,
+      complete: false,
+    });
+    expect(getSectionProgress(complete).content.complete).toBe(true);
   });
 });
 
@@ -89,7 +97,7 @@ describe("firstIncompleteSection", () => {
       firstIncompleteSection(getSectionProgress({ ...complete, industry: "" }))
     ).toBe("classification");
     expect(
-      firstIncompleteSection(getSectionProgress({ ...complete, problem: "" }))
+      firstIncompleteSection(getSectionProgress({ ...complete, solution: "" }))
     ).toBe("content");
   });
 
@@ -105,7 +113,6 @@ describe("getBlocksWithContent", () => {
 
   it.each([
     ["relevance", { relevance: "Relevant" }],
-    ["customerFacing", { customerFacingSummary: "Trygg tekst" }],
     ["internalNotes", { internalNotes: "Notat" }],
     ["effect", { effectMetric: "Konvertering" }],
     ["effect", { resultValue: "+12 %" }],
@@ -127,7 +134,6 @@ describe("getBlocksWithContent", () => {
     const all = getBlocksWithContent({
       ...complete,
       internalNotes: "n",
-      customerFacingSummary: "k",
       relevance: "r",
       effectMetric: "m",
     });
@@ -172,8 +178,8 @@ describe("getSectionSummary", () => {
   });
 
   it("should name the content parts that are filled in", () => {
-    expect(getSectionSummary("content", { ...empty, problem: "p", learning: "l" })).toBe(
-      "Problem · Læring"
+    expect(getSectionSummary("content", { ...empty, solution: "s", resultSummary: "e" })).toBe(
+      "Løsning · Effekt"
     );
   });
 });

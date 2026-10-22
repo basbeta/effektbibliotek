@@ -2,7 +2,7 @@
 
 > Dekker det de automatiserte testene (`npm test`, CR-032) ikke kan: ekte database, S3, SMTP og UI.
 > Kjør etter avhengighetsoppgraderinger, Prisma-/migreringsendringer og endringer i e-post, filhåndtering eller innlogging.
-> Første gang kjørt 2026-10-20 etter CR-031.
+> Første gang kjørt 2026-10-20 etter CR-031. Utvidet 2026-10-21 med skjemaflyten (CR-033) og fyll-ut-fra-panel (CR-034).
 
 ## Regler
 - Bruk **kun en egen test-case**. Rør aldri kollegaers caser.
@@ -20,6 +20,27 @@
 ### 1. Opprett test-case
 1. «+ Ny Case» → fyll ut kunde, tittel og beskrivelse (fiktive data) → «Opprett case».
 2. **Forventet:** du lander på case-siden, status «Påbegynt», «Ikke avklart».
+
+### 1b. Redigeringsskjemaet (CR-033)
+1. På case-siden: «Rediger». **Forventet:** kortene Grunninfo, Klassifisering og Innhold vises lukket/åpen etter hvor mye som er utfylt; bare det første ufullstendige kortet er åpent; hvert kort viser «✓», «N av 3» (Innhold: «N av 2») eller «tom».
+2. Åpne Klassifisering. I **Kanal**: skriv `sm`, trykk Enter. **Forventet:** «SMS» legges til som chip, og skjemaet sendes **ikke** inn. Trykk Escape (bare listen lukkes) og ta bort chipen med ×.
+3. Velg minst bransje, én kanal og én case-type (f.eks. «auto» → Automatisering).
+4. Trykk «+ Effektmåling» under «Legg til». **Forventet:** blokken åpnes med Effekttype, Hva ble målt, Resultat, Evidensnivå og «Flere måledetaljer» (Før, Etter, Periode, Datakilde).
+5. Fyll ut noe og trykk «Lagre». **Forventet:** du sendes til case-siden, og alt du fylte ut vises.
+6. Åpne «Rediger» igjen og trykk «Lagre» uten å endre noe. **Forventet:** case-siden er identisk (ingenting går tapt).
+7. Nederst: «⋯» → «Eksporter …» og «Slett case …» (slettingen testes i steg 7 nedenfor).
+8. På «Ny case»: skriv de første bokstavene av en kunde som finnes fra før. **Forventet:** nettleseren foreslår eksisterende kundenavn.
+
+### 1c. Fyll ut fra «Dette kan kompletteres» (CR-034)
+Brukes på en case der noe mangler (en ny test-case mangler alt). Gjelder eier og admin.
+1. På case-siden: chipene under «Dette kan kompletteres» har «+» foran. **Forventet:** «NDA er satt …» (hvis den vises) er vanlig tekst, ikke klikkbar.
+2. Klikk «+ Bransje». **Forventet:** en liten editor åpnes med fokus i feltet, og «Lagre» er **deaktivert** til du har valgt noe. Velg en bransje og lagre. **Forventet:** chipen forsvinner, og bransjen vises på siden.
+3. Klikk «+ Kanal»: skriv `sm`, Enter, Escape (bare listen lukkes, editoren blir stående), «Lagre». Gjenta for «+ Case-type».
+4. Klikk «+ Løsning», skriv noe og trykk **Avbryt**. **Forventet:** ingenting lagres. Åpne igjen: feltet er tomt. Skriv, og lagre denne gangen.
+5. Gjenta for «+ Effekt» (lagres som Effekt; Løsning er urørt).
+6. Kontroller at feltene Problem / kontekst, Læring og Kundevennlig beskrivelse **ikke** finnes (verken i skjemaet, på case-siden eller som chips), og at godkjenningssiden (steg 6) bare viser kundenavn, tittel og skjemaet — ingen beskrivelsesboks. (Fjernet i CR-035.)
+7. **Forventet til slutt:** når ingenting mangler, forsvinner hele «Dette kan kompletteres»-panelet.
+8. (Hvis mulig, med en annen konto som ikke er eier/admin) panelet viser vanlig tekst uten «+» og uten klikk.
 
 ### 2. Bruksgodkjenning — send
 1. Åpne «Bruksgodkjenning» på case-siden.

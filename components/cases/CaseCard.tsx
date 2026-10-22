@@ -19,7 +19,6 @@ export interface CaseCardData {
   industry: string | null;
   caseTypes: string[];
   channels: string[];
-  learning: string | null;
   resultSummary: string | null;
   owner: { name: string; email: string };
   updatedAt: string | Date;
@@ -35,7 +34,7 @@ export default function CaseCard({ c }: { c: CaseCardData }) {
     metaChips.push(caseTypeLabels[ct as keyof typeof caseTypeLabels] ?? ct);
   });
 
-  const effectPreview = c.resultSummary || c.learning;
+  const effectPreview = c.resultSummary;
 
   return (
     <Link

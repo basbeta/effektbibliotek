@@ -6,19 +6,9 @@ export interface MissingInfo {
 
 /**
  * Stable ids for the things that can be missing, so the UI can offer the right
- * editor for each one (CR-034). "problemOrSolution" and "nda" are not single
- * editable fields.
+ * editor for each one (CR-034). "nda" is information, not an editable field.
  */
-export type MissingId =
-  | "industry"
-  | "caseTypes"
-  | "channels"
-  | "problemOrSolution"
-  | "problem"
-  | "solution"
-  | "effectOrLearning"
-  | "customerFacingSummary"
-  | "nda";
+export type MissingId = "industry" | "caseTypes" | "channels" | "solution" | "effect" | "nda";
 
 export interface MissingItem {
   id: MissingId;
@@ -35,14 +25,17 @@ interface CaseFields {
   industry: string | null;
   caseTypes: string[];
   channels: string[];
-  problem: string | null;
   solution: string | null;
   resultSummary: string | null;
-  learning: string | null;
-  customerFacingSummary: string | null;
   ndaRestricted: boolean;
 }
 
+/**
+ * What a case still needs (FR-CASE-004/005, FR-MISS-001):
+ * - to be set to "Pågår": industry, case type, channel and a solution
+ * - to be set to "Ferdigstilt": the same plus an effect
+ * - for use in presentations: NDA blocks it
+ */
 export function getMissingItems(c: CaseFields): MissingItems {
   const forOngoing: MissingItem[] = [];
   const forCompleted: MissingItem[] = [];
@@ -60,18 +53,12 @@ export function getMissingItems(c: CaseFields): MissingItems {
     forOngoing.push({ id: "channels", label: "Kanal" });
     forCompleted.push({ id: "channels", label: "Kanal" });
   }
-  if (!c.problem && !c.solution) {
-    forOngoing.push({ id: "problemOrSolution", label: "Problem eller løsning" });
+  if (!c.solution) {
+    forOngoing.push({ id: "solution", label: "Løsning" });
+    forCompleted.push({ id: "solution", label: "Løsning" });
   }
-  if (!c.problem) forCompleted.push({ id: "problem", label: "Problem / kontekst" });
-  if (!c.solution) forCompleted.push({ id: "solution", label: "Løsning" });
-  if (!c.resultSummary && !c.learning) {
-    forCompleted.push({ id: "effectOrLearning", label: "Effekt eller læring" });
-  }
+  if (!c.resultSummary) forCompleted.push({ id: "effect", label: "Effekt" });
 
-  if (!c.customerFacingSummary) {
-    forPresentation.push({ id: "customerFacingSummary", label: "Kundevennlig beskrivelse" });
-  }
   if (c.ndaRestricted) {
     forPresentation.push({ id: "nda", label: "NDA er satt — kan ikke brukes i presentasjoner" });
   }

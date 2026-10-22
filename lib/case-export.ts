@@ -45,16 +45,13 @@ export interface CaseExportData extends ApprovalChoices {
   customerName: string;
   title: string;
   summary: string;
-  customerFacingSummary: string | null;
   lifecycleStatus: CaseLifecycleStatus;
   industry: Industry | null;
   caseTypes: CaseType[];
   channels: Channel[];
   effectTypes: EffectType[];
-  problem: string | null;
   solution: string | null;
   resultSummary: string | null;
-  learning: string | null;
   relevance: string | null;
   internalNotes: string | null;
   effectMetric: string | null;
@@ -92,12 +89,9 @@ export function buildCaseExportText(c: CaseExportData): string {
 
   lines.push("--- BESKRIVELSE ---");
   lines.push(c.summary);
-  if (c.problem) lines.push(`\nProblem / kontekst:\n${c.problem}`);
   if (c.solution) lines.push(`\nLøsning:\n${c.solution}`);
   if (c.resultSummary) lines.push(`\nEffekt:\n${c.resultSummary}`);
-  if (c.learning) lines.push(`\nLæring:\n${c.learning}`);
   if (c.relevance) lines.push(`\nRelevans:\n${c.relevance}`);
-  if (c.customerFacingSummary) lines.push(`\nKundevennlig beskrivelse:\n${c.customerFacingSummary}`);
   if (c.internalNotes) lines.push(`\nInterne notater:\n${c.internalNotes}`);
   lines.push("");
 

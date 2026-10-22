@@ -31,9 +31,8 @@ const inputStyle: React.CSSProperties = {
 
 /** Placeholder hints shown in the text editors. */
 const TEXT_PLACEHOLDERS: Partial<Record<MissingId, string>> = {
-  problem: "Hva var utgangspunktet eller utfordringen?",
   solution: "Hva ble gjort?",
-  customerFacingSummary: "Trygg tekst som kan vises til kunden",
+  effect: "Hva ble effekten?",
 };
 
 export default function MissingInfoPanel({ caseId, canEdit, forCompleted, forPresentation }: Props) {
@@ -210,50 +209,16 @@ export default function MissingInfoPanel({ caseId, canEdit, forCompleted, forPre
             />
           )}
 
-          {(active === "problem" || active === "solution" || active === "customerFacingSummary") && (
+          {(active === "solution" || active === "effect") && (
             <textarea
               aria-label={label}
-              value={draft[active]}
-              onChange={(e) => set(active, e.target.value)}
+              value={active === "solution" ? draft.solution : draft.resultSummary}
+              onChange={(e) => set(active === "solution" ? "solution" : "resultSummary", e.target.value)}
               rows={4}
               placeholder={TEXT_PLACEHOLDERS[active]}
               className={inputCls + " resize-y"}
               style={inputStyle}
             />
-          )}
-
-          {active === "effectOrLearning" && (
-            <div className="space-y-3">
-              <div>
-                <label className="block text-xs font-medium mb-1" style={{ color: "var(--color-text-muted)" }}>
-                  Effekt
-                </label>
-                <textarea
-                  aria-label="Effekt"
-                  value={draft.resultSummary}
-                  onChange={(e) => set("resultSummary", e.target.value)}
-                  rows={3}
-                  className={inputCls + " resize-y"}
-                  style={inputStyle}
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium mb-1" style={{ color: "var(--color-text-muted)" }}>
-                  Læring
-                </label>
-                <textarea
-                  aria-label="Læring"
-                  value={draft.learning}
-                  onChange={(e) => set("learning", e.target.value)}
-                  rows={3}
-                  className={inputCls + " resize-y"}
-                  style={inputStyle}
-                />
-              </div>
-              <p className="text-xs" style={{ color: "var(--color-text-muted)" }}>
-                Det holder å fylle ut én av dem.
-              </p>
-            </div>
           )}
 
           {error && (

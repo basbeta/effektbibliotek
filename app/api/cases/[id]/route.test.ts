@@ -70,11 +70,11 @@ describe("PATCH /api/cases/[id]", () => {
   it("should let the owner update allowed fields and record who updated", async () => {
     loggedInAs("eier@example.com");
     db.case.findUnique.mockResolvedValue(existingCase);
-    const res = await PATCH(patchRequest({ title: "Ny tittel", problem: "P" }), ctx);
+    const res = await PATCH(patchRequest({ title: "Ny tittel", solution: "S" }), ctx);
     expect(res.status).toBe(200);
     expect(db.case.update).toHaveBeenCalledWith({
       where: { id: "case1" },
-      data: { updatedByEmail: "eier@example.com", title: "Ny tittel", problem: "P" },
+      data: { updatedByEmail: "eier@example.com", title: "Ny tittel", solution: "S" },
     });
   });
 
@@ -104,6 +104,9 @@ describe("PATCH /api/cases/[id]", () => {
         usageApprovalToken: "stjålet",
         createdByEmail: "falsk@example.com",
         pitchText: "feltet er fjernet (CR-033) og skal ignoreres",
+        problem: "fjernet (CR-035) og skal ignoreres",
+        learning: "fjernet (CR-035) og skal ignoreres",
+        customerFacingSummary: "fjernet (CR-035) og skal ignoreres",
       }),
       ctx
     );

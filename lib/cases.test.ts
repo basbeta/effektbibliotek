@@ -7,11 +7,8 @@ const complete: Fields = {
   industry: "retail",
   caseTypes: ["automation"],
   channels: ["email"],
-  problem: "Problem",
   solution: "Løsning",
   resultSummary: "Effekt",
-  learning: "Læring",
-  customerFacingSummary: "Kundevennlig",
   ndaRestricted: false,
 };
 
@@ -19,11 +16,8 @@ const empty: Fields = {
   industry: null,
   caseTypes: [],
   channels: [],
-  problem: null,
   solution: null,
   resultSummary: null,
-  learning: null,
-  customerFacingSummary: null,
   ndaRestricted: false,
 };
 
@@ -38,53 +32,39 @@ describe("getMissingInfo", () => {
 
   it("should list every requirement for a completely empty case", () => {
     expect(getMissingInfo(empty)).toEqual({
-      forOngoing: ["Bransje", "Case-type", "Kanal", "Problem eller løsning"],
-      forCompleted: [
-        "Bransje",
-        "Case-type",
-        "Kanal",
-        "Problem / kontekst",
-        "Løsning",
-        "Effekt eller læring",
-      ],
-      forPresentation: ["Kundevennlig beskrivelse"],
+      forOngoing: ["Bransje", "Case-type", "Kanal", "Løsning"],
+      forCompleted: ["Bransje", "Case-type", "Kanal", "Løsning", "Effekt"],
+      forPresentation: [],
     });
   });
 
-  it("should accept problem alone for an ongoing case but still require a solution to complete", () => {
-    const result = getMissingInfo({ ...complete, solution: null });
-    expect(result.forOngoing).toEqual([]);
-    expect(result.forCompleted).toEqual(["Løsning"]);
-  });
+  it("should require a solution to set Pågår, and solution plus effect to set Ferdigstilt", () => {
+    const noSolution = getMissingInfo({ ...complete, solution: null });
+    expect(noSolution.forOngoing).toEqual(["Løsning"]);
+    expect(noSolution.forCompleted).toEqual(["Løsning"]);
 
-  it("should accept solution alone for an ongoing case but still require a problem to complete", () => {
-    const result = getMissingInfo({ ...complete, problem: null });
-    expect(result.forOngoing).toEqual([]);
-    expect(result.forCompleted).toEqual(["Problem / kontekst"]);
-  });
-
-  it("should accept either result summary or learning as effect or learning", () => {
-    expect(getMissingInfo({ ...complete, learning: null }).forCompleted).toEqual([]);
-    expect(getMissingInfo({ ...complete, resultSummary: null }).forCompleted).toEqual([]);
-    expect(
-      getMissingInfo({ ...complete, resultSummary: null, learning: null }).forCompleted
-    ).toEqual(["Effekt eller læring"]);
+    const noEffect = getMissingInfo({ ...complete, resultSummary: null });
+    expect(noEffect.forOngoing).toEqual([]);
+    expect(noEffect.forCompleted).toEqual(["Effekt"]);
   });
 
   it("should treat empty strings as missing", () => {
-    const result = getMissingInfo({ ...complete, industry: "", problem: "", customerFacingSummary: "" });
-    expect(result.forOngoing).toContain("Bransje");
-    expect(result.forCompleted).toContain("Problem / kontekst");
-    expect(result.forPresentation).toContain("Kundevennlig beskrivelse");
+    const result = getMissingInfo({ ...complete, industry: "", solution: "", resultSummary: "" });
+    expect(result.forOngoing).toEqual(["Bransje", "Løsning"]);
+    expect(result.forCompleted).toEqual(["Bransje", "Løsning", "Effekt"]);
   });
 
   it("should block presentation use when the case is NDA restricted", () => {
     const result = getMissingInfo({ ...complete, ndaRestricted: true });
     expect(result.forPresentation).toEqual(["NDA er satt — kan ikke brukes i presentasjoner"]);
   });
+
+  it("should not have anything for presentations when the case is not NDA restricted", () => {
+    expect(getMissingInfo(empty).forPresentation).toEqual([]);
+  });
 });
 
-describe("getMissingItems (CR-034)", () => {
+describe("getMissingItems (CR-034, CR-035)", () => {
   it("should report nothing for a complete case", () => {
     expect(getMissingItems(complete)).toEqual({ forOngoing: [], forCompleted: [], forPresentation: [] });
   });
@@ -95,17 +75,16 @@ describe("getMissingItems (CR-034)", () => {
         { id: "industry", label: "Bransje" },
         { id: "caseTypes", label: "Case-type" },
         { id: "channels", label: "Kanal" },
-        { id: "problemOrSolution", label: "Problem eller løsning" },
+        { id: "solution", label: "Løsning" },
       ],
       forCompleted: [
         { id: "industry", label: "Bransje" },
         { id: "caseTypes", label: "Case-type" },
         { id: "channels", label: "Kanal" },
-        { id: "problem", label: "Problem / kontekst" },
         { id: "solution", label: "Løsning" },
-        { id: "effectOrLearning", label: "Effekt eller læring" },
+        { id: "effect", label: "Effekt" },
       ],
-      forPresentation: [{ id: "customerFacingSummary", label: "Kundevennlig beskrivelse" }],
+      forPresentation: [],
     });
   });
 
@@ -116,7 +95,7 @@ describe("getMissingItems (CR-034)", () => {
   });
 
   it("should keep getMissingInfo identical to the labels of getMissingItems", () => {
-    for (const c of [empty, complete, { ...complete, ndaRestricted: true }, { ...empty, problem: "p" }]) {
+    for (const c of [empty, complete, { ...complete, ndaRestricted: true }, { ...empty, solution: "s" }]) {
       const items = getMissingItems(c);
       expect(getMissingInfo(c)).toEqual({
         forOngoing: items.forOngoing.map((i) => i.label),

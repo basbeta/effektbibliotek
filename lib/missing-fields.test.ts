@@ -11,34 +11,26 @@ import type { MissingId } from "@/lib/cases";
 const draft = emptyMissingDraft;
 
 describe("isEditableMissing", () => {
-  it.each<MissingId>(["industry", "channels", "caseTypes", "problem", "solution", "effectOrLearning", "customerFacingSummary"])(
+  it.each<MissingId>(["industry", "channels", "caseTypes", "solution", "effect"])(
     "should treat %s as editable",
     (id) => {
       expect(isEditableMissing(id)).toBe(true);
     }
   );
 
-  it.each<MissingId>(["nda", "problemOrSolution"])("should not treat %s as editable", (id) => {
-    expect(isEditableMissing(id)).toBe(false);
+  it("should not treat the NDA message as editable", () => {
+    expect(isEditableMissing("nda")).toBe(false);
   });
 });
 
 describe("buildMissingPatch", () => {
   it("should return null for every item when the draft is empty", () => {
-    const ids: EditableMissingId[] = [
-      "industry",
-      "channels",
-      "caseTypes",
-      "problem",
-      "solution",
-      "effectOrLearning",
-      "customerFacingSummary",
-    ];
+    const ids: EditableMissingId[] = ["industry", "channels", "caseTypes", "solution", "effect"];
     for (const id of ids) expect(buildMissingPatch(id, draft())).toBeNull();
   });
 
   it("should send only the industry for the industry item", () => {
-    expect(buildMissingPatch("industry", { ...draft(), industry: "retail", problem: "ikke med" })).toEqual({
+    expect(buildMissingPatch("industry", { ...draft(), industry: "retail", solution: "ikke med" })).toEqual({
       industry: "retail",
     });
   });
@@ -53,49 +45,33 @@ describe("buildMissingPatch", () => {
   });
 
   it("should trim text and send only the field that belongs to the item", () => {
-    expect(buildMissingPatch("problem", { ...draft(), problem: "  Problem  ", solution: "ikke med" })).toEqual({
-      problem: "Problem",
+    expect(buildMissingPatch("solution", { ...draft(), solution: "  Løsning \n", resultSummary: "ikke med" })).toEqual({
+      solution: "Løsning",
     });
-    expect(buildMissingPatch("solution", { ...draft(), solution: "\nLøsning\t" })).toEqual({ solution: "Løsning" });
-    expect(buildMissingPatch("customerFacingSummary", { ...draft(), customerFacingSummary: " Kunde " })).toEqual({
-      customerFacingSummary: "Kunde",
+  });
+
+  it("should save the effect item as resultSummary, and nothing else", () => {
+    expect(buildMissingPatch("effect", { ...draft(), resultSummary: "\tEffekt  ", solution: "ikke med" })).toEqual({
+      resultSummary: "Effekt",
     });
   });
 
   it("should treat whitespace-only text as empty", () => {
-    expect(buildMissingPatch("problem", { ...draft(), problem: "   \n " })).toBeNull();
-  });
-
-  describe("effekt eller læring", () => {
-    it("should send both parts when both are filled in", () => {
-      expect(buildMissingPatch("effectOrLearning", { ...draft(), resultSummary: "E", learning: "L" })).toEqual({
-        resultSummary: "E",
-        learning: "L",
-      });
-    });
-
-    it("should send only the part that was filled in, so the other is not overwritten", () => {
-      expect(buildMissingPatch("effectOrLearning", { ...draft(), resultSummary: "E" })).toEqual({
-        resultSummary: "E",
-      });
-      expect(buildMissingPatch("effectOrLearning", { ...draft(), learning: "L" })).toEqual({ learning: "L" });
-    });
-
-    it("should return null when neither part has text", () => {
-      expect(buildMissingPatch("effectOrLearning", { ...draft(), resultSummary: " ", learning: "" })).toBeNull();
-    });
+    expect(buildMissingPatch("solution", { ...draft(), solution: "   \n " })).toBeNull();
+    expect(buildMissingPatch("effect", { ...draft(), resultSummary: " " })).toBeNull();
   });
 });
 
 describe("canSaveMissing", () => {
   it("should be false until something is filled in", () => {
-    expect(canSaveMissing("problem", draft())).toBe(false);
+    expect(canSaveMissing("solution", draft())).toBe(false);
     expect(canSaveMissing("channels", draft())).toBe(false);
+    expect(canSaveMissing("effect", draft())).toBe(false);
   });
 
   it("should be true once there is something to save", () => {
-    expect(canSaveMissing("problem", { ...draft(), problem: "x" })).toBe(true);
+    expect(canSaveMissing("solution", { ...draft(), solution: "x" })).toBe(true);
     expect(canSaveMissing("channels", { ...draft(), channels: ["sms"] })).toBe(true);
-    expect(canSaveMissing("effectOrLearning", { ...draft(), learning: "x" })).toBe(true);
+    expect(canSaveMissing("effect", { ...draft(), resultSummary: "x" })).toBe(true);
   });
 });

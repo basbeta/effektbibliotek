@@ -17,7 +17,6 @@ export default async function GodkjenningPage({ params }: Props) {
       id: true,
       customerName: true,
       title: true,
-      customerFacingSummary: true,
       usageApprovalStatus: true,
       usageApprovalToken: true,
       approverName: true,
@@ -48,20 +47,6 @@ export default async function GodkjenningPage({ params }: Props) {
             {c.title}
           </h1>
         </div>
-
-        {c.customerFacingSummary && (
-          <div
-            className="rounded-xl p-5 mb-6"
-            style={{
-              backgroundColor: "var(--color-surface)",
-              border: "1px solid var(--color-border-subtle)",
-            }}
-          >
-            <p className="text-sm" style={{ color: "var(--color-text-primary)" }}>
-              {c.customerFacingSummary}
-            </p>
-          </div>
-        )}
 
         <div
           className="rounded-xl p-5 mb-6"

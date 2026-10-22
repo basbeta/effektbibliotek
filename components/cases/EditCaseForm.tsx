@@ -33,16 +33,13 @@ interface CaseData {
   customerName: string;
   title: string;
   summary: string;
-  customerFacingSummary: string | null;
   lifecycleStatus: string;
   industry: string | null;
   caseTypes: string[];
   channels: string[];
   effectTypes: string[];
-  problem: string | null;
   solution: string | null;
   resultSummary: string | null;
-  learning: string | null;
   relevance: string | null;
   internalNotes: string | null;
   effectMetric: string | null;
@@ -121,16 +118,13 @@ export default function EditCaseForm({
     customerName: n(initial.customerName),
     title: n(initial.title),
     summary: n(initial.summary),
-    customerFacingSummary: n(initial.customerFacingSummary),
     lifecycleStatus: initial.lifecycleStatus,
     industry: n(initial.industry),
     caseTypes: initial.caseTypes ?? [],
     channels: initial.channels ?? [],
     effectTypes: initial.effectTypes ?? [],
-    problem: n(initial.problem),
     solution: n(initial.solution),
     resultSummary: n(initial.resultSummary),
-    learning: n(initial.learning),
     relevance: n(initial.relevance),
     internalNotes: n(initial.internalNotes),
     effectMetric: n(initial.effectMetric),
@@ -239,11 +233,8 @@ export default function EditCaseForm({
           ...form,
           industry: form.industry || null,
           evidenceLevel: form.evidenceLevel || null,
-          customerFacingSummary: form.customerFacingSummary || null,
-          problem: form.problem || null,
           solution: form.solution || null,
           resultSummary: form.resultSummary || null,
-          learning: form.learning || null,
           relevance: form.relevance || null,
           internalNotes: form.internalNotes || null,
           effectMetric: form.effectMetric || null,
@@ -337,17 +328,11 @@ export default function EditCaseForm({
           progress={progress.content}
           summary={getSectionSummary("content", form)}
         >
-          <Field label="Problem / kontekst" htmlFor="field-problem">
-            <textarea id="field-problem" value={form.problem} onChange={(e) => set("problem", e.target.value)} rows={3} className={inputCls + " resize-y"} style={inputStyle} />
-          </Field>
           <Field label="Løsning" htmlFor="field-solution">
             <textarea id="field-solution" value={form.solution} onChange={(e) => set("solution", e.target.value)} rows={3} className={inputCls + " resize-y"} style={inputStyle} />
           </Field>
           <Field label="Effekt" htmlFor="field-result">
             <textarea id="field-result" value={form.resultSummary} onChange={(e) => set("resultSummary", e.target.value)} rows={3} className={inputCls + " resize-y"} style={inputStyle} />
-          </Field>
-          <Field label="Læring" htmlFor="field-learning">
-            <textarea id="field-learning" value={form.learning} onChange={(e) => set("learning", e.target.value)} rows={3} className={inputCls + " resize-y"} style={inputStyle} />
           </Field>
         </CollapsibleCard>
 
@@ -408,11 +393,6 @@ export default function EditCaseForm({
             {b.key === "relevance" && (
               <Field label="Relevans" htmlFor="field-relevance">
                 <textarea id="field-relevance" value={form.relevance} onChange={(e) => set("relevance", e.target.value)} rows={3} className={inputCls + " resize-y"} style={inputStyle} placeholder="Hvorfor er denne casen relevant for andre?" />
-              </Field>
-            )}
-            {b.key === "customerFacing" && (
-              <Field label="Kundevennlig beskrivelse" htmlFor="field-customerFacing">
-                <textarea id="field-customerFacing" value={form.customerFacingSummary} onChange={(e) => set("customerFacingSummary", e.target.value)} rows={4} className={inputCls + " resize-y"} style={inputStyle} placeholder="Trygg tekst som kan vises til kunden" />
               </Field>
             )}
             {b.key === "internalNotes" && (

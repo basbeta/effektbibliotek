@@ -132,10 +132,8 @@ export default async function CaseDetailPage({ params }: Props) {
         }}
       >
         <Section title="Beskrivelse">{c.summary}</Section>
-        {c.problem && <Section title="Problem / kontekst">{c.problem}</Section>}
         {c.solution && <Section title="Løsning">{c.solution}</Section>}
         {c.resultSummary && <Section title="Effekt">{c.resultSummary}</Section>}
-        {c.learning && <Section title="Læring">{c.learning}</Section>}
         {c.relevance && <Section title="Relevans">{c.relevance}</Section>}
       </div>
 
@@ -216,23 +214,6 @@ export default async function CaseDetailPage({ params }: Props) {
           </div>
         )}
       </div>
-
-      {c.customerFacingSummary && (
-        <div
-          className="rounded-xl p-5 mb-4"
-          style={{
-            backgroundColor: "var(--color-accent-soft)",
-            border: "1px solid var(--color-border-subtle)",
-          }}
-        >
-          <p className="text-xs font-semibold mb-2" style={{ color: "var(--color-accent)" }}>
-            Kundevennlig beskrivelse
-          </p>
-          <p className="text-sm" style={{ color: "var(--color-text-primary)" }}>
-            {c.customerFacingSummary}
-          </p>
-        </div>
-      )}
 
       {c.internalNotes && (
         <div

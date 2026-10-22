@@ -38,9 +38,9 @@ Components: `EditCaseForm`, `CollapsibleCard`, `MultiSelect`, `ApprovalSection`,
 States: populated (eksisterende case), saving, error (påkrevde felt mangler / API-feil), delete-confirmation.
 
 Oppførsel:
-- **Kjerneseksjoner** (alltid synlige som sammenleggbare kort): Grunninfo (kundenavn*, tittel*, beskrivelse*, status, ansvarlig), Klassifisering (bransje, kanal, case-type), Innhold (problem/kontekst, løsning, effekt, læring). Deretter Bruksgodkjenning og Materiale.
-- **Valgfrie blokker** — Effektmåling, Relevans, Kundevennlig tekst, Interne notater: vises bare når de har innhold, eller når brukeren legger dem til via «+ Legg til»-knappene. Blokker med data vises alltid.
-- **Fremdrift:** hvert kjernekort viser «✓», «N av 3» eller «tom», basert på kravene i FR-CASE-004/005 (grunninfo: kundenavn, tittel, beskrivelse; klassifisering: bransje, kanal, case-type; innhold: problem, løsning, effekt eller læring). Lukkede kort viser et kort sammendrag.
+- **Kjerneseksjoner** (alltid synlige som sammenleggbare kort): Grunninfo (kundenavn*, tittel*, beskrivelse*, status, ansvarlig), Klassifisering (bransje, kanal, case-type), Innhold (løsning, effekt). Deretter Bruksgodkjenning og Materiale.
+- **Valgfrie blokker** — Effektmåling, Relevans, Interne notater: vises bare når de har innhold, eller når brukeren legger dem til via «+ Legg til»-knappene. Blokker med data vises alltid.
+- **Fremdrift:** hvert kjernekort viser «✓», «N av 3» (Innhold: «N av 2») eller «tom», basert på kravene i FR-CASE-004/005 (grunninfo: kundenavn, tittel, beskrivelse; klassifisering: bransje, kanal, case-type; innhold: løsning og effekt). Lukkede kort viser et kort sammendrag.
 - **Åpne kort:** bare første ufullstendige kjernekort er åpent ved innlasting; nye blokker åpnes når de legges til.
 - **Kanal, Case-type og Effekttype** er søkbare flervalg (skriv for å filtrere, piltaster, Enter velger, valgte vises som fjernbare chips). Enter sender aldri inn skjemaet fra et flervalg.
 - **Effektmåling** viser Effekttype, Hva ble målt, Resultat og Evidensnivå som standard; Før, Etter, Periode og Datakilde ligger under «Flere måledetaljer» (åpen hvis noe er utfylt).
@@ -63,9 +63,9 @@ Oppførsel:
 - Panelet vises bare når noe mangler. Chips er gruppert: «For å sette Ferdigstilt» og «For bruk i presentasjoner».
 - For eier og admin er redigerbare chips knapper med «+» foran. Andre brukere ser vanlige tekst-chips uten knapper.
 - Et klikk åpner en liten editor i panelet for akkurat det feltet; kun én editor er åpen om gangen, og fokus flyttes til feltet.
-- Felttyper: Bransje (nedtrekk), Kanal og Case-type (søkbart flervalg), Problem / kontekst, Løsning og Kundevennlig beskrivelse (tekstboks), Effekt eller læring (to tekstbokser; det holder å fylle ut én).
+- Felttyper: Bransje (nedtrekk), Kanal og Case-type (søkbart flervalg), Løsning og Effekt (tekstboks).
 - «NDA er satt …» er informasjon og er ikke klikkbar.
-- «Lagre» er deaktivert til noe er fylt ut. Lagring sender kun de aktuelle feltene (trimmet) og for «Effekt eller læring» kun delen som er fylt ut. Etter lagring lukkes editoren og siden oppdateres.
+- «Lagre» er deaktivert til noe er fylt ut. Lagring sender kun det aktuelle feltet (trimmet). Etter lagring lukkes editoren og siden oppdateres.
 - Feil (403, serverfeil, nettverk) vises i editoren; det brukeren skrev beholdes.
 - Escape: i et flervalg med åpen forslagsliste lukker første Escape bare listen; Escape ellers (eller «Avbryt») forkaster editoren.
 

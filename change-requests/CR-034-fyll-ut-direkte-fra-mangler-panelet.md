@@ -1,6 +1,6 @@
 # CR-034: Fyll ut manglende felt direkte fra «Dette kan kompletteres»
 
-**Status:** In Progress (godkjent av produkteier 2026-10-21)
+**Status:** Done (2026-10-22). Pushet som `4831489` (2026-10-21) og verifisert i produksjon av Claude via Claude in Chrome på en test-case som ble slettet. Åpent forbehold: ikke-eier-visning er ikke prøvd med en reell annen konto.
 **Created:** 2026-10-21
 
 ---
@@ -74,15 +74,15 @@ Ubetydelig (ett PATCH-kall pluss `router.refresh()`).
 ---
 
 ## Acceptance Criteria
-- [ ] Eier og admin kan klikke en chip og fylle ut det feltet direkte; chipen forsvinner etter lagring og innholdet vises på siden *(lokalt verifisert mot en forhåndsvisning med fanget PATCH; gjenstår i produksjon mot ekte data)*
-- [ ] Alle redigerbare chips fungerer: Bransje, Kanal, Case-type, Problem / kontekst, Løsning, Effekt eller læring (to felt, minst ett), Kundevennlig beskrivelse *(lokalt: Bransje, Kanal, Effekt eller læring, Problem verifisert i nettleser; alle sju chips bekreftet klikkbare; Case-type/Løsning/Kundevennlig gjenstår i produksjon)*
+- [x] Eier og admin kan klikke en chip og fylle ut det feltet direkte; chipen forsvinner etter lagring og innholdet vises på siden (verifisert i produksjon: lagret verdi bekreftet via `GET /api/cases/[id]` etter hver lagring)
+- [x] Alle redigerbare chips fungerer: Bransje, Kanal, Case-type, Problem / kontekst, Løsning, Effekt eller læring (to felt, minst ett), Kundevennlig beskrivelse (alle sju verifisert i produksjon, hver for seg, og hver lagring rørte kun sitt eget felt)
 - [x] NDA-meldingen er ikke klikkbar (en `span`, ikke en knapp; verifisert i nettleser og i enhetstest)
 - [x] Ikke-eiere (uten admin) ser ren tekst uten klikk-/redigeringsmulighet (verifisert lokalt: 0 knapper, ingen «+»); API-et avviser fortsatt PATCH fra dem (403, dekket av eksisterende PATCH-tester fra CR-032). Ikke testet med en reell annen brukerkonto
 - [x] «Lagre» er deaktivert til noe er fylt ut; Escape/Avbryt forkaster; kun ett felt åpent om gangen
 - [x] Feil ved lagring vises i panelet og bevarer det brukeren skrev (403 → «Du har ikke tilgang …», nettverksfeil → «Noe gikk galt …», teksten bevart, «Lagre» aktiv igjen)
 - [x] `getMissingInfo` gir uendret utdata (eksisterende tester grønne uendret; i tillegg en test som beviser at den er identisk med labels fra `getMissingItems`)
 - [x] `npm test` (210), `npx tsc --noEmit`, `npm run build` grønt; lockfile og `package.json` uendret
-- [ ] Verifisert i faktisk nettleser (Claude in Chrome) mot produksjon på en test-case som slettes etterpå *(gjenstår: kjøres etter deploy)*
+- [x] Verifisert i faktisk nettleser (Claude in Chrome) mot produksjon på en test-case som ble slettet etterpå (se Validation Notes)
 - [x] `specs/requirements.md` (FR-MISS-004) og `specs/ui-spec.md` oppdatert
 
 ## Required Tests
@@ -115,4 +115,8 @@ Bygger på CR-033 (`MultiSelect`, `lib/case-form.ts`). Ingen nye npm-pakker.
 
 **Feil funnet og rettet underveis:** Escape for å lukke forslagslisten i `MultiSelect` boblet opp og lukket hele editoren (forkastet valget). Rettet i `MultiSelect`: mens listen er åpen lukker Escape bare listen (`stopPropagation`); er den allerede lukket, bobler Escape opp. Verifisert (første Escape: editor åpen, chip beholdt, liste lukket; andre Escape: editor lukket, ingen PATCH). Rettelsen gjelder også `MultiSelect` i redigeringsskjemaet (CR-033), uten bivirkning der.
 
-**Gjenstår:** push → Chrome-test mot produksjon (opprett test-case, åpne hver chip-type, lagre, bekreft innhold på siden, avbryt, tom lagring blokkert, slett test-casen); `docs/SMOKE-TEST.md` utvides med «fyll ut fra mangler-panelet»; sette CR-034 til Done.
+**Produksjonsverifisering (2026-10-22, Claude in Chrome; test-case «TEST CR-034 mangler-panel (slettes)», kunde «TESTKUNDE CR-034»):** Første forsøk 2026-10-21 ble avbrutt fordi Chrome-utvidelsen mistet forbindelsen (ingenting ble opprettet; bekreftet ved å sjekke at ingen «TESTKUNDE CR-034» lå igjen, biblioteket 7 caser). Etter gjenoppkobling: ny versjon bekreftet live (panelet med «+»-chips på case-siden). Resultater: (1) chipsene vises som «+ Bransje», «+ Case-type», «+ Kanal», «+ Problem / kontekst», «+ Løsning», «+ Effekt eller læring», «+ Kundevennlig beskrivelse». (2) Bransje: fokus i feltet, «Lagre» deaktivert når tomt; lagret `industry: retail`, chip borte, siden viser Retail. (3) Kanal: `sm` + Enter, første Escape lukket bare listen (editor åpen, SMS-chip beholdt — Escape-rettelsen fungerer i produksjon), lagret `channels: ["sms"]`, bransje urørt. (4) Case-type: lagret `["automation"]`, de andre urørt. (5) Problem: **Avbryt** lagret ingenting (chip igjen, DB `null`), gjenåpning ga tomt utkast; deretter lagret trimmet `"Fiktiv problemtekst (CR-034-test) æøå"`, løsning urørt. (6) Effekt eller læring med bare Effekt: `resultSummary` lagret, `learning` forble `null`, problem urørt. (7) Løsning og Kundevennlig beskrivelse lagret hver for seg. (8) Til slutt: alle felt satt, panelet «Dette kan kompletteres» forsvant, status urørt (`started`). (9) Sletting (200 → 404), biblioteket tilbake på 7, ingen «TESTKUNDE» igjen.
+
+**Ikke verifisert:** ikke-eier-visning med en reell annen konto (kun enhetstest/lokal forhåndsvisning: 0 knapper, ingen «+»; API-et avviser PATCH fra ikke-eiere med 403, dekket av eksisterende tester). Feilhåndtering (403/nettverk) er verifisert lokalt, ikke utløst i produksjon.
+
+**Dokumentasjon:** `docs/SMOKE-TEST.md` utvidet med skjemaflyten (CR-033, steg 1b) og fyll-ut-fra-panel (CR-034, steg 1c).

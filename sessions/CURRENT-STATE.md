@@ -34,18 +34,18 @@ MIGRERING FERDIG — CR-008 (porting fra Vercel/Neon til Hetzner/Coolify/Postgre
 **(Tidligere i økten) CR-037 bli stående på siden etter «Lagre»:** Etter vellykket lagring blir eieren stående i redigering (`router.refresh()`), «✓ Lagret» vises til neste endring, «Avbryt» heter «Lukk» når alt er lagret. Endringsteller hindrer feil «Lagret» ved endring under lagring. 211 tester ✓, `tsc`/`build` ✓, lockfile uendret. Ingen komponenttester: gjenstår Chrome-test i produksjon. Se `change-requests/CR-037-…md` og DECISIONS 2026-10-22.
 
 ## Current Objectives
-000. Bekreft i Coolify-loggen at `20261022120000_drop_problem_learning_customerfacing` ble anvendt (CR-035 deploy B; ikke sett av Claude; CR-038 sin migrasjon er bekreftet). Deretter neste forbedring av skjemaet/appen — se Next Actions
-00a. ~~CR-034~~ — Done 2026-10-22 (pushet `4831489`, verifisert i produksjon). Gjenstår kun at docs-oppdateringen fra denne avslutningen committes (se Current Branch)
+000. Bekreft i Coolify-loggen at `20261022120000_drop_problem_learning_customerfacing` ble anvendt (CR-035 deploy B; ikke sett av Claude; CR-038 sin migrasjon er bekreftet; ISSUE-019). Deretter neste forbedring av skjemaet/appen — se Next Actions
+00a. ~~CR-034~~ — Done 2026-10-22 (pushet `4831489`, verifisert i produksjon)
 00. Deretter neste forbedring av skjemaet (klikk-for-å-fylle-ut på case-siden er nå CR-034), anbefalt rekkefølge: (1) klikk-for-å-fylle-ut direkte på case-siden («Dette kan kompletteres»-chips åpner et lite felt), (2) statusstyrt sjekkliste øverst, (3) caseformat/maler, (4) bransjeforslag og autolagrede utkast — hver som egen CR
 0a. ~~Commit/push CR-032~~ — gjort 2026-10-21 (391baf6, d49b70f). Gjenstår: bekreft at Coolify-bygget gikk rent, og at en annen person følger `docs/SMOKE-TEST.md`
-0. (Ny) Avgjør skjebnen til untracked `triage.ps1` (commit/slett/ignorer — anbefalt: hold utenfor repoet)
+0. ~~Avgjør skjebnen til `triage.ps1`~~ — slettet 2026-10-22 etter ordre fra produkteier (var untracked, aldri committet)
 1. Manuell E2E-verifisering av CR-025 sine egne flyter: slett-case-dialog og eksport ✓ bekreftet 2026-08-05. **Gjenstår:** eierbytte for en ikke-admin eier — blokkert på at produkteier ikke har en annen brukerkonto tilgjengelig for testing akkurat nå
 2. (Valgfritt, lav prioritet) Bekreft CR-015–019 individuelt hvis det er ønskelig med fullstendig sikkerhet — se Next Recommended Actions
 3. Ende-til-ende-test av gjenstående flyter: case-opprettelse, redigering av felt utenom bruksrettigheter
 4. Produkteier fjerner Vercel-prosjektet og Neon-databasen manuelt (klarert 2026-08-05, se CR-008/docs/COOLIFY-DEPLOY.md §7)
 
 ## Current Branch
-master (alle endringer CR-009–034 + emergency-fix er pushet direkte til master, ingen feature-branch brukt; siste pushede kode-commit `4831489` (CR-034)). Ved slutten av Session 11 gjenstår kun docs-oppdateringen fra denne avslutningen (CR-034 Done, utvidet `docs/SMOKE-TEST.md`, sessions-filer) som ikke-committet, samt untracked `triage.ps1` (bevisst ikke committet). Ingen midlertidige filer ligger igjen
+master (alle endringer CR-009–038 + emergency-fix er pushet direkte til master, ingen feature-branch brukt). Siste kode-commit `27ade1b` (CR-038 deploy B); siste commit `074b168` (docs for CR-037/038). Arbeidskatalogen var ren før denne avslutningen; kun session-filene fra `/end-session` er endret og ikke committet. `triage.ps1` er slettet. Ingen midlertidige filer ligger igjen
 
 ## Blockers
 Manuelt Coolify/Hetzner-oppsett kan ikke utføres fra Claude Code-økten (ingen tilgang til Coolify-instansen). Krever produkteier/admin på `coolify.basbeta.no`.
@@ -60,7 +60,11 @@ Manuelt Coolify/Hetzner-oppsett kan ikke utføres fra Claude Code-økten (ingen 
 - **(Ny, Session 10) Testsuiten kan gi falsk trygghet:** 144 tester med mocket Prisma/S3/SMTP verifiserer logikk og tilgangsregler, ikke SQL, cascade, S3 eller UI. De kjøres kun manuelt (`npm test` før push) — ingen CI, så en glemt kjøring slipper gjennom, og Coolify deployer uansett ved push. `docs/SMOKE-TEST.md` er ikke validert av en annen person.
 - **(Ny) Coolify-bygget etter CR-032-push (lockfile med vitest/vite 8/rolldown, `@types/node` ^22) er ikke eksplisitt verifisert** — lokalt er `tsc`/`build` grønt, men Docker-bygget er ikke prøvd av Claude. Rollback: `git revert d49b70f 391baf6` + «Redeploy».
 - **(Ny) npm-verktøykjede:** npm 10.9.8 ga intern Arborist-feil (`edgesOut`) ved Vitest 4.x; fremtidige Vitest-oppgraderinger kan treffe samme feil. Vitest/Vite er eksakt pinnet/ferske (publisert okt. 2026), signaturverifisert, men nye devDependency-kjeder øker supply-chain-flaten under en aktiv npm-ormekampanje.
-- **(Ny) Maskintriage er et negativt funn, ikke bevis for ren maskin** — ingen tokens tilbakekalt; `triage.ps1` har ukjent opphav og er ikke committet (DECISIONS 2026-10-20).
+- **(Ny) Maskintriage er et negativt funn, ikke bevis for ren maskin** — ingen tokens tilbakekalt; `triage.ps1` hadde ukjent opphav og er nå slettet uten å ha vært committet (DECISIONS 2026-10-20).
+- **(Ny, 2026-10-22) Irreversibelt datatap:** `Case.relevance` og `Case.internalNotes` er droppet i produksjon (CR-038 deploy B), bevisst og akseptert; ikke gjenopprettbart uten backup. Ingen intern-notat-funksjon finnes lenger.
+- **(Ny, 2026-10-22) Etter CR-037 gjenstår ulagrede endringer uten advarsel ved navigering bort** (utenfor scope), og en ekte serverfeil ved lagring er ikke fremprovosert (kun simulert 500/nettverksfeil og ekte klientvalidering).
+- **(Ny, 2026-10-22) CR-038 ble ikke mutasjonstestet** (mest sletting av kode); 207 tester.
+- **(Ny, 2026-10-22) Verktøy-/prosjektgrense:** produkteier spurte om en filvelger («Velg HTML-fil(er)») som ligger i et annet prosjekt (`Basbeta\sider`, `components/NewPageForm.tsx`), ikke i effektbibliotek. Ingenting ble endret; produkteier fikser det selv i riktig repo.
 - **(Ny) ISSUE-015 (5 high, dev-only lint-kjede), ISSUE-016 (S3-sletting svelges/uhåndtert → mulige orphan-objekter), ISSUE-017 (mindre punkter)** er åpne og ikke endret.
 - **(Ny) Ekstern Server Action-sondering** mot appen i Coolify-loggene — ingen Server Actions i koden, avvist av Next.js; ingen rate limit utover `request-code`.
 - **(Oppdatert 2026-10-21, CR-032)** Automatiserte tester finnes nå lokalt (144 tester, `npm test`) etter commit; de dekker logikk og tilgangskontroll, ikke SQL/S3/SMTP/UI, og blokkerer ikke deploy. Historisk beskrivelse under: ~~Ingen automatiserte tester i prosjektet.~~ All verifisering tidligere økter var `npm run build`/TypeScript-sjekk + manuell produksjonstesting av produkteier. Fungerer for nå, men skalerer dårlig etter hvert som appen vokser — regressonsrisiko ved fremtidige endringer er reelt.
@@ -237,10 +241,11 @@ https://effektbibliotek.vercel.app (gammel — klarert for fjerning 2026-08-05, 
 - CR-008 avsluttet: backup + Uptime Kuma bekreftet av produkteier, `npm install`/`npx tsc --noEmit`/`npm run build` ✓ etter fjerning av ubrukt `resend`-avhengighet, `npm audit` fortsatt 0 sårbarheter
 
 ## Next Actions (prioritert)
-**Anbefalt rekkefølge for neste økt (satt ved slutten av Session 11, 2026-10-21):**
-1. ~~Fullfør CR-034~~ — ferdig 2026-10-22 (pushet, verifisert i produksjon, Done). **Først i neste økt:** commit/push docs-oppdateringen fra denne avslutningen (diff → «push»).
+**Anbefalt rekkefølge for neste økt (oppdatert ved slutten av Session 11, 2026-10-22):**
+0. **Først:** commit/push session-filene fra `/end-session` (diff → «push»). Deretter ISSUE-019: bekreft i Coolify-loggen at CR-035-migrasjonen ble anvendt.
+1. ~~Fullfør CR-034~~ — ferdig 2026-10-22 (pushet, verifisert i produksjon, Done). CR-035 til CR-038 er også Done.
 2. ~~Utvid `docs/SMOKE-TEST.md`~~ — gjort 2026-10-22 (steg 1b skjema, 1c fyll-ut-fra-panel). **Gjenstår:** få en annen person til å følge hele sjekklisten uten ekstra kontekst og rette uklarheter (åpent akseptansekriterium fra CR-032).
-3. **Rydd `triage.ps1`:** slett eller flytt ut av repoet (anbefalt). Ukjent opphav, aldri committet.
+3. ~~Rydd `triage.ps1`~~ — slettet 2026-10-22.
 4. **ISSUE-016:** bestem om S3-feil ved sletting skal logges/Sentry-rapporteres (egen CR) eller aksepteres; sjekk evt. bucketen manuelt for orphan-objekter etter test-caser.
 5. **Liten opprydding-CR for ISSUE-018** (`npm run lint` er rød fra før: `Date.now()` i `oppfolging/page.tsx` + to ubrukte importer), slik at lint kan brukes som grønn port. Kan samles med ISSUE-017 (`isBasEmail`, OTP-grense, `formatBytes`).
 6. **Videre skjemaforbedringer, hver som egen CR:** klikk-for-å-fylle-ut også på Oppfølging/Mine caser; statusstyrt sjekkliste øverst i redigeringsskjemaet; caseformat/maler; bransjeforslag fra tidligere caser; autolagrede utkast.

@@ -176,3 +176,11 @@ Area: app/(app)/oppfolging/page.tsx
 Description: `npm run lint` feiler (1 error + 2 warnings) allerede i HEAD, uavhengig av CR-033: `react-hooks/purity` flagger `Date.now()` i `OppfolgingPage` (linje 57, `const cutoff = new Date(Date.now() - …)`). Siden dette er en server component som rendres per request er det trolig et falskt positivt i praksis, men lint-kommandoen kan ikke brukes som grønn port før det er håndtert. Warnings: ubrukte importer `lifecycleStatusLabels` og `usageApprovalStatusLabels` i `app/(app)/case/[id]/page.tsx`.
 Blocker for: Ingenting (lint kjøres ikke i build eller Docker). Kandidat for en liten opprydding-CR.
 Opened: 2026-10-21
+
+ISSUE-019
+Status: Open
+Priority: Low
+Area: prisma/migrations/20261022120000_drop_problem_learning_customerfacing (CR-035 deploy B)
+Description: Coolify-loggen for denne migrasjonen er aldri sett av Claude; funksjonstest i produksjon viser at appen virker, men ikke at `DROP COLUMN` faktisk ble anvendt (kolonnene er nullable og påvirker ikke gammel/ny kode). Til sammenligning er CR-033 og CR-038 sine migrasjoner bekreftet anvendt i Coolify-loggen av produkteier.
+Blocker for: Ingenting. Lukkes når produkteier bekrefter «All migrations have been successfully applied» for `20261022120000_…` i bygg-/oppstartsloggen.
+Opened: 2026-10-22

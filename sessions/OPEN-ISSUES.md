@@ -184,3 +184,11 @@ Area: prisma/migrations/20261022120000_drop_problem_learning_customerfacing (CR-
 Description: Coolify-loggen for denne migrasjonen er aldri sett av Claude; funksjonstest i produksjon viser at appen virker, men ikke at `DROP COLUMN` faktisk ble anvendt (kolonnene er nullable og påvirker ikke gammel/ny kode). Til sammenligning er CR-033 og CR-038 sine migrasjoner bekreftet anvendt i Coolify-loggen av produkteier.
 Blocker for: Ingenting. Lukkes når produkteier bekrefter «All migrations have been successfully applied» for `20261022120000_…` i bygg-/oppstartsloggen.
 Opened: 2026-10-22
+
+ISSUE-020
+Status: Open
+Priority: High
+Area: git-historikk (commit `e46f8d3`, 2026-05-21, på `origin/master` og tre `origin/claude/*`-grener); `.claude/settings.local.json`
+Description: Filen `.claude/settings.local.json` var sporet i det OFFENTLIGE repoet `basbeta/effektbibliotek` og inneholder en innloggingsstreng med passord til den gamle Neon-databasen i klartekst (i en tillatt `prisma db push`-kommando). Sporingen er stoppet (CR-039, `997fdf8`), men verdien ligger i historikken. Ikke gjengitt her. Filen har også brede tillatelser (`npm install *`, `curl *`, `python *`, `node *`) som bør strammes inn av eier.
+Blocker for: Ingenting teknisk. Følg opp: produkteier sletter Neon-databasen/-prosjektet eller bytter passordet (Claude kan ikke). Omskriving av historikk (force-push) er ikke nødvendig etter rotasjon. Lukkes når produkteier bekrefter sletting/rotasjon.
+Opened: 2026-10-23
